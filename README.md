@@ -1,3 +1,11 @@
+# SISTEMA ORIONTAX SYNC
+
+## Sistema serve para sincronizar dados dos clientes com a OneTax
+
+### Para gerar o executável: digitar pyinstaller build.spec
+
+## Estrutura básica
+''
 OrionTaxSync/
 ├── main.py                 # Executável principal
 ├── config/
@@ -21,3 +29,4 @@ OrionTaxSync/
 │   └── oriontax.db        # SQLite (criado automaticamente)
 ├── requirements.txt
 └── build.spec             # PyInstaller config
+''
