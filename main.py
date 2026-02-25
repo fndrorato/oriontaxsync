@@ -6,9 +6,9 @@ import sys
 import logging
 from pathlib import Path
 from datetime import datetime
-from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction
+from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction, QMessageBox
 from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QSystemSemaphore, QSharedMemory
 from config.database import DatabaseManager
 from gui.login import LoginDialog
 from gui.main_window import MainWindow
@@ -49,6 +49,26 @@ def setup_logging():
         ]
     )
 
+class SingleInstance:
+    """Garante que apenas uma instância do aplicativo rode por vez"""
+    
+    def __init__(self, key):
+        self.key = key
+        self.memory = QSharedMemory(key)
+        self.is_running = False
+        
+        # Tentar anexar à memória existente
+        if self.memory.attach():
+            self.is_running = True
+        else:
+            # Criar nova memória compartilhada
+            if not self.memory.create(1):
+                self.is_running = True
+    
+    def check(self):
+        return self.is_running
+
+
 class OrionTaxSyncApp:
     """Aplicação principal com System Tray"""
     
@@ -56,7 +76,18 @@ class OrionTaxSyncApp:
         setup_logging()
         
         self.app = QApplication(sys.argv)
-        self.app.setQuitOnLastWindowClosed(False)  # ✅ Não fechar ao fechar janela
+        
+        # ✅ Verificar instância única
+        self.single_instance = SingleInstance('OrionTaxSync')
+        if self.single_instance.check():
+            QMessageBox.warning(
+                None,
+                "OrionTax Sync",
+                "O OrionTax Sync já está em execução.\n\nVerifique o ícone na bandeja do sistema."
+            )
+            sys.exit(0)
+        
+        self.app.setQuitOnLastWindowClosed(False)
         
         self.db_manager = None
         self.scheduler = None
@@ -68,7 +99,7 @@ class OrionTaxSyncApp:
         self.init_scheduler()
         self.init_tray()
         
-        # ✅ SEMPRE MOSTRAR LOGIN AO INICIAR
+        # SEMPRE MOSTRAR LOGIN AO INICIAR
         self.show_login()
     
     def init_database(self):

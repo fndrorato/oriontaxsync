@@ -6,10 +6,22 @@ from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 block_cipher = None
 project_root = os.path.abspath(SPECPATH)
 
-# ✅ Coletar dados do pandas/numpy
-datas = [
-    ('resources/icone.ico', 'resources'),
-]
+# ✅ Caminho ABSOLUTO do ícone
+icon_path = os.path.join(project_root, 'resources', 'icone.ico')
+
+# Verificar se ícone existe
+if not os.path.exists(icon_path):
+    print(f"AVISO: Ícone não encontrado em: {icon_path}")
+    icon_path = None
+else:
+    print(f"✓ Ícone encontrado: {icon_path}")
+
+# Coletar dados
+datas = []
+
+# Adicionar ícone aos dados
+if icon_path:
+    datas.append((icon_path, 'resources'))
 
 # ✅ Adicionar dados de pacotes específicos
 datas += collect_data_files('pandas')
@@ -118,7 +130,7 @@ exe = EXE(
     strip=False,
     upx=True,
     console=False,
-    icon='resources/icone.ico' if os.path.exists('resources/icone.ico') else None,
+    icon=icon_path,
 )
 
 coll = COLLECT(

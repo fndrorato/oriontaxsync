@@ -1,3 +1,8 @@
 /venv/
 /data/*.db
 /debug/
+
+# Ignorar o instaclient
+/instantclient_23_0/
+*.zip
+*.exe
