@@ -750,7 +750,24 @@ class OracleClient:
         """Context manager entry"""
         self.connect()
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Context manager exit"""
         self.disconnect()
+
+
+def create_db_client(config: Dict):
+    """
+    Factory: retorna o cliente correto conforme o tipo de banco configurado.
+
+    Args:
+        config: dicionário de configuração (campo 'db_type': 'oracle' ou 'firebird')
+
+    Returns:
+        OracleClient ou FirebirdClient
+    """
+    db_type = config.get('db_type', 'oracle')
+    if db_type == 'firebird':
+        from .firebird_client import FirebirdClient
+        return FirebirdClient(config)
+    return OracleClient(config)
