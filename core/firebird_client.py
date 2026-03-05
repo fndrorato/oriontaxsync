@@ -220,8 +220,12 @@ class FirebirdClient:
             try:
                 if value is None:
                     return None
-                if isinstance(value, float) and math.isnan(value):
-                    return None
+                try:
+                    if pd.isna(value):
+                        return None
+                except (TypeError, ValueError):
+                    pass
+
                 if isinstance(value, str):
                     v = value.strip()
                     if v.lower() in ("none", "null", ""):
@@ -235,6 +239,7 @@ class FirebirdClient:
                             )
                             return None
                     return v
+
                 if col_name in TABLE_NUMBER_COLUMNS.get(table_name, set()):
                     try:
                         return float(value)
@@ -243,6 +248,10 @@ class FirebirdClient:
                             f"{table_name} | {col_name} | Valor numérico inválido: {value}"
                         )
                         return None
+
+                if hasattr(value, 'item'):
+                    return value.item()
+
                 return value
             except Exception as e:
                 logger.error(

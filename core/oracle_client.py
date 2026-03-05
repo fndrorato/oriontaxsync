@@ -381,21 +381,21 @@ class OracleClient:
         # ==========================
         def clean_value(value, col_name):
             try:
-                # NULLs
+                # NULLs — pd.isna cobre Python None, float nan, numpy.float64 nan,
+                # pandas.NA e pandas.NaT, independente da versão do NumPy
                 if value is None:
                     return None
-
-                if isinstance(value, float) and math.isnan(value):
-                    return None
+                try:
+                    if pd.isna(value):
+                        return None
+                except (TypeError, ValueError):
+                    pass  # pd.isna levanta TypeError para arrays/objetos compostos
 
                 # Strings
                 if isinstance(value, str):
                     v = value.strip()
-
                     if v.lower() in ("none", "null", ""):
                         return None
-
-                    # Se coluna é NUMBER, tentar converter
                     if col_name in TABLE_NUMBER_COLUMNS.get(table_name, set()):
                         try:
                             return float(v.replace(",", "."))
@@ -404,10 +404,9 @@ class OracleClient:
                                 f"{table_name} | {col_name} | Valor numérico inválido: '{value}'"
                             )
                             return None
-
                     return v
 
-                # Números reais
+                # Colunas numéricas: garante float Python nativo
                 if col_name in TABLE_NUMBER_COLUMNS.get(table_name, set()):
                     try:
                         return float(value)
@@ -416,6 +415,11 @@ class OracleClient:
                             f"{table_name} | {col_name} | Valor numérico inválido: {value}"
                         )
                         return None
+
+                # Colunas não-numéricas: converte numpy scalars para tipo Python nativo
+                # (numpy.int64, numpy.float64, numpy.bool_, etc. causam erros no modo thick)
+                if hasattr(value, 'item'):
+                    return value.item()
 
                 return value
 
