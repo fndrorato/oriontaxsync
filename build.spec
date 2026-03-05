@@ -1,33 +1,49 @@
 # -*- mode: python ; coding: utf-8 -*-
 import os
 import sys
-from PyInstaller.utils.hooks import collect_data_files, collect_submodules
+from PyInstaller.utils.hooks import (
+    collect_data_files,
+    collect_submodules,
+    collect_dynamic_libs,
+)
 
 block_cipher = None
 project_root = os.path.abspath(SPECPATH)
 
-# ✅ Caminho ABSOLUTO do ícone
+# ============================================================
+# ÍCONE
+# ============================================================
 icon_path = os.path.join(project_root, 'resources', 'icone.ico')
-
-# Verificar se ícone existe
 if not os.path.exists(icon_path):
     print(f"AVISO: Ícone não encontrado em: {icon_path}")
     icon_path = None
 else:
     print(f"✓ Ícone encontrado: {icon_path}")
 
-# Coletar dados
+# ============================================================
+# DATAS
+# ============================================================
 datas = []
 
-# Adicionar ícone aos dados
 if icon_path:
     datas.append((icon_path, 'resources'))
 
-# ✅ Adicionar dados de pacotes específicos
 datas += collect_data_files('pandas')
 datas += collect_data_files('numpy')
 
-# ✅ Hidden imports completos
+# PyQt5: inclui os plugins Qt (platforms/qwindows.dll, styles, etc.)
+# Sem isso ocorre "DLL load failed while importing QtWidgets"
+datas += collect_data_files('PyQt5')
+
+# ============================================================
+# BINÁRIOS
+# ============================================================
+# Coleta os DLLs do Qt5 (Qt5Core.dll, Qt5Widgets.dll, etc.)
+binaries = collect_dynamic_libs('PyQt5')
+
+# ============================================================
+# HIDDEN IMPORTS
+# ============================================================
 hiddenimports = [
     # Platform
     'platformdirs',
@@ -35,13 +51,15 @@ hiddenimports = [
     'pkg_resources.extern',
     'pkg_resources._vendor',
     'setuptools',
-    
-    # GUI
+
+    # GUI — submódulos PyQt5
+    'PyQt5',
     'PyQt5.QtCore',
     'PyQt5.QtGui',
     'PyQt5.QtWidgets',
+    'PyQt5.QtNetwork',
     'PyQt5.sip',
-    
+
     # Scheduler
     'apscheduler',
     'apscheduler.schedulers',
@@ -52,13 +70,20 @@ hiddenimports = [
     'apscheduler.executors.pool',
     'apscheduler.jobstores',
     'apscheduler.jobstores.memory',
-    
+
     # Database
+    'oracledb',
     'psycopg2',
     'psycopg2.extensions',
     'psycopg2._psycopg',
     'sqlite3',
-    
+
+    # Firebird
+    'firebirdsql',
+    'firebirdsql.fbcore',
+    'firebirdsql.wire',
+    'firebirdsql.utils',
+
     # Data processing
     'pandas',
     'pandas._libs',
@@ -73,24 +98,28 @@ hiddenimports = [
     'numpy.random',
     'numpy.random._common',
     'numpy.random._generator',
-    
+
     # Security
     'bcrypt',
     '_cffi_backend',
-    
-    # Oracle (se necessário)
-    # 'oracledb',
-    # 'cx_Oracle',
+    'cryptography',
+    'cryptography.hazmat.primitives',
+    'cryptography.hazmat.backends',
+    'cryptography.hazmat.backends.openssl',
 ]
 
-# ✅ Coletar todos os submódulos do pandas e numpy
+hiddenimports += collect_submodules('PyQt5')
 hiddenimports += collect_submodules('pandas')
 hiddenimports += collect_submodules('numpy')
+hiddenimports += collect_submodules('firebirdsql')
 
+# ============================================================
+# ANÁLISE
+# ============================================================
 a = Analysis(
     ['main.py'],
     pathex=[project_root],
-    binaries=[],
+    binaries=binaries,
     datas=datas,
     hiddenimports=hiddenimports,
     hookspath=['.'],
@@ -114,7 +143,7 @@ a = Analysis(
     noarchive=False,
 )
 
-# ✅ Remover duplicatas
+# Remover duplicatas
 a.datas = list({tuple(map(str, t)) for t in a.datas})
 
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
