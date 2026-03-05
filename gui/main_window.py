@@ -34,25 +34,25 @@ class WorkerThread(QThread):
     def run(self):
         """Executa a operação"""
         from datetime import datetime
-        from core.oracle_client import OracleClient
+        from core.oracle_client import create_db_client
         from core.oriontax_client import OrionTaxClient
-        
+
         try:
             start_time = datetime.now()
-            
+
             if self.operation_type == 'ENVIAR':
-                # ENVIAR: Oracle VIEWs → PostgreSQL VIEWs
-                
-                self.progress.emit('Conectando ao Oracle...')
-                oracle_client = OracleClient(self.oracle_config)
+                # ENVIAR: BD Intersolid VIEWs → PostgreSQL VIEWs
+
+                self.progress.emit('Conectando ao BD Intersolid...')
+                oracle_client = create_db_client(self.oracle_config)
                 oracle_client.connect()
-                
-                self.progress.emit(f'Lendo VIEWs do Oracle (CNPJ: {self.cnpj})...')
+
+                self.progress.emit(f'Lendo VIEWs do BD Intersolid (CNPJ: {self.cnpj})...')
                 dataframes = oracle_client.read_views_to_dataframes()
-                
+
                 total_records = sum(len(df) for df in dataframes.values())
-                self.progress.emit(f'✓ {total_records} registros lidos do Oracle')
-                
+                self.progress.emit(f'✓ {total_records} registros lidos do BD Intersolid')
+
                 oracle_client.disconnect()
                 
                 self.progress.emit('Conectando ao OrionTax...')
@@ -86,11 +86,11 @@ class WorkerThread(QThread):
                 
                 oriontax_client.disconnect()
                 
-                self.progress.emit('Conectando ao Oracle...')
-                oracle_client = OracleClient(self.oracle_config)
+                self.progress.emit('Conectando ao BD Intersolid...')
+                oracle_client = create_db_client(self.oracle_config)
                 oracle_client.connect()
-                
-                self.progress.emit('Gravando dados no Oracle...')
+
+                self.progress.emit('Gravando dados no BD Intersolid...')
                 success, message = oracle_client.write_dataframes_to_tmp_tables(dataframes)
                 
                 oracle_client.disconnect()
@@ -276,7 +276,7 @@ class MainWindow(QMainWindow):
         status_group = QGroupBox('Status das Conexões')
         status_layout = QVBoxLayout()
         
-        self.oracle_status_label = QLabel('Oracle: Não configurado')
+        self.oracle_status_label = QLabel('BD Intersolid: Não configurado')
         self.oriontax_status_label = QLabel('OrionTax: Não configurado')
         
         status_layout.addWidget(self.oracle_status_label)
@@ -342,7 +342,7 @@ class MainWindow(QMainWindow):
         # ========================================
         # CONFIGURAÇÃO ORACLE
         # ========================================
-        oracle_group = QGroupBox('Configuração Oracle')
+        oracle_group = QGroupBox('Configuração BD Intersolid')
         oracle_layout = QVBoxLayout()
         
         # Status Oracle
@@ -353,12 +353,12 @@ class MainWindow(QMainWindow):
         # Botões Oracle
         oracle_buttons = QHBoxLayout()
         
-        config_oracle_button = QPushButton('⚙️ Configurar Oracle')
+        config_oracle_button = QPushButton('⚙️ Configurar BD Intersolid')
         config_oracle_button.setMinimumHeight(40)
         config_oracle_button.clicked.connect(self.open_oracle_config)
         oracle_buttons.addWidget(config_oracle_button)
         
-        test_oracle_button = QPushButton('🔍 Testar Conexão Oracle')
+        test_oracle_button = QPushButton('🔍 Testar Conexão com Intersolid')
         test_oracle_button.setMinimumHeight(40)
         test_oracle_button.clicked.connect(self.test_oracle_connection)
         oracle_buttons.addWidget(test_oracle_button)
@@ -680,13 +680,13 @@ class MainWindow(QMainWindow):
         # ✅ Oracle
         oracle_config = self.db_manager.get_oracle_config()  # ✅ Adicionar self.
         if oracle_config:
-            self.oracle_status_label.setText(f"✓ Oracle: {oracle_config['nome_conexao']} ({oracle_config['host']})")
+            self.oracle_status_label.setText(f"✓ BD Intersolid: {oracle_config['nome_conexao']} ({oracle_config['host']})")
             self.oracle_status_label.setStyleSheet('color: #27ae60; font-weight: bold;')
             
             self.oracle_config_status.setText(f"✓ Configurado: {oracle_config['nome_conexao']} - {oracle_config['host']}:{oracle_config['port']}")
             self.oracle_config_status.setStyleSheet('color: #27ae60; font-weight: bold;')
         else:
-            self.oracle_status_label.setText('✗ Oracle: Não configurado')
+            self.oracle_status_label.setText('✗ BD Intersolid: Não configurado')
             self.oracle_status_label.setStyleSheet('color: #e74c3c; font-weight: bold;')
             
             self.oracle_config_status.setText('✗ Não configurado')
@@ -796,23 +796,23 @@ class MainWindow(QMainWindow):
         oracle_config = self.db_manager.get_oracle_config()  # ✅ Adicionar self.
         
         if not oracle_config:
-            QMessageBox.warning(self, 'Atenção', 'Configure a conexão Oracle primeiro.')
+            QMessageBox.warning(self, 'Atenção', 'Configure a conexão BD Intersolid primeiro.')
             return
         
         try:
-            from core.oracle_client import OracleClient
-            
-            self.log_message('Testando conexão Oracle...', 'INFO')
-            
-            oracle_client = OracleClient(oracle_config)
+            from core.oracle_client import create_db_client
+
+            self.log_message('Testando conexão BD Intersolid...', 'INFO')
+
+            oracle_client = create_db_client(oracle_config)
             success, message = oracle_client.test_connection()
-            
+
             if success:
-                QMessageBox.information(self, 'Sucesso', '✓ Conexão Oracle bem-sucedida!')
-                self.log_message('✓ Conexão Oracle OK', 'SUCCESS')
+                QMessageBox.information(self, 'Sucesso', '✓ Conexão BD Intersolid bem-sucedida!')
+                self.log_message('✓ Conexão BD Intersolid OK', 'SUCCESS')
             else:
-                QMessageBox.critical(self, 'Erro', f'Falha na conexão Oracle:\n\n{message}')
-                self.log_message(f'✗ Erro Oracle: {message}', 'ERROR')
+                QMessageBox.critical(self, 'Erro', f'Falha na conexão BD Intersolid:\n\n{message}')
+                self.log_message(f'✗ Erro BD Intersolid: {message}', 'ERROR')
                 
         except Exception as e:
             QMessageBox.critical(self, 'Erro', f'Erro ao testar conexão:\n\n{str(e)}')
@@ -1027,7 +1027,7 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(
                 self,
                 'Configuração Pendente',
-                'Configure a conexão Oracle antes de continuar.'
+                'Configure a conexão BD Intersolid antes de continuar.'
             )
             return
         
@@ -1123,7 +1123,7 @@ class MainWindow(QMainWindow):
         dialog = OracleConfigDialog(self)
         if dialog.exec_():
             self.check_connection_status()
-            self.log_message('Configuração Oracle atualizada', 'SUCCESS')
+            self.log_message('Configuração BD Intersolid atualizada', 'SUCCESS')
     
     def open_oriontax_config(self):
         """Abre diálogo de configuração OrionTax"""
@@ -1161,7 +1161,7 @@ class MainWindow(QMainWindow):
         QMessageBox.about(
             self,
             'Sobre OrionTax Sync',
-            '<h2>OrionTax Sync v1.0</h2>'
+            '<h2>OrionTax Sync v1.0.1</h2>'
             '<p>Sistema de Sincronização Fiscal</p>'
             '<p>Desenvolvido para integração entre Oracle e OrionTax</p>'
             '<br>'

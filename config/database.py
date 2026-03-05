@@ -138,8 +138,20 @@ class DatabaseManager:
             )
         """)
         
+        # Migração: adicionar colunas de Firebird na config_oracle
+        migration_columns = [
+            ("db_type", "TEXT DEFAULT 'oracle'"),
+            ("database_path", "TEXT"),
+            ("charset", "TEXT"),
+        ]
+        for col_name, col_def in migration_columns:
+            try:
+                cursor.execute(f"ALTER TABLE config_oracle ADD COLUMN {col_name} {col_def}")
+            except sqlite3.OperationalError:
+                pass  # Coluna já existe
+
         self.conn.commit()
-        
+
         # Criar usuário padrão se não existir
         self._create_default_user()
     
@@ -334,38 +346,43 @@ class DatabaseManager:
     
     def save_oracle_config(self, nome_conexao: str, host: str, port: int,
                           service_name: str, username: str, password: str,
-                          instant_client_path: str = None) -> bool:
-        """Salva configuração Oracle"""
+                          instant_client_path: str = None,
+                          db_type: str = 'oracle',
+                          database_path: str = None,
+                          charset: str = None) -> bool:
+        """Salva configuração Oracle ou Firebird"""
         try:
             password_enc = encryption_manager.encrypt(password)
             cursor = self.conn.cursor()
-            
+
             # Verificar se já existe
-            cursor.execute("SELECT id FROM config_oracle WHERE nome_conexao = ?", 
-                         (nome_conexao,))
+            cursor.execute("SELECT id FROM config_oracle WHERE nome_conexao = ?",
+                           (nome_conexao,))
             existing = cursor.fetchone()
-            
+
             if existing:
-                # Atualizar
                 cursor.execute("""
-                    UPDATE config_oracle 
+                    UPDATE config_oracle
                     SET host = ?, port = ?, service_name = ?, username = ?,
-                        password_encrypted = ?, instant_client_path = ?, updated_at = ?
+                        password_encrypted = ?, instant_client_path = ?,
+                        db_type = ?, database_path = ?, charset = ?, updated_at = ?
                     WHERE nome_conexao = ?
                 """, (host, port, service_name, username, password_enc,
-                     instant_client_path, datetime.now(), nome_conexao))
+                      instant_client_path, db_type, database_path, charset,
+                      datetime.now(), nome_conexao))
             else:
-                # Inserir
                 cursor.execute("""
-                    INSERT INTO config_oracle 
-                    (nome_conexao, host, port, service_name, username, password_encrypted, instant_client_path)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                """, (nome_conexao, host, port, service_name, username, password_enc, instant_client_path))
-            
+                    INSERT INTO config_oracle
+                    (nome_conexao, host, port, service_name, username, password_encrypted,
+                     instant_client_path, db_type, database_path, charset)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (nome_conexao, host, port, service_name, username, password_enc,
+                      instant_client_path, db_type, database_path, charset))
+
             self.conn.commit()
             return True
         except Exception as e:
-            print(f"Erro ao salvar config Oracle: {e}")
+            print(f"Erro ao salvar config: {e}")
             return False
     
     def get_oracle_config(self, nome_conexao: str = None) -> Optional[Dict]:

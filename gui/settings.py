@@ -5,114 +5,177 @@ import os
 from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel,
                              QLineEdit, QPushButton, QSpinBox, QCheckBox,
                              QGroupBox, QFormLayout, QMessageBox, QComboBox,
-                             QTimeEdit, QListWidget, QFileDialog)
+                             QTimeEdit, QListWidget, QFileDialog, QWidget)
 from PyQt5.QtCore import Qt, QTime
 from PyQt5.QtGui import QFont
 from config.database import db_manager
 import json
 
 
-class OracleConfigDialog(QDialog):
-    """Diálogo de Configuração Oracle"""
-    
+class DatabaseConfigDialog(QDialog):
+    """Diálogo de Configuração de Banco de Dados (Oracle ou Firebird)"""
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.init_ui()
         self.load_config()
-    
+
     def init_ui(self):
         """Inicializa a interface"""
-        self.setWindowTitle('Configuração Oracle')
-        self.setMinimumWidth(550)
-        
+        self.setWindowTitle('Configuração Banco de Dados')
+        self.setMinimumWidth(580)
+
         layout = QVBoxLayout()
         layout.setSpacing(15)
-        
-        # GroupBox principal
-        group = QGroupBox('Dados de Conexão Oracle')
+
+        group = QGroupBox('Dados de Conexão')
         form = QFormLayout()
         form.setSpacing(10)
-        
+
+        # Tipo de Banco de Dados
+        self.db_type_combo = QComboBox()
+        self.db_type_combo.addItems(['Oracle', 'Firebird 2.5'])
+        self.db_type_combo.currentTextChanged.connect(self.on_db_type_changed)
+        form.addRow('Tipo de Banco:', self.db_type_combo)
+
         # Nome da Conexão
         self.nome_input = QLineEdit()
         self.nome_input.setPlaceholderText('Ex: Producao, Homologacao')
         form.addRow('Nome da Conexão:', self.nome_input)
-        
+
         # Host
         self.host_input = QLineEdit()
-        self.host_input.setPlaceholderText('192.168.1.100 ou oracle.empresa.com')
+        self.host_input.setPlaceholderText('192.168.1.100 ou servidor.empresa.com')
         form.addRow('Host:', self.host_input)
-        
+
         # Port
         self.port_input = QSpinBox()
         self.port_input.setRange(1, 65535)
         self.port_input.setValue(1521)
         form.addRow('Porta:', self.port_input)
-        
-        # Service Name
+
+        # Service Name (Oracle)
         self.service_input = QLineEdit()
         self.service_input.setPlaceholderText('ORCL, XE, etc')
-        form.addRow('Service Name:', self.service_input)
-        
+        self.service_label = QLabel('Service Name:')
+        form.addRow(self.service_label, self.service_input)
+
+        # Database Path (Firebird)
+        db_path_container = QWidget()
+        db_path_layout = QHBoxLayout(db_path_container)
+        db_path_layout.setContentsMargins(0, 0, 0, 0)
+        self.db_path_input = QLineEdit()
+        self.db_path_input.setPlaceholderText('/caminho/para/banco.fdb')
+        browse_db_button = QPushButton('📁')
+        browse_db_button.setMaximumWidth(40)
+        browse_db_button.setToolTip('Procurar arquivo .fdb')
+        browse_db_button.clicked.connect(self.browse_database_file)
+        db_path_layout.addWidget(self.db_path_input)
+        db_path_layout.addWidget(browse_db_button)
+        self.db_path_label = QLabel('Database:')
+        form.addRow(self.db_path_label, db_path_container)
+        self.db_path_container = db_path_container
+
+        # Charset (Firebird)
+        self.charset_input = QLineEdit()
+        self.charset_input.setPlaceholderText('UTF8, WIN1252, NONE (padrão: UTF8)')
+        self.charset_label = QLabel('Charset:')
+        form.addRow(self.charset_label, self.charset_input)
+
         # Username
         self.username_input = QLineEdit()
-        self.username_input.setPlaceholderText('usuario_oracle')
+        self.username_input.setPlaceholderText('usuario')
         form.addRow('Usuário:', self.username_input)
-        
+
         # Password
         self.password_input = QLineEdit()
         self.password_input.setEchoMode(QLineEdit.Password)
         self.password_input.setPlaceholderText('••••••••')
         form.addRow('Senha:', self.password_input)
-        
-        # ✅ Instant Client Path (Opcional)
-        instant_client_layout = QVBoxLayout()
-        
+
+        # Instant Client Path (Oracle)
+        instant_client_container = QWidget()
+        ic_outer = QVBoxLayout(instant_client_container)
+        ic_outer.setContentsMargins(0, 0, 0, 0)
+
         instant_client_row = QHBoxLayout()
         self.instant_client_input = QLineEdit()
         self.instant_client_input.setPlaceholderText('/path/to/instantclient_19_20')
         instant_client_row.addWidget(self.instant_client_input)
-        
-        browse_button = QPushButton('📁')
-        browse_button.setMaximumWidth(40)
-        browse_button.setToolTip('Procurar diretório')
-        browse_button.clicked.connect(self.browse_instant_client)
-        instant_client_row.addWidget(browse_button)
-        
-        instant_client_layout.addLayout(instant_client_row)
-        
+
+        browse_ic_button = QPushButton('📁')
+        browse_ic_button.setMaximumWidth(40)
+        browse_ic_button.setToolTip('Procurar diretório')
+        browse_ic_button.clicked.connect(self.browse_instant_client)
+        instant_client_row.addWidget(browse_ic_button)
+        ic_outer.addLayout(instant_client_row)
+
         instant_client_info = QLabel('Opcional: Para Oracle < 12.1 (modo thick). Deixe vazio para usar modo thin.')
         instant_client_info.setStyleSheet('color: #7f8c8d; font-size: 10px;')
         instant_client_info.setWordWrap(True)
-        instant_client_layout.addWidget(instant_client_info)
-        
-        form.addRow('Instant Client:', instant_client_layout)
-        
+        ic_outer.addWidget(instant_client_info)
+
+        self.instant_client_label = QLabel('Instant Client:')
+        form.addRow(self.instant_client_label, instant_client_container)
+        self.instant_client_container = instant_client_container
+
         group.setLayout(form)
         layout.addWidget(group)
-        
+
         # Botões
         buttons_layout = QHBoxLayout()
         buttons_layout.addStretch()
-        
+
         test_button = QPushButton('Testar Conexão')
         test_button.clicked.connect(self.test_connection)
         buttons_layout.addWidget(test_button)
-        
+
         save_button = QPushButton('Salvar')
         save_button.clicked.connect(self.save_config)
         save_button.setDefault(True)
         buttons_layout.addWidget(save_button)
-        
+
         cancel_button = QPushButton('Cancelar')
         cancel_button.clicked.connect(self.reject)
         buttons_layout.addWidget(cancel_button)
-        
+
         layout.addLayout(buttons_layout)
         self.setLayout(layout)
-        
+
         self.apply_styles()
-    
+
+        # Inicializa visibilidade dos campos conforme tipo padrão
+        self.on_db_type_changed('Oracle')
+
+    def on_db_type_changed(self, db_type: str):
+        """Mostra/oculta campos conforme o tipo de banco selecionado"""
+        is_oracle = db_type == 'Oracle'
+        is_firebird = db_type == 'Firebird 2.5'
+
+        # Campos Oracle
+        self.service_label.setVisible(is_oracle)
+        self.service_input.setVisible(is_oracle)
+        self.instant_client_label.setVisible(is_oracle)
+        self.instant_client_container.setVisible(is_oracle)
+
+        # Campos Firebird
+        self.db_path_label.setVisible(is_firebird)
+        self.db_path_container.setVisible(is_firebird)
+        self.charset_label.setVisible(is_firebird)
+        self.charset_input.setVisible(is_firebird)
+
+        # Atualiza porta padrão apenas se ainda estiver no valor padrão do outro banco
+        if is_oracle and self.port_input.value() == 3050:
+            self.port_input.setValue(1521)
+        elif is_firebird and self.port_input.value() == 1521:
+            self.port_input.setValue(3050)
+
+        # Atualiza placeholder do usuário
+        if is_firebird:
+            self.username_input.setPlaceholderText('SYSDBA')
+        else:
+            self.username_input.setPlaceholderText('usuario_oracle')
+
     def apply_styles(self):
         """Aplica estilos"""
         self.setStyleSheet("""
@@ -128,12 +191,12 @@ class OracleConfigDialog(QDialog):
                 left: 10px;
                 padding: 0 5px;
             }
-            QLineEdit, QSpinBox {
+            QLineEdit, QSpinBox, QComboBox {
                 padding: 8px;
                 border: 1px solid #bdc3c7;
                 border-radius: 3px;
             }
-            QLineEdit:focus, QSpinBox:focus {
+            QLineEdit:focus, QSpinBox:focus, QComboBox:focus {
                 border: 2px solid #3498db;
             }
             QPushButton {
@@ -148,7 +211,7 @@ class OracleConfigDialog(QDialog):
                 background-color: #2980b9;
             }
         """)
-    
+
     def browse_instant_client(self):
         """Abre diálogo para selecionar diretório do Instant Client"""
         directory = QFileDialog.getExistingDirectory(
@@ -157,10 +220,20 @@ class OracleConfigDialog(QDialog):
             os.path.expanduser('~'),
             QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks
         )
-        
         if directory:
             self.instant_client_input.setText(directory)
-    
+
+    def browse_database_file(self):
+        """Abre diálogo para selecionar arquivo .fdb do Firebird"""
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            'Selecionar Banco de Dados Firebird',
+            os.path.expanduser('~'),
+            'Firebird Database (*.fdb *.gdb);;Todos os arquivos (*.*)'
+        )
+        if file_path:
+            self.db_path_input.setText(file_path)
+
     def load_config(self):
         """Carrega configuração existente"""
         config = db_manager.get_oracle_config()
@@ -168,20 +241,71 @@ class OracleConfigDialog(QDialog):
             self.nome_input.setText(config.get('nome_conexao', ''))
             self.host_input.setText(config.get('host', ''))
             self.port_input.setValue(config.get('port', 1521))
-            self.service_input.setText(config.get('service_name', ''))
             self.username_input.setText(config.get('username', ''))
-            self.instant_client_input.setText(config.get('instant_client_path', '') or '')
+
+            db_type = config.get('db_type', 'oracle')
+            if db_type == 'firebird':
+                self.db_type_combo.setCurrentText('Firebird 2.5')
+                self.db_path_input.setText(config.get('database_path', '') or '')
+                self.charset_input.setText(config.get('charset', '') or '')
+            else:
+                self.db_type_combo.setCurrentText('Oracle')
+                self.service_input.setText(config.get('service_name', ''))
+                self.instant_client_input.setText(config.get('instant_client_path', '') or '')
             # Senha não é carregada por segurança
-    
+
+    def validate_fields(self) -> bool:
+        """Valida campos obrigatórios"""
+        if not self.nome_input.text().strip():
+            QMessageBox.warning(self, 'Atenção', 'Informe o nome da conexão.')
+            self.nome_input.setFocus()
+            return False
+
+        if not self.host_input.text().strip():
+            QMessageBox.warning(self, 'Atenção', 'Informe o host.')
+            self.host_input.setFocus()
+            return False
+
+        is_firebird = self.db_type_combo.currentText() == 'Firebird 2.5'
+
+        if is_firebird:
+            if not self.db_path_input.text().strip():
+                QMessageBox.warning(self, 'Atenção', 'Informe o caminho do banco de dados (.fdb).')
+                self.db_path_input.setFocus()
+                return False
+        else:
+            if not self.service_input.text().strip():
+                QMessageBox.warning(self, 'Atenção', 'Informe o service name.')
+                self.service_input.setFocus()
+                return False
+
+        if not self.username_input.text().strip():
+            QMessageBox.warning(self, 'Atenção', 'Informe o usuário.')
+            self.username_input.setFocus()
+            return False
+
+        if not self.password_input.text():
+            QMessageBox.warning(self, 'Atenção', 'Informe a senha.')
+            self.password_input.setFocus()
+            return False
+
+        return True
+
     def test_connection(self):
-        """Testa conexão Oracle"""
+        """Testa conexão conforme o tipo de banco selecionado"""
         if not self.validate_fields():
             return
-        
+
+        if self.db_type_combo.currentText() == 'Firebird 2.5':
+            self._test_firebird_connection()
+        else:
+            self._test_oracle_connection()
+
+    def _test_oracle_connection(self):
+        """Testa conexão Oracle"""
         try:
             from core.oracle_client import OracleClient
-            
-            # Preparar config temporária
+
             temp_config = {
                 'host': self.host_input.text().strip(),
                 'port': self.port_input.value(),
@@ -190,88 +314,93 @@ class OracleConfigDialog(QDialog):
                 'password': self.password_input.text(),
                 'instant_client_path': self.instant_client_input.text().strip() or None
             }
-            
+
             oracle_client = OracleClient(temp_config)
             success, message = oracle_client.test_connection()
-            
+
             if success:
-                QMessageBox.information(
-                    self,
-                    'Sucesso',
-                    f'✓ {message}'
-                )
+                QMessageBox.information(self, 'Sucesso', f'✓ {message}')
             else:
                 QMessageBox.critical(
-                    self,
-                    'Erro de Conexão',
+                    self, 'Erro de Conexão',
                     f'Não foi possível conectar ao Oracle:\n\n{message}'
                 )
         except Exception as e:
             QMessageBox.critical(
-                self,
-                'Erro de Conexão',
+                self, 'Erro de Conexão',
                 f'Não foi possível conectar ao Oracle:\n\n{str(e)}'
             )
-    
-    def validate_fields(self) -> bool:
-        """Valida campos"""
-        if not self.nome_input.text().strip():
-            QMessageBox.warning(self, 'Atenção', 'Informe o nome da conexão.')
-            self.nome_input.setFocus()
-            return False
-        
-        if not self.host_input.text().strip():
-            QMessageBox.warning(self, 'Atenção', 'Informe o host.')
-            self.host_input.setFocus()
-            return False
-        
-        if not self.service_input.text().strip():
-            QMessageBox.warning(self, 'Atenção', 'Informe o service name.')
-            self.service_input.setFocus()
-            return False
-        
-        if not self.username_input.text().strip():
-            QMessageBox.warning(self, 'Atenção', 'Informe o usuário.')
-            self.username_input.setFocus()
-            return False
-        
-        if not self.password_input.text():
-            QMessageBox.warning(self, 'Atenção', 'Informe a senha.')
-            self.password_input.setFocus()
-            return False
-        
-        return True
-    
+
+    def _test_firebird_connection(self):
+        """Testa conexão Firebird"""
+        try:
+            import firebirdsql
+        except ImportError:
+            QMessageBox.critical(
+                self, 'Biblioteca não encontrada',
+                'A biblioteca "firebirdsql" não está instalada.\n\nInstale com:\n  pip install firebirdsql'
+            )
+            return
+
+        try:
+            charset = self.charset_input.text().strip() or 'UTF8'
+            con = firebirdsql.connect(
+                host=self.host_input.text().strip(),
+                database=self.db_path_input.text().strip(),
+                user=self.username_input.text().strip(),
+                password=self.password_input.text(),
+                port=self.port_input.value(),
+                charset=charset
+            )
+            con.close()
+            QMessageBox.information(self, 'Sucesso', '✓ Conexão ao Firebird realizada com sucesso!')
+        except Exception as e:
+            QMessageBox.critical(
+                self, 'Erro de Conexão',
+                f'Não foi possível conectar ao Firebird:\n\n{str(e)}'
+            )
+
     def save_config(self):
         """Salva configuração"""
         if not self.validate_fields():
             return
-        
-        instant_client_path = self.instant_client_input.text().strip() or None
-        
+
+        is_firebird = self.db_type_combo.currentText() == 'Firebird 2.5'
+        db_type = 'firebird' if is_firebird else 'oracle'
+
+        if is_firebird:
+            service_name = ''
+            instant_client_path = None
+            database_path = self.db_path_input.text().strip()
+            charset = self.charset_input.text().strip() or 'UTF8'
+        else:
+            service_name = self.service_input.text().strip()
+            instant_client_path = self.instant_client_input.text().strip() or None
+            database_path = None
+            charset = None
+
         success = db_manager.save_oracle_config(
             nome_conexao=self.nome_input.text().strip(),
             host=self.host_input.text().strip(),
             port=self.port_input.value(),
-            service_name=self.service_input.text().strip(),
+            service_name=service_name,
             username=self.username_input.text().strip(),
             password=self.password_input.text(),
-            instant_client_path=instant_client_path
+            instant_client_path=instant_client_path,
+            db_type=db_type,
+            database_path=database_path,
+            charset=charset
         )
-        
+
         if success:
-            QMessageBox.information(
-                self,
-                'Sucesso',
-                'Configuração salva com sucesso!'
-            )
+            QMessageBox.information(self, 'Sucesso', 'Configuração salva com sucesso!')
             self.accept()
         else:
-            QMessageBox.critical(
-                self,
-                'Erro',
-                'Erro ao salvar configuração.'
-            )
+            QMessageBox.critical(self, 'Erro', 'Erro ao salvar configuração.')
+
+
+# Alias para compatibilidade com código existente
+OracleConfigDialog = DatabaseConfigDialog
 
 class OrionTaxConfigDialog(QDialog):
     """Diálogo de Configuração OrionTax (PostgreSQL)"""

@@ -2,7 +2,7 @@
 ; Script Inno Setup
 
 #define MyAppName "OrionTax Sync"
-#define MyAppVersion "1.0.0"
+#define MyAppVersion "1.0.1"
 #define MyAppPublisher "OrionTax"
 #define MyAppExeName "OrionTaxSync.exe"
 #define MyAppIconName "icone.ico"
@@ -25,8 +25,8 @@ Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
 PrivilegesRequired=admin
-; Exigir Windows 10 ou superior
-MinVersion=10.0
+; Windows 8 / Server 2012 ou superior
+MinVersion=6.2
 
 ; Diretórios
 SourceDir=.
@@ -45,6 +45,10 @@ Name: "startup"; Description: "Iniciar automaticamente com o Windows"; GroupDesc
 Source: "dist\OrionTaxSync\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; Ícone
 Source: "resources\{#MyAppIconName}"; DestDir: "{app}\resources"; Flags: ignoreversion
+; Visual C++ 2015-2022 Redistributable (necessário em Windows 8/8.1 e Server 2012)
+; Baixe em: https://aka.ms/vs/17/release/vc_redist.x64.exe e coloque em resources\
+Source: "resources\vc_redist.x64.exe"; DestDir: "{tmp}"; Flags: ignoreversion; Check: IsWin64
+Source: "resources\vc_redist.x86.exe"; DestDir: "{tmp}"; Flags: ignoreversion; Check: not IsWin64
 
 [Icons]
 ; Menu Iniciar
@@ -58,6 +62,9 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilen
 Name: "{userstartup}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\resources\{#MyAppIconName}"; Tasks: startup
 
 [Run]
+; Instalar VC++ runtime silenciosamente se necessário
+Filename: "{tmp}\vc_redist.x64.exe"; Parameters: "/install /quiet /norestart"; StatusMsg: "Instalando dependências do sistema..."; Flags: waituntilterminated skipifsilent; Check: IsWin64
+Filename: "{tmp}\vc_redist.x86.exe"; Parameters: "/install /quiet /norestart"; StatusMsg: "Instalando dependências do sistema..."; Flags: waituntilterminated skipifsilent; Check: not IsWin64
 ; Executar após instalação (opcional)
 Filename: "{app}\{#MyAppExeName}"; Description: "Iniciar {#MyAppName} agora"; Flags: nowait postinstall skipifsilent
 
