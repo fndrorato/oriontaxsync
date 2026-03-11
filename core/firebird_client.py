@@ -47,6 +47,7 @@ class FirebirdClient:
             password=self.config['password'],
             port=self.config.get('port', 3050),
             charset=self.config.get('charset', 'UTF8'),
+            auth_plugin_name='Legacy_Auth',
         )
         self.logger.info(f"✓ Conectado ao Firebird: {self.config['host']}")
         return True
@@ -228,7 +229,7 @@ class FirebirdClient:
 
                 if isinstance(value, str):
                     v = value.strip()
-                    if v.lower() in ("none", "null", ""):
+                    if v.lower() in ("none", "null", "", "nan", "nat", "na", "<na>"):
                         return None
                     if col_name in TABLE_NUMBER_COLUMNS.get(table_name, set()):
                         try:

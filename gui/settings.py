@@ -350,7 +350,8 @@ class DatabaseConfigDialog(QDialog):
                 user=self.username_input.text().strip(),
                 password=self.password_input.text(),
                 port=self.port_input.value(),
-                charset=charset
+                charset=charset,
+                auth_plugin_name='Legacy_Auth',
             )
             con.close()
             QMessageBox.information(self, 'Sucesso', '✓ Conexão ao Firebird realizada com sucesso!')

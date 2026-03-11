@@ -10,7 +10,8 @@ jaraco.functools==4.3.0
 jaraco.text==4.0.0
 macholib==1.16.4
 more-itertools==10.8.0
-numpy==2.3.5
+numpy==1.26.4
+passlib==1.7.4
 oracledb==1.4.2
 packaging==25.0
 pandas==2.3.3
