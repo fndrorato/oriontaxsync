@@ -57,6 +57,24 @@ TABLE_NUMBER_COLUMNS = {
     }
 }
 
+def _execute_batch_one_by_one(cursor, insert_sql, batch, table_name, columns):
+    """
+    Fallback: executa linha a linha para identificar o valor exato que causa ORA-01722.
+    Re-levanta com mensagem detalhada mostrando coluna e valor.
+    """
+    for row_idx, row_tuple in enumerate(batch):
+        try:
+            cursor.execute(insert_sql, row_tuple)
+        except Exception as row_err:
+            detalhes = " | ".join(
+                f"{col}={repr(val)}({type(val).__name__})"
+                for col, val in zip(columns, row_tuple)
+            )
+            raise Exception(
+                f"ORA-01722 em {table_name} linha {row_idx}: {detalhes}"
+            ) from row_err
+
+
 class OracleClient:
     """Cliente para conexão e operações com Oracle"""
     
@@ -394,7 +412,7 @@ class OracleClient:
                 # Strings
                 if isinstance(value, str):
                     v = value.strip()
-                    if v.lower() in ("none", "null", ""):
+                    if v.lower() in ("none", "null", "", "nan", "nat", "na", "<na>"):
                         return None
                     if col_name in TABLE_NUMBER_COLUMNS.get(table_name, set()):
                         try:
@@ -456,13 +474,10 @@ class OracleClient:
                     cursor.executemany(insert_sql, batch)
                     inserted_rows += len(batch)
                     batch.clear()
-
                 except Exception as e:
-                    logger.critical(
-                        f"Falha no executemany para {table_name}: {e}"
-                    )
-                    logger.error("Amostra de dados do erro: %s", batch[0])
-                    raise
+                    _execute_batch_one_by_one(cursor, insert_sql, batch, table_name, columns)
+                    inserted_rows += len(batch)
+                    batch.clear()
 
         # ==========================
         # ÚLTIMO BATCH
@@ -471,13 +486,9 @@ class OracleClient:
             try:
                 cursor.executemany(insert_sql, batch)
                 inserted_rows += len(batch)
-
             except Exception as e:
-                logger.critical(
-                    f"Falha no executemany para {table_name}: {e}"
-                )
-                logger.error("Amostra de dados do erro: %s", batch[0])
-                raise
+                _execute_batch_one_by_one(cursor, insert_sql, batch, table_name, columns)
+                inserted_rows += len(batch)
 
         logger.info(
             f"{table_name} | Inseridos {inserted_rows} registros com sucesso"

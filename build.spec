@@ -1,14 +1,36 @@
 # -*- mode: python ; coding: utf-8 -*-
 import os
 import sys
-from PyInstaller.utils.hooks import (
-    collect_data_files,
-    collect_submodules,
-    collect_dynamic_libs,
-)
+from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 
 block_cipher = None
 project_root = os.path.abspath(SPECPATH)
+
+# ============================================================
+# VENV SITE-PACKAGES
+# Injeta o site-packages do venv explicitamente para garantir
+# que PyInstaller encontre PyQt5 e todas as dependências.
+# ============================================================
+# Tentar detectar via sys.executable (mais confiável que construir o path manualmente)
+_venv_scripts_dir = os.path.dirname(sys.executable)  # venv\Scripts ou venv/bin
+_venv_root = os.path.dirname(_venv_scripts_dir)       # venv\
+
+# Windows: venv\Lib\site-packages
+venv_site_packages = os.path.join(_venv_root, 'Lib', 'site-packages')
+if not os.path.exists(venv_site_packages):
+    # Linux/macOS: venv/lib/python3.x/site-packages
+    import glob as _glob
+    _matches = _glob.glob(os.path.join(_venv_root, 'lib', 'python*', 'site-packages'))
+    venv_site_packages = _matches[0] if _matches else None
+
+if venv_site_packages:
+    if venv_site_packages not in sys.path:
+        sys.path.insert(0, venv_site_packages)
+        print(f"✓ venv site-packages adicionado ao sys.path: {venv_site_packages}")
+    else:
+        print(f"✓ venv site-packages já no sys.path: {venv_site_packages}")
+else:
+    print(f"AVISO: venv site-packages não encontrado! sys.executable={sys.executable}")
 
 # ============================================================
 # ÍCONE
@@ -28,18 +50,30 @@ datas = []
 if icon_path:
     datas.append((icon_path, 'resources'))
 
-datas += collect_data_files('pandas')
-datas += collect_data_files('numpy')
+try:
+    datas += collect_data_files('pandas')
+except Exception as e:
+    print(f"AVISO: collect_data_files('pandas') falhou: {e}")
 
-# PyQt5: inclui os plugins Qt (platforms/qwindows.dll, styles, etc.)
-# Sem isso ocorre "DLL load failed while importing QtWidgets"
-datas += collect_data_files('PyQt5')
+try:
+    datas += collect_data_files('numpy')
+except Exception as e:
+    print(f"AVISO: collect_data_files('numpy') falhou: {e}")
+
+# PyQt5: inclui os plugins Qt necessários (platforms/qwindows.dll, styles, etc.)
+# IMPORTANTE: sem isso o Qt não consegue criar janelas no Windows
+try:
+    datas += collect_data_files('PyQt5')
+except Exception as e:
+    print(f"AVISO: collect_data_files('PyQt5') falhou: {e}")
 
 # ============================================================
 # BINÁRIOS
+# Não usamos collect_dynamic_libs(PyQt5) porque os hooks embutidos
+# do pyinstaller-hooks-contrib já coletam os DLLs do Qt5 automaticamente.
+# Misturar os dois métodos pode causar conflitos e corrupção.
 # ============================================================
-# Coleta os DLLs do Qt5 (Qt5Core.dll, Qt5Widgets.dll, etc.)
-binaries = collect_dynamic_libs('PyQt5')
+binaries = []
 
 # ============================================================
 # HIDDEN IMPORTS
@@ -52,7 +86,7 @@ hiddenimports = [
     'pkg_resources._vendor',
     'setuptools',
 
-    # GUI — submódulos PyQt5
+    # GUI
     'PyQt5',
     'PyQt5.QtCore',
     'PyQt5.QtGui',
@@ -80,9 +114,12 @@ hiddenimports = [
 
     # Firebird
     'firebirdsql',
-    'firebirdsql.fbcore',
-    'firebirdsql.wire',
-    'firebirdsql.utils',
+    'passlib',
+    'passlib.handlers',
+    'passlib.handlers.des_crypt',
+    'passlib.utils',
+    'passlib.utils.binary',
+    'passlib.utils.decor',
 
     # Data processing
     'pandas',
@@ -103,22 +140,42 @@ hiddenimports = [
     'bcrypt',
     '_cffi_backend',
     'cryptography',
+    'cryptography.x509',
+    'cryptography.x509.base',
+    'cryptography.x509.extensions',
+    'cryptography.x509.general_name',
+    'cryptography.x509.name',
+    'cryptography.x509.oid',
+    'cryptography.hazmat',
     'cryptography.hazmat.primitives',
+    'cryptography.hazmat.primitives.asymmetric',
+    'cryptography.hazmat.primitives.ciphers',
+    'cryptography.hazmat.primitives.hashes',
+    'cryptography.hazmat.primitives.serialization',
     'cryptography.hazmat.backends',
     'cryptography.hazmat.backends.openssl',
+    'cryptography.hazmat.backends.openssl.backend',
+    'cryptography.hazmat.bindings',
+    'cryptography.hazmat.bindings.openssl',
 ]
 
+hiddenimports += collect_submodules('cryptography')
 hiddenimports += collect_submodules('PyQt5')
 hiddenimports += collect_submodules('pandas')
 hiddenimports += collect_submodules('numpy')
 hiddenimports += collect_submodules('firebirdsql')
+hiddenimports += collect_submodules('passlib')
 
 # ============================================================
 # ANÁLISE
 # ============================================================
+_pathex = [project_root]
+if venv_site_packages:
+    _pathex.append(venv_site_packages)
+
 a = Analysis(
     ['main.py'],
-    pathex=[project_root],
+    pathex=_pathex,
     binaries=binaries,
     datas=datas,
     hiddenimports=hiddenimports,
@@ -157,7 +214,9 @@ exe = EXE(
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=True,
+    # UPX DESATIVADO — comprime DLLs do Qt e pode corrompê-las,
+    # causando "DLL load failed" e "No module named PyQt5"
+    upx=False,
     console=False,
     icon=icon_path,
 )
@@ -168,7 +227,7 @@ coll = COLLECT(
     a.zipfiles,
     a.datas,
     strip=False,
-    upx=True,
+    upx=False,
     upx_exclude=[],
     name='OrionTaxSync',
 )
