@@ -46,7 +46,7 @@ class FirebirdClient:
             user=self.config['username'],
             password=self.config['password'],
             port=self.config.get('port', 3050),
-            charset=self.config.get('charset', 'UTF8'),
+            charset=self.config.get('charset', 'WIN1252'),
             auth_plugin_name='Legacy_Auth',
         )
         self.logger.info(f"✓ Conectado ao Firebird: {self.config['host']}")
