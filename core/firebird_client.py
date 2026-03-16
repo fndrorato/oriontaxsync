@@ -51,30 +51,20 @@ class FirebirdClient:
     def connect(self) -> bool:
         """Conecta ao Firebird via firebirdsql."""
         import firebirdsql
-        import firebirdsql.wireprotocol as _wp
 
         fb_charset = self.config.get('charset', 'WIN1252').upper()
-        python_codec = self._CHARSET_MAP.get(fb_charset, 'cp1252')
+        self._python_codec = self._CHARSET_MAP.get(fb_charset, 'cp1252')
 
-        # Monkey-patch: bytes_to_str do firebirdsql usa utf-8 internamente
-        # independente do charset configurado. Substituímos para usar o codec correto.
-        _original_bytes_to_str = _wp.bytes_to_str
-
-        def _patched_bytes_to_str(b, charset):
-            try:
-                return _original_bytes_to_str(b, charset)
-            except (UnicodeDecodeError, LookupError):
-                return b.decode(python_codec, errors='replace')
-
-        _wp.bytes_to_str = _patched_bytes_to_str
-
+        # Conecta com charset=NONE: Firebird envia bytes brutos sem conversão.
+        # A decodificação é feita manualmente em _read_view com o codec correto,
+        # evitando o bug do firebirdsql que ignora o charset e usa utf-8 internamente.
         self.connection = firebirdsql.connect(
             host=self.config['host'],
             database=self.config['database_path'],
             user=self.config['username'],
             password=self.config['password'],
             port=self.config.get('port', 3050),
-            charset=fb_charset,
+            charset='NONE',
             auth_plugin_name='Legacy_Auth',
         )
         self.logger.info(f"✓ Conectado ao Firebird: {self.config['host']}")
@@ -111,12 +101,25 @@ class FirebirdClient:
     # LEITURA DE VIEWS
     # ------------------------------------------------------------------
 
+    def _decode_value(self, value):
+        """Decodifica bytes para string usando o codec da conexão."""
+        if isinstance(value, (bytes, bytearray)):
+            return value.decode(self._python_codec, errors='replace')
+        return value
+
     def _read_view(self, view_name: str) -> pd.DataFrame:
         """Lê uma VIEW e retorna um DataFrame."""
+        codec = getattr(self, '_python_codec', 'cp1252')
         cursor = self.connection.cursor()
         cursor.execute(f"SELECT * FROM {view_name}")
-        columns = [desc[0].strip() for desc in cursor.description]
-        rows = cursor.fetchall()
+        columns = [
+            (desc[0].decode(codec, errors='replace') if isinstance(desc[0], bytes) else desc[0]).strip()
+            for desc in cursor.description
+        ]
+        rows = [
+            tuple(self._decode_value(val) for val in row)
+            for row in cursor.fetchall()
+        ]
         cursor.close()
         return pd.DataFrame(rows, columns=columns)
 
@@ -290,7 +293,7 @@ class FirebirdClient:
 
         batch = []
 
-        for row_idx, row in df.iterrows():
+        for _, row in df.iterrows():
             clean_row = [clean_value(row[col], col) for col in columns]
 
             if len(clean_row) != expected_cols:
@@ -380,7 +383,7 @@ class FirebirdClient:
             self.logger.info(message)
             return True, message
 
-        except Exception as e:
+        except Exception:
             self.logger.error("Erro ao inserir dados no Firebird", exc_info=True)
             if self.connection:
                 self.connection.rollback()
