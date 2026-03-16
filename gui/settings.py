@@ -78,7 +78,7 @@ class DatabaseConfigDialog(QDialog):
 
         # Charset (Firebird)
         self.charset_input = QLineEdit()
-        self.charset_input.setPlaceholderText('UTF8, WIN1252, NONE (padrão: UTF8)')
+        self.charset_input.setPlaceholderText('WIN1252, UTF8, NONE (padrão: WIN1252)')
         self.charset_label = QLabel('Charset:')
         form.addRow(self.charset_label, self.charset_input)
 
@@ -343,7 +343,7 @@ class DatabaseConfigDialog(QDialog):
             return
 
         try:
-            charset = self.charset_input.text().strip() or 'UTF8'
+            charset = self.charset_input.text().strip() or 'WIN1252'
             con = firebirdsql.connect(
                 host=self.host_input.text().strip(),
                 database=self.db_path_input.text().strip(),
@@ -373,7 +373,7 @@ class DatabaseConfigDialog(QDialog):
             service_name = ''
             instant_client_path = None
             database_path = self.db_path_input.text().strip()
-            charset = self.charset_input.text().strip() or 'UTF8'
+            charset = self.charset_input.text().strip() or 'WIN1252'
         else:
             service_name = self.service_input.text().strip()
             instant_client_path = self.instant_client_input.text().strip() or None

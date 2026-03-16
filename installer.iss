@@ -23,10 +23,10 @@ OutputBaseFilename=OrionTaxSync_Setup
 SetupIconFile=resources\{#MyAppIconName}
 Compression=lzma2/max
 SolidCompression=yes
-WizardStyle=modern
+WizardStyle=classic
 PrivilegesRequired=admin
-; Windows 8 / Server 2012 ou superior
-MinVersion=6.2
+; Windows 7 SP1 / Server 2008 R2 SP1 ou superior (NT 6.1)
+MinVersion=6.1sp1
 
 ; Diretórios
 SourceDir=.
