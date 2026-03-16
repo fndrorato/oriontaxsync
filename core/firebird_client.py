@@ -36,9 +36,37 @@ class FirebirdClient:
     # CONEXÃO
     # ------------------------------------------------------------------
 
+    # Mapa de charsets Firebird → codec Python
+    _CHARSET_MAP = {
+        'WIN1252': 'cp1252',
+        'WIN1251': 'cp1251',
+        'WIN1250': 'cp1250',
+        'ISO8859_1': 'latin-1',
+        'LATIN1': 'latin-1',
+        'UTF8': 'utf-8',
+        'UNICODE_FSS': 'utf-8',
+        'NONE': 'cp1252',
+    }
+
     def connect(self) -> bool:
         """Conecta ao Firebird via firebirdsql."""
         import firebirdsql
+        import firebirdsql.wireprotocol as _wp
+
+        fb_charset = self.config.get('charset', 'WIN1252').upper()
+        python_codec = self._CHARSET_MAP.get(fb_charset, 'cp1252')
+
+        # Monkey-patch: bytes_to_str do firebirdsql usa utf-8 internamente
+        # independente do charset configurado. Substituímos para usar o codec correto.
+        _original_bytes_to_str = _wp.bytes_to_str
+
+        def _patched_bytes_to_str(b, charset):
+            try:
+                return _original_bytes_to_str(b, charset)
+            except (UnicodeDecodeError, LookupError):
+                return b.decode(python_codec, errors='replace')
+
+        _wp.bytes_to_str = _patched_bytes_to_str
 
         self.connection = firebirdsql.connect(
             host=self.config['host'],
@@ -46,7 +74,7 @@ class FirebirdClient:
             user=self.config['username'],
             password=self.config['password'],
             port=self.config.get('port', 3050),
-            charset=self.config.get('charset', 'WIN1252'),
+            charset=fb_charset,
             auth_plugin_name='Legacy_Auth',
         )
         self.logger.info(f"✓ Conectado ao Firebird: {self.config['host']}")
