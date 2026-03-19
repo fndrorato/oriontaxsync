@@ -36,14 +36,14 @@ class FirebirdClient:
     # CONEXÃO
     # ------------------------------------------------------------------
 
-    # Mapa de charsets Firebird → codec Python
-    _CHARSET_MAP = {
+    # Mapa charset configurado → codec Python para decode manual de bytes (colunas NONE)
+    _PYTHON_CODEC_MAP = {
         'WIN1252': 'cp1252',
         'WIN1251': 'cp1251',
         'WIN1250': 'cp1250',
-        'ISO8859_1': 'latin-1',
-        'LATIN1': 'latin-1',
-        'UTF8': 'utf-8',
+        'ISO8859_1': 'iso-8859-1',
+        'LATIN1': 'iso-8859-1',
+        'UTF8': 'cp1252',       # banco configurado como UTF8 mas dados em WIN1252
         'UNICODE_FSS': 'utf-8',
         'NONE': 'cp1252',
     }
@@ -53,18 +53,20 @@ class FirebirdClient:
         import firebirdsql
 
         fb_charset = self.config.get('charset', 'WIN1252').upper()
-        self._python_codec = self._CHARSET_MAP.get(fb_charset, 'cp1252')
 
-        # Conecta com charset=NONE: Firebird envia bytes brutos sem conversão.
-        # A decodificação é feita manualmente em _read_view com o codec correto,
-        # evitando o bug do firebirdsql que ignora o charset e usa utf-8 internamente.
+        # Sempre conecta com ISO8859_1: está no charset_map do firebirdsql
+        # ('ISO8859_1' → 'iso8859_1'), evitando falhas com WIN1252/NONE/UTF8.
+        # Firebird converte dados para ISO-8859-1 antes de enviar, o que cobre
+        # todos os caracteres do português brasileiro (faixa 0xA0–0xFF).
+        self._python_codec = self._PYTHON_CODEC_MAP.get(fb_charset, 'cp1252')
+
         self.connection = firebirdsql.connect(
             host=self.config['host'],
             database=self.config['database_path'],
             user=self.config['username'],
             password=self.config['password'],
             port=self.config.get('port', 3050),
-            charset='NONE',
+            charset='ISO8859_1',
             auth_plugin_name='Legacy_Auth',
         )
         self.logger.info(f"✓ Conectado ao Firebird: {self.config['host']}")
