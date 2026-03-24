@@ -9,7 +9,7 @@ import pandas as pd
 import logging
 from typing import Dict, Tuple
 
-from .oracle_client import TABLE_COLUMNS, TABLE_NUMBER_COLUMNS
+from .oracle_client import TABLE_COLUMNS, TABLE_NUMBER_COLUMNS, TABLE_ZFILL_COLUMNS
 
 
 class FirebirdClient:
@@ -272,6 +272,9 @@ class FirebirdClient:
                                 f"{table_name} | {col_name} | Valor numérico inválido: '{value}'"
                             )
                             return None
+                    zfill_width = TABLE_ZFILL_COLUMNS.get(table_name, {}).get(col_name)
+                    if zfill_width and v.isdigit():
+                        v = v.zfill(zfill_width)
                     return v
 
                 if col_name in TABLE_NUMBER_COLUMNS.get(table_name, set()):

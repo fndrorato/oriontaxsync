@@ -37,6 +37,15 @@ TABLE_COLUMNS = {
     ]
 }
 
+# Colunas que precisam de zero-padding ao gravar no destino.
+# Formato: {tabela: {coluna: largura}}
+TABLE_ZFILL_COLUMNS = {
+    "MXF_TMP_CBS_IBS": {
+        "CST_CBS_IBS": 3,
+        "CCLASSTRIB":  6,
+    }
+}
+
 TABLE_NUMBER_COLUMNS = {
     "MXF_TMP_ICMS_SAIDA": {
         "FECP", "SNC_ALQ", "SNC_ALQST", "SNC_RBC", "SNC_RBCST",
@@ -422,6 +431,9 @@ class OracleClient:
                                 f"{table_name} | {col_name} | Valor numérico inválido: '{value}'"
                             )
                             return None
+                    zfill_width = TABLE_ZFILL_COLUMNS.get(table_name, {}).get(col_name)
+                    if zfill_width and v.isdigit():
+                        v = v.zfill(zfill_width)
                     return v
 
                 # Colunas numéricas: garante float Python nativo
