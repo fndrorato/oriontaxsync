@@ -54,6 +54,12 @@ try:
 except Exception as e:
     print(f"AVISO: collect_data_files('PyQt5') falhou: {e}")
 
+# jaraco.text: inclui arquivo de dados 'Lorem ipsum.txt' requerido pelo pkg_resources
+try:
+    datas += collect_data_files('jaraco.text')
+except Exception as e:
+    print(f"AVISO: collect_data_files('jaraco.text') falhou: {e}")
+
 # ============================================================
 # BINÁRIOS
 # Não usamos collect_dynamic_libs(PyQt5) porque os hooks embutidos
