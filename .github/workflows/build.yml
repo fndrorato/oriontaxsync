@@ -24,6 +24,14 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
 
+      - name: Verificar pacotes instalados
+        run: |
+          python -c "import PyQt5; print('PyQt5:', PyQt5.__version__)"
+          python -c "import numpy; print('numpy:', numpy.__version__)"
+          python -c "import pandas; print('pandas:', pandas.__version__)"
+          python -c "import sysconfig; print('site-packages:', sysconfig.get_paths()['purelib'])"
+          pip show PyQt5 | Select-String "Location"
+
       - name: Compilar executável (PyInstaller)
         run: |
           pyinstaller build.spec --clean --noconfirm
@@ -40,8 +48,12 @@ jobs:
           Write-Host "--- Tamanho total da pasta dist ---"
           $size = (Get-ChildItem -Recurse "dist\OrionTaxSync" | Measure-Object -Property Length -Sum).Sum / 1MB
           Write-Host ("Total: {0:N1} MB" -f $size)
-          Write-Host "--- Conteudo _internal (primeiros 30 itens) ---"
-          Get-ChildItem "dist\OrionTaxSync\_internal" | Select-Object -First 30 Name
+          Write-Host "--- Verificando presenca de PyQt5 e numpy ---"
+          if (Test-Path "dist\OrionTaxSync\_internal\PyQt5") { Write-Host "PyQt5 PRESENTE" } else { Write-Host "PyQt5 AUSENTE" }
+          if (Test-Path "dist\OrionTaxSync\_internal\numpy") { Write-Host "numpy PRESENTE" } else { Write-Host "numpy AUSENTE" }
+          if (Test-Path "dist\OrionTaxSync\_internal\pandas") { Write-Host "pandas PRESENTE" } else { Write-Host "pandas AUSENTE" }
+          Write-Host "--- Conteudo _internal ---"
+          Get-ChildItem "dist\OrionTaxSync\_internal" | Select-Object Name, @{N='KB';E={[math]::Round($_.Length/1KB,1)}}
 
       - name: Criar ZIP de distribuição
         run: |
