@@ -1,0 +1,53 @@
+name: Build Windows Executable
+
+on:
+  push:
+    branches: [ main, master, feature/** ]
+  workflow_dispatch:  # permite disparar manualmente pelo GitHub
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Instalar Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instalar dependências
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Compilar executável (PyInstaller)
+        run: |
+          pyinstaller build.spec --clean --noconfirm
+
+      - name: Verificar build
+        run: |
+          if (Test-Path "dist\OrionTaxSync\OrionTaxSync.exe") {
+            Write-Host "✓ Executável gerado com sucesso"
+            Get-Item "dist\OrionTaxSync\OrionTaxSync.exe" | Select-Object Name, Length
+          } else {
+            Write-Host "ERRO: Executável não encontrado"
+            exit 1
+          }
+
+      - name: Criar ZIP de distribuição
+        run: |
+          New-Item -ItemType Directory -Force -Path installer_output
+          Compress-Archive -Path "dist\OrionTaxSync\*" -DestinationPath "installer_output\OrionTaxSync.zip" -Force
+          Write-Host "✓ ZIP criado"
+          Get-Item "installer_output\OrionTaxSync.zip" | Select-Object Name, @{N='Tamanho';E={"{0:N2} MB" -f ($_.Length / 1MB)}}
+
+      - name: Upload ZIP como artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: OrionTaxSync-Windows
+          path: installer_output\OrionTaxSync.zip
+          retention-days: 30
