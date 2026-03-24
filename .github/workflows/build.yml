@@ -31,12 +31,17 @@ jobs:
       - name: Verificar build
         run: |
           if (Test-Path "dist\OrionTaxSync\OrionTaxSync.exe") {
-            Write-Host "✓ Executável gerado com sucesso"
+            Write-Host "Executavel gerado com sucesso"
             Get-Item "dist\OrionTaxSync\OrionTaxSync.exe" | Select-Object Name, Length
           } else {
-            Write-Host "ERRO: Executável não encontrado"
+            Write-Host "ERRO: Executavel nao encontrado"
             exit 1
           }
+          Write-Host "--- Tamanho total da pasta dist ---"
+          $size = (Get-ChildItem -Recurse "dist\OrionTaxSync" | Measure-Object -Property Length -Sum).Sum / 1MB
+          Write-Host ("Total: {0:N1} MB" -f $size)
+          Write-Host "--- Conteudo _internal (primeiros 30 itens) ---"
+          Get-ChildItem "dist\OrionTaxSync\_internal" | Select-Object -First 30 Name
 
       - name: Criar ZIP de distribuição
         run: |
