@@ -17,7 +17,7 @@ import sysconfig
 venv_site_packages = sysconfig.get_paths()['purelib']
 if venv_site_packages not in sys.path:
     sys.path.insert(0, venv_site_packages)
-print(f"✓ site-packages: {venv_site_packages}")
+print(f"OK site-packages: {venv_site_packages}")
 
 # ============================================================
 # ÍCONE
