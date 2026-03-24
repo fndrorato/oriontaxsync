@@ -542,6 +542,20 @@ class OrionTaxClient:
             
             return False, f"Erro: {str(e)}"
     
+    def _read_tmp_table(self, table_name: str, cnpj: str) -> pd.DataFrame:
+        """
+        Lê uma tabela TMP via cursor direto (sem pd.read_sql).
+        pd.read_sql pode converter strings numéricas como "000" para inteiro 0,
+        perdendo zeros à esquerda de campos VARCHAR como CST_CBS_IBS.
+        O cursor do psycopg2 retorna os tipos exatos definidos no PostgreSQL.
+        """
+        cursor = self.connection.cursor()
+        cursor.execute(f"SELECT * FROM {table_name} WHERE CNPJ = %s", (cnpj,))
+        columns = [desc[0] for desc in cursor.description]
+        rows = cursor.fetchall()
+        cursor.close()
+        return pd.DataFrame(rows, columns=columns)
+
     def read_tmp_tables_to_dataframes(self, cnpj: str) -> Dict[str, pd.DataFrame]:
         """
         Lê dados das tabelas TMP do PostgreSQL para enviar ao Oracle
@@ -563,30 +577,22 @@ class OrionTaxClient:
             
             # 1. ICMS ENTRADA
             self.logger.info("Lendo MXF_TMP_ICMS_ENTRADA...")
-            df_icms_entrada = pd.read_sql("""
-                SELECT * FROM MXF_TMP_ICMS_ENTRADA WHERE CNPJ = %s
-            """, self.connection, params=(cnpj,))
+            df_icms_entrada = self._read_tmp_table("MXF_TMP_ICMS_ENTRADA", cnpj)
             self.logger.info(f"✓ ICMS Entrada: {len(df_icms_entrada)} registros")
-            
+
             # 2. ICMS SAÍDA
             self.logger.info("Lendo MXF_TMP_ICMS_SAIDA...")
-            df_icms_saida = pd.read_sql("""
-                SELECT * FROM MXF_TMP_ICMS_SAIDA WHERE CNPJ = %s
-            """, self.connection, params=(cnpj,))
+            df_icms_saida = self._read_tmp_table("MXF_TMP_ICMS_SAIDA", cnpj)
             self.logger.info(f"✓ ICMS Saída: {len(df_icms_saida)} registros")
-            
+
             # 3. PIS/COFINS
             self.logger.info("Lendo MXF_TMP_PIS_COFINS...")
-            df_pis_cofins = pd.read_sql("""
-                SELECT * FROM MXF_TMP_PIS_COFINS WHERE CNPJ = %s
-            """, self.connection, params=(cnpj,))
+            df_pis_cofins = self._read_tmp_table("MXF_TMP_PIS_COFINS", cnpj)
             self.logger.info(f"✓ PIS/COFINS: {len(df_pis_cofins)} registros")
-            
+
             # 4. CBS/IBS
             self.logger.info("Lendo MXF_TMP_CBS_IBS...")
-            df_cbs_ibs = pd.read_sql("""
-                SELECT * FROM MXF_TMP_CBS_IBS WHERE CNPJ = %s
-            """, self.connection, params=(cnpj,))
+            df_cbs_ibs = self._read_tmp_table("MXF_TMP_CBS_IBS", cnpj)
             self.logger.info(f"✓ CBS/IBS: {len(df_cbs_ibs)} registros")
             
             return {
