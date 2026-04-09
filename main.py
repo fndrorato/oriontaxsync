@@ -13,41 +13,35 @@ from config.database import DatabaseManager
 from gui.login import LoginDialog
 from gui.main_window import MainWindow
 from core.scheduler import Scheduler
-
-# Configurar logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
+from core.heartbeat import HeartbeatService
+from version import APP_VERSION
 
 logger = logging.getLogger(__name__)
 
 def setup_logging():
-    """Configura sistema de logging"""
-    # Criar pasta logs
+    """Configura sistema de logging (console + arquivo)"""
     log_dir = Path(__file__).parent / 'logs'
     log_dir.mkdir(exist_ok=True)
-    
-    # Nome do arquivo com data/hora
+
     log_filename = log_dir / f'oriontax_{datetime.now().strftime("%Y%m%d")}.log'
-    
-    # Formato
+
     log_format = '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
     date_format = '%Y-%m-%d %H:%M:%S'
-    
-    # Configurar
-    logging.basicConfig(
-        level=logging.INFO,
-        format=log_format,
-        datefmt=date_format,
-        handlers=[
-            # Console
-            logging.StreamHandler(sys.stdout),
-            # Arquivo (rotativo por dia)
-            logging.FileHandler(log_filename, encoding='utf-8')
-        ]
-    )
+    formatter = logging.Formatter(log_format, datefmt=date_format)
+
+    root = logging.getLogger()
+    root.setLevel(logging.INFO)
+
+    # Remove handlers anteriores para evitar duplicatas
+    root.handlers.clear()
+
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setFormatter(formatter)
+    root.addHandler(console_handler)
+
+    file_handler = logging.FileHandler(log_filename, encoding='utf-8')
+    file_handler.setFormatter(formatter)
+    root.addHandler(file_handler)
 
 class SingleInstance:
     """Garante que apenas uma instância do aplicativo rode por vez"""
@@ -93,7 +87,8 @@ class OrionTaxSyncApp:
         self.scheduler = None
         self.main_window = None
         self.tray_icon = None
-        
+        self.app_start_time = datetime.now()
+
         # Inicializar sistema
         self.init_database()
         self.init_scheduler()
@@ -119,19 +114,29 @@ class OrionTaxSyncApp:
             sys.exit(1)
     
     def init_scheduler(self):
-        """Inicializa scheduler"""
+        """Inicializa scheduler e heartbeat"""
         try:
             logger.info("Iniciando agendador de tarefas...")
             self.scheduler = Scheduler(self.db_manager)
             self.scheduler.start()
             logger.info("✓ Scheduler iniciado")
-            
+
             jobs = self.scheduler.get_jobs()
             if jobs:
                 logger.info(f"{len(jobs)} job(s) agendado(s)")
             else:
                 logger.info("Nenhum job agendado no momento")
-                
+
+            # Iniciar heartbeat
+            heartbeat_service = HeartbeatService(
+                db_manager=self.db_manager,
+                app_start_time=self.app_start_time,
+                app_version=APP_VERSION,
+            )
+            interval = self.db_manager.get_heartbeat_interval()
+            self.scheduler.start_heartbeat(heartbeat_service, interval)
+            logger.info(f"✓ Heartbeat iniciado (intervalo: {interval} min)")
+
         except Exception as e:
             logger.error(f"Erro ao iniciar scheduler: {e}")
     

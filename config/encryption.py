@@ -70,19 +70,24 @@ class EncryptionManager:
     def decrypt(self, ciphertext: str) -> str:
         """
         Descriptografa texto
-        
+
         Args:
             ciphertext: Texto criptografado
-            
+
         Returns:
-            Texto em claro
+            Texto em claro, ou '' se a chave não corresponder (senha foi
+            criptografada em outra máquina / hostname diferente).
         """
         if not ciphertext:
             return ''
-        
-        cipher = self._get_cipher()
-        decrypted = cipher.decrypt(ciphertext.encode())
-        return decrypted.decode()
+
+        from cryptography.fernet import InvalidToken
+        try:
+            cipher = self._get_cipher()
+            decrypted = cipher.decrypt(ciphertext.encode())
+            return decrypted.decode()
+        except (InvalidToken, Exception):
+            return ''
 
 
 class PasswordHasher:

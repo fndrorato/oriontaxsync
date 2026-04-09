@@ -3,6 +3,7 @@ Scheduler - Gerencia agendamentos de sincronização
 """
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
+from apscheduler.triggers.interval import IntervalTrigger
 from datetime import datetime
 import logging
 import threading
@@ -383,6 +384,44 @@ class Scheduler:
                 error_details=error_msg
             )
     
+    # ------------------------------------------------------------------
+    # HEARTBEAT
+    # ------------------------------------------------------------------
+
+    def start_heartbeat(self, heartbeat_service, interval_minutes: int):
+        """
+        Registra o job de heartbeat no APScheduler.
+
+        Args:
+            heartbeat_service: Instância de HeartbeatService
+            interval_minutes: Intervalo em minutos entre cada envio
+        """
+        try:
+            # Remove job anterior se existir (ex: ao reconfigurar o intervalo)
+            self.stop_heartbeat()
+
+            trigger = IntervalTrigger(minutes=interval_minutes)
+            self.scheduler.add_job(
+                func=heartbeat_service.send,
+                trigger=trigger,
+                id='heartbeat',
+                name='Heartbeat',
+                replace_existing=True,
+            )
+            self.logger.info(f"Heartbeat iniciado — intervalo: {interval_minutes} minuto(s)")
+        except Exception as e:
+            self.logger.error(f"Erro ao iniciar heartbeat: {e}")
+
+    def stop_heartbeat(self):
+        """Remove o job de heartbeat do scheduler, se existir."""
+        try:
+            job_ids = [job.id for job in self.scheduler.get_jobs()]
+            if 'heartbeat' in job_ids:
+                self.scheduler.remove_job('heartbeat')
+                self.logger.info("Heartbeat parado")
+        except Exception as e:
+            self.logger.error(f"Erro ao parar heartbeat: {e}")
+
     def get_jobs(self):
         """
         Retorna lista de jobs ativos

@@ -1,0 +1,459 @@
+2026-04-09 12:18:10 [INFO] __main__: ================================================================================
+2026-04-09 12:18:10 [INFO] __main__: OrionTax Sync - Iniciando Sistema
+2026-04-09 12:18:10 [INFO] __main__: ================================================================================
+2026-04-09 12:18:10 [INFO] __main__: Conectando ao banco de dados...
+2026-04-09 12:18:10 [INFO] __main__: ✓ Banco de dados conectado
+2026-04-09 12:18:10 [INFO] __main__: Iniciando agendador de tarefas...
+2026-04-09 12:18:10 [INFO] apscheduler.scheduler: Scheduler started
+2026-04-09 12:18:10 [INFO] core.scheduler: Scheduler iniciado
+2026-04-09 12:18:10 [INFO] apscheduler.scheduler: Added job "ENVIAR" to job store "default"
+2026-04-09 12:18:10 [INFO] core.scheduler: Job adicionado: 1 - ENVIAR
+2026-04-09 12:18:10 [INFO] apscheduler.scheduler: Added job "BUSCAR" to job store "default"
+2026-04-09 12:18:10 [INFO] core.scheduler: Job adicionado: 3 - BUSCAR
+2026-04-09 12:18:10 [INFO] core.scheduler: 2 agendamentos carregados
+2026-04-09 12:18:10 [INFO] __main__: ✓ Scheduler iniciado
+2026-04-09 12:18:10 [INFO] __main__: 2 job(s) agendado(s)
+2026-04-09 12:18:10 [INFO] apscheduler.scheduler: Added job "Heartbeat" to job store "default"
+2026-04-09 12:18:10 [INFO] core.scheduler: Heartbeat iniciado — intervalo: 4 minuto(s)
+2026-04-09 12:18:10 [INFO] __main__: ✓ Heartbeat iniciado (intervalo: 4 min)
+2026-04-09 12:18:10 [INFO] __main__: ✓ System Tray inicializado
+2026-04-09 12:18:10 [INFO] __main__: Abrindo tela de login...
+2026-04-09 12:18:14 [INFO] __main__: ✓ Login bem-sucedido: admin
+2026-04-09 12:18:14 [INFO] __main__: Criando janela principal...
+2026-04-09 12:18:49 [INFO] config.database: Agendamento 3 atualizado
+2026-04-09 12:18:49 [INFO] apscheduler.scheduler: Removed job schedule_3
+2026-04-09 12:18:49 [INFO] core.scheduler: Job removido: 3
+2026-04-09 12:18:49 [INFO] apscheduler.scheduler: Added job "BUSCAR" to job store "default"
+2026-04-09 12:18:49 [INFO] core.scheduler: Job adicionado: 3 - BUSCAR
+2026-04-09 12:18:49 [INFO] core.scheduler: Job atualizado: 3
+2026-04-09 12:20:00 [INFO] apscheduler.executors.default: Running job "BUSCAR (trigger: cron[hour='12', minute='20'], next run at: 2026-04-10 12:20:00 -03)" (scheduled at 2026-04-09 12:20:00-03:00)
+2026-04-09 12:20:00 [INFO] core.scheduler: ========================================
+2026-04-09 12:20:00 [INFO] core.scheduler: Executando sincronização agendada: BUSCAR
+2026-04-09 12:20:00 [INFO] core.scheduler: ========================================
+2026-04-09 12:20:00 [INFO] core.scheduler: Processando cliente: SUPERMERCADO GLOBO (CNPJ: 09610605000179)
+2026-04-09 12:20:00 [INFO] core.scheduler: [SUPERMERCADO GLOBO] Conectando ao OrionTax...
+2026-04-09 12:20:00 [INFO] core.scheduler: Sincronização agendada iniciada para 1 cliente(s)
+2026-04-09 12:20:00 [INFO] apscheduler.executors.default: Job "BUSCAR (trigger: cron[hour='12', minute='20'], next run at: 2026-04-10 12:20:00 -03)" executed successfully
+2026-04-09 12:20:00 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: 172.16.10.248
+2026-04-09 12:20:00 [INFO] core.scheduler: [SUPERMERCADO GLOBO] Lendo tabelas TMP do OrionTax (CNPJ: 09610605000179)...
+2026-04-09 12:20:00 [INFO] core.oriontax_client: Lendo tabelas TMP do OrionTax para CNPJ: 09610605000179
+2026-04-09 12:20:00 [INFO] core.oriontax_client: Lendo MXF_TMP_ICMS_ENTRADA...
+2026-04-09 12:20:00 [INFO] core.oriontax_client: ✓ ICMS Entrada: 19272 registros
+2026-04-09 12:20:00 [INFO] core.oriontax_client: Lendo MXF_TMP_ICMS_SAIDA...
+2026-04-09 12:20:02 [INFO] core.oriontax_client: ✓ ICMS Saída: 19684 registros
+2026-04-09 12:20:02 [INFO] core.oriontax_client: Lendo MXF_TMP_PIS_COFINS...
+2026-04-09 12:20:02 [INFO] core.oriontax_client: ✓ PIS/COFINS: 19684 registros
+2026-04-09 12:20:02 [INFO] core.oriontax_client: Lendo MXF_TMP_CBS_IBS...
+2026-04-09 12:20:03 [INFO] core.oriontax_client: ✓ CBS/IBS: 19684 registros
+2026-04-09 12:20:03 [INFO] core.scheduler: [SUPERMERCADO GLOBO] ✓ 78324 registros lidos do OrionTax
+2026-04-09 12:20:03 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-04-09 12:20:03 [INFO] core.scheduler: [SUPERMERCADO GLOBO] Conectando ao Oracle...
+2026-04-09 12:20:03 [INFO] core.oracle_client: Tentando conexão em modo thin...
+2026-04-09 12:20:03 [INFO] core.oracle_client: ✓ Conectado ao Oracle (modo thin): localhost
+2026-04-09 12:20:03 [INFO] core.scheduler: [SUPERMERCADO GLOBO] Gravando dados no Oracle...
+2026-04-09 12:20:03 [INFO] core.oracle_client: Limpando tabelas TMP do Oracle...
+2026-04-09 12:20:03 [ERROR] core.oracle_client: Erro ao inserir dados no Oracle
+Traceback (most recent call last):
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/core/oracle_client.py", line 601, in write_dataframes_to_tmp_tables
+    cursor.execute("DELETE FROM MXF_TMP_PIS_COFINS")
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/venv/lib/python3.12/site-packages/oracledb/cursor.py", line 383, in execute
+    impl.execute(self)
+  File "src/oracledb/impl/thin/cursor.pyx", line 132, in oracledb.thin_impl.ThinCursorImpl.execute
+  File "src/oracledb/impl/thin/protocol.pyx", line 420, in oracledb.thin_impl.Protocol._process_single_message
+  File "src/oracledb/impl/thin/protocol.pyx", line 421, in oracledb.thin_impl.Protocol._process_single_message
+  File "src/oracledb/impl/thin/protocol.pyx", line 414, in oracledb.thin_impl.Protocol._process_message
+oracledb.exceptions.DatabaseError: ORA-00942: table or view "INTERSOLID"."MXF_TMP_PIS_COFINS" does not exist
+Help: https://docs.oracle.com/error-help/db/ora-00942/
+2026-04-09 12:20:03 [ERROR] core.scheduler: [SUPERMERCADO GLOBO] Erro: ORA-00942: table or view "INTERSOLID"."MXF_TMP_PIS_COFINS" does not exist
+Help: https://docs.oracle.com/error-help/db/ora-00942/
+
+Traceback (most recent call last):
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/core/scheduler.py", line 348, in _execute_sync_for_client
+    success, message = oracle_client.write_dataframes_to_tmp_tables(dataframes)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/core/oracle_client.py", line 601, in write_dataframes_to_tmp_tables
+    cursor.execute("DELETE FROM MXF_TMP_PIS_COFINS")
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/venv/lib/python3.12/site-packages/oracledb/cursor.py", line 383, in execute
+    impl.execute(self)
+  File "src/oracledb/impl/thin/cursor.pyx", line 132, in oracledb.thin_impl.ThinCursorImpl.execute
+  File "src/oracledb/impl/thin/protocol.pyx", line 420, in oracledb.thin_impl.Protocol._process_single_message
+  File "src/oracledb/impl/thin/protocol.pyx", line 421, in oracledb.thin_impl.Protocol._process_single_message
+  File "src/oracledb/impl/thin/protocol.pyx", line 414, in oracledb.thin_impl.Protocol._process_message
+oracledb.exceptions.DatabaseError: ORA-00942: table or view "INTERSOLID"."MXF_TMP_PIS_COFINS" does not exist
+Help: https://docs.oracle.com/error-help/db/ora-00942/
+
+2026-04-09 12:22:10 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 12:26:10 -03)" (scheduled at 2026-04-09 12:22:10.192222-03:00)
+2026-04-09 12:22:10 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: 172.16.10.248
+2026-04-09 12:22:10 [INFO] core.heartbeat: Heartbeat OK | CNPJ=09610605000179 | CPU=52.2% | MEM=81.4% | DISCO=6.7% | STATUS=error
+2026-04-09 12:22:10 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-04-09 12:22:10 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 12:26:10 -03)" executed successfully
+2026-04-09 12:26:10 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 12:30:10 -03)" (scheduled at 2026-04-09 12:26:10.192222-03:00)
+2026-04-09 12:26:10 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: 172.16.10.248
+2026-04-09 12:26:10 [INFO] core.heartbeat: Heartbeat OK | CNPJ=09610605000179 | CPU=0.0% | MEM=82.0% | DISCO=6.7% | STATUS=error
+2026-04-09 12:26:10 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-04-09 12:26:10 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 12:30:10 -03)" executed successfully
+2026-04-09 12:30:10 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 12:34:10 -03)" (scheduled at 2026-04-09 12:30:10.192222-03:00)
+2026-04-09 12:30:11 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: 172.16.10.248
+2026-04-09 12:30:11 [INFO] core.heartbeat: Heartbeat OK | CNPJ=09610605000179 | CPU=50.0% | MEM=81.8% | DISCO=6.7% | STATUS=error
+2026-04-09 12:30:11 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-04-09 12:30:11 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 12:34:10 -03)" executed successfully
+2026-04-09 12:34:10 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 12:38:10 -03)" (scheduled at 2026-04-09 12:34:10.192222-03:00)
+2026-04-09 12:34:10 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: 172.16.10.248
+2026-04-09 12:34:10 [INFO] core.heartbeat: Heartbeat OK | CNPJ=09610605000179 | CPU=51.5% | MEM=73.3% | DISCO=6.7% | STATUS=error
+2026-04-09 12:34:10 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-04-09 12:34:10 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 12:38:10 -03)" executed successfully
+2026-04-09 12:38:10 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 12:42:10 -03)" (scheduled at 2026-04-09 12:38:10.192222-03:00)
+2026-04-09 12:38:10 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: 172.16.10.248
+2026-04-09 12:38:10 [INFO] core.heartbeat: Heartbeat OK | CNPJ=09610605000179 | CPU=36.3% | MEM=74.1% | DISCO=6.7% | STATUS=error
+2026-04-09 12:38:10 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-04-09 12:38:10 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 12:42:10 -03)" executed successfully
+2026-04-09 12:42:10 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 12:46:10 -03)" (scheduled at 2026-04-09 12:42:10.192222-03:00)
+2026-04-09 12:42:10 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: 172.16.10.248
+2026-04-09 12:42:10 [INFO] core.heartbeat: Heartbeat OK | CNPJ=09610605000179 | CPU=43.8% | MEM=75.6% | DISCO=6.7% | STATUS=error
+2026-04-09 12:42:10 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-04-09 12:42:10 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 12:46:10 -03)" executed successfully
+2026-04-09 12:46:10 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 12:50:10 -03)" (scheduled at 2026-04-09 12:46:10.192222-03:00)
+2026-04-09 12:46:10 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: 172.16.10.248
+2026-04-09 12:46:10 [INFO] core.heartbeat: Heartbeat OK | CNPJ=09610605000179 | CPU=51.2% | MEM=75.8% | DISCO=6.7% | STATUS=error
+2026-04-09 12:46:11 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-04-09 12:46:11 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 12:50:10 -03)" executed successfully
+2026-04-09 12:50:10 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 12:54:10 -03)" (scheduled at 2026-04-09 12:50:10.192222-03:00)
+2026-04-09 12:50:10 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: 172.16.10.248
+2026-04-09 12:50:10 [INFO] core.heartbeat: Heartbeat OK | CNPJ=09610605000179 | CPU=16.5% | MEM=76.4% | DISCO=6.7% | STATUS=error
+2026-04-09 12:50:10 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-04-09 12:50:10 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 12:54:10 -03)" executed successfully
+2026-04-09 12:54:10 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 12:58:10 -03)" (scheduled at 2026-04-09 12:54:10.192222-03:00)
+2026-04-09 12:54:10 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: 172.16.10.248
+2026-04-09 12:54:10 [INFO] core.heartbeat: Heartbeat OK | CNPJ=09610605000179 | CPU=31.2% | MEM=75.6% | DISCO=6.7% | STATUS=error
+2026-04-09 12:54:10 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-04-09 12:54:10 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 12:58:10 -03)" executed successfully
+2026-04-09 12:58:10 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 13:02:10 -03)" (scheduled at 2026-04-09 12:58:10.192222-03:00)
+2026-04-09 12:58:10 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: 172.16.10.248
+2026-04-09 12:58:10 [INFO] core.heartbeat: Heartbeat OK | CNPJ=09610605000179 | CPU=33.5% | MEM=77.5% | DISCO=6.7% | STATUS=error
+2026-04-09 12:58:10 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-04-09 12:58:10 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 13:02:10 -03)" executed successfully
+2026-04-09 13:02:10 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 13:06:10 -03)" (scheduled at 2026-04-09 13:02:10.192222-03:00)
+2026-04-09 13:02:10 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: 172.16.10.248
+2026-04-09 13:02:11 [INFO] core.heartbeat: Heartbeat OK | CNPJ=09610605000179 | CPU=46.9% | MEM=77.3% | DISCO=6.7% | STATUS=error
+2026-04-09 13:02:11 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-04-09 13:02:11 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 13:06:10 -03)" executed successfully
+2026-04-09 13:06:10 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 13:10:10 -03)" (scheduled at 2026-04-09 13:06:10.192222-03:00)
+2026-04-09 13:06:10 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: 172.16.10.248
+2026-04-09 13:06:11 [INFO] core.heartbeat: Heartbeat OK | CNPJ=09610605000179 | CPU=53.4% | MEM=78.4% | DISCO=6.7% | STATUS=error
+2026-04-09 13:06:11 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-04-09 13:06:11 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 13:10:10 -03)" executed successfully
+2026-04-09 13:10:10 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 13:14:10 -03)" (scheduled at 2026-04-09 13:10:10.192222-03:00)
+2026-04-09 13:10:10 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: 172.16.10.248
+2026-04-09 13:10:10 [INFO] core.heartbeat: Heartbeat OK | CNPJ=09610605000179 | CPU=25.6% | MEM=77.3% | DISCO=6.7% | STATUS=error
+2026-04-09 13:10:10 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-04-09 13:10:10 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 13:14:10 -03)" executed successfully
+2026-04-09 13:14:10 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 13:18:10 -03)" (scheduled at 2026-04-09 13:14:10.192222-03:00)
+2026-04-09 13:14:10 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: 172.16.10.248
+2026-04-09 13:14:10 [INFO] core.heartbeat: Heartbeat OK | CNPJ=09610605000179 | CPU=43.2% | MEM=77.8% | DISCO=6.7% | STATUS=error
+2026-04-09 13:14:10 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-04-09 13:14:10 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 13:18:10 -03)" executed successfully
+2026-04-09 13:18:10 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 13:22:10 -03)" (scheduled at 2026-04-09 13:18:10.192222-03:00)
+2026-04-09 13:18:10 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: 172.16.10.248
+2026-04-09 13:18:10 [INFO] core.heartbeat: Heartbeat OK | CNPJ=09610605000179 | CPU=37.8% | MEM=77.6% | DISCO=6.7% | STATUS=error
+2026-04-09 13:18:10 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-04-09 13:18:10 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 13:22:10 -03)" executed successfully
+2026-04-09 13:22:10 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 13:26:10 -03)" (scheduled at 2026-04-09 13:22:10.192222-03:00)
+2026-04-09 13:22:10 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: 172.16.10.248
+2026-04-09 13:22:10 [INFO] core.heartbeat: Heartbeat OK | CNPJ=09610605000179 | CPU=45.2% | MEM=78.1% | DISCO=6.7% | STATUS=error
+2026-04-09 13:22:11 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-04-09 13:22:11 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 13:26:10 -03)" executed successfully
+2026-04-09 13:26:10 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 13:30:10 -03)" (scheduled at 2026-04-09 13:26:10.192222-03:00)
+2026-04-09 13:26:10 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: 172.16.10.248
+2026-04-09 13:26:10 [INFO] core.heartbeat: Heartbeat OK | CNPJ=09610605000179 | CPU=51.7% | MEM=78.0% | DISCO=6.7% | STATUS=error
+2026-04-09 13:26:10 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-04-09 13:26:10 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 13:30:10 -03)" executed successfully
+2026-04-09 13:30:10 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 13:34:10 -03)" (scheduled at 2026-04-09 13:30:10.192222-03:00)
+2026-04-09 13:30:10 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: 172.16.10.248
+2026-04-09 13:30:10 [INFO] core.heartbeat: Heartbeat OK | CNPJ=09610605000179 | CPU=46.1% | MEM=78.1% | DISCO=6.7% | STATUS=error
+2026-04-09 13:30:10 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-04-09 13:30:10 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 13:34:10 -03)" executed successfully
+2026-04-09 13:34:10 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 13:38:10 -03)" (scheduled at 2026-04-09 13:34:10.192222-03:00)
+2026-04-09 13:34:10 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: 172.16.10.248
+2026-04-09 13:34:11 [INFO] core.heartbeat: Heartbeat OK | CNPJ=09610605000179 | CPU=43.1% | MEM=79.8% | DISCO=6.7% | STATUS=error
+2026-04-09 13:34:11 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-04-09 13:34:11 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 13:38:10 -03)" executed successfully
+2026-04-09 13:38:10 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 13:42:10 -03)" (scheduled at 2026-04-09 13:38:10.192222-03:00)
+2026-04-09 13:38:10 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: 172.16.10.248
+2026-04-09 13:38:10 [INFO] core.heartbeat: Heartbeat OK | CNPJ=09610605000179 | CPU=46.1% | MEM=75.6% | DISCO=6.7% | STATUS=error
+2026-04-09 13:38:10 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-04-09 13:38:10 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:04:00], next run at: 2026-04-09 13:42:10 -03)" executed successfully
+2026-04-09 13:38:53 [INFO] __main__: Janela minimizada para tray
+2026-04-09 13:40:53 [INFO] __main__: ================================================================================
+2026-04-09 13:40:53 [INFO] __main__: OrionTax Sync - Iniciando Sistema
+2026-04-09 13:40:53 [INFO] __main__: ================================================================================
+2026-04-09 13:40:53 [INFO] __main__: Conectando ao banco de dados...
+2026-04-09 13:40:53 [INFO] __main__: ✓ Banco de dados conectado
+2026-04-09 13:40:53 [INFO] __main__: Iniciando agendador de tarefas...
+2026-04-09 13:40:53 [INFO] apscheduler.scheduler: Scheduler started
+2026-04-09 13:40:53 [INFO] core.scheduler: Scheduler iniciado
+2026-04-09 13:40:53 [INFO] apscheduler.scheduler: Added job "ENVIAR" to job store "default"
+2026-04-09 13:40:53 [INFO] core.scheduler: Job adicionado: 1 - ENVIAR
+2026-04-09 13:40:53 [INFO] apscheduler.scheduler: Added job "BUSCAR" to job store "default"
+2026-04-09 13:40:53 [INFO] core.scheduler: Job adicionado: 3 - BUSCAR
+2026-04-09 13:40:53 [INFO] core.scheduler: 2 agendamentos carregados
+2026-04-09 13:40:53 [INFO] __main__: ✓ Scheduler iniciado
+2026-04-09 13:40:53 [INFO] __main__: 2 job(s) agendado(s)
+2026-04-09 13:40:53 [INFO] apscheduler.scheduler: Added job "Heartbeat" to job store "default"
+2026-04-09 13:40:53 [INFO] core.scheduler: Heartbeat iniciado — intervalo: 4 minuto(s)
+2026-04-09 13:40:53 [INFO] __main__: ✓ Heartbeat iniciado (intervalo: 4 min)
+2026-04-09 13:40:53 [INFO] __main__: ✓ System Tray inicializado
+2026-04-09 13:40:53 [INFO] __main__: Abrindo tela de login...
+2026-04-09 13:40:56 [INFO] __main__: ✓ Login bem-sucedido: admin
+2026-04-09 13:40:56 [INFO] __main__: Criando janela principal...
+2026-04-09 13:41:14 [INFO] __main__: Janela minimizada para tray
+2026-04-09 13:42:20 [INFO] __main__: ================================================================================
+2026-04-09 13:42:20 [INFO] __main__: OrionTax Sync - Iniciando Sistema
+2026-04-09 13:42:20 [INFO] __main__: ================================================================================
+2026-04-09 13:42:20 [INFO] __main__: Conectando ao banco de dados...
+2026-04-09 13:42:20 [INFO] __main__: ✓ Banco de dados conectado
+2026-04-09 13:42:20 [INFO] __main__: Iniciando agendador de tarefas...
+2026-04-09 13:42:20 [INFO] apscheduler.scheduler: Scheduler started
+2026-04-09 13:42:20 [INFO] core.scheduler: Scheduler iniciado
+2026-04-09 13:42:20 [INFO] apscheduler.scheduler: Added job "ENVIAR" to job store "default"
+2026-04-09 13:42:20 [INFO] core.scheduler: Job adicionado: 1 - ENVIAR
+2026-04-09 13:42:20 [INFO] apscheduler.scheduler: Added job "BUSCAR" to job store "default"
+2026-04-09 13:42:20 [INFO] core.scheduler: Job adicionado: 2 - BUSCAR
+2026-04-09 13:42:20 [INFO] core.scheduler: 2 agendamentos carregados
+2026-04-09 13:42:20 [INFO] __main__: ✓ Scheduler iniciado
+2026-04-09 13:42:20 [INFO] __main__: 2 job(s) agendado(s)
+2026-04-09 13:42:20 [INFO] apscheduler.scheduler: Added job "Heartbeat" to job store "default"
+2026-04-09 13:42:20 [INFO] core.scheduler: Heartbeat iniciado — intervalo: 5 minuto(s)
+2026-04-09 13:42:20 [INFO] __main__: ✓ Heartbeat iniciado (intervalo: 5 min)
+2026-04-09 13:42:20 [INFO] __main__: ✓ System Tray inicializado
+2026-04-09 13:42:20 [INFO] __main__: Abrindo tela de login...
+2026-04-09 13:42:30 [INFO] __main__: ✓ Login bem-sucedido: admin
+2026-04-09 13:42:30 [INFO] __main__: Criando janela principal...
+2026-04-09 13:42:30 [ERROR] __main__: Erro ao criar janela: 
+2026-04-09 13:42:30 [ERROR] __main__: Traceback (most recent call last):
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/venv/lib/python3.12/site-packages/cryptography/fernet.py", line 134, in _verify_signature
+    h.verify(data[-32:])
+cryptography.exceptions.InvalidSignature: Signature did not match digest.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/main.py", line 214, in create_main_window
+    self.main_window = MainWindow(self.db_manager, self.scheduler, self)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/gui/main_window.py", line 135, in __init__
+    self.load_initial_data()
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/gui/main_window.py", line 693, in load_initial_data
+    self.check_connection_status()
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/gui/main_window.py", line 703, in check_connection_status
+    oracle_config = self.db_manager.get_oracle_config()  # ✅ Adicionar self.
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/config/database.py", line 417, in get_oracle_config
+    config_dict['password'] = encryption_manager.decrypt(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/config/encryption.py", line 84, in decrypt
+    decrypted = cipher.decrypt(ciphertext.encode())
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/venv/lib/python3.12/site-packages/cryptography/fernet.py", line 91, in decrypt
+    return self._decrypt_data(data, timestamp, time_info)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/venv/lib/python3.12/site-packages/cryptography/fernet.py", line 152, in _decrypt_data
+    self._verify_signature(data)
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/venv/lib/python3.12/site-packages/cryptography/fernet.py", line 136, in _verify_signature
+    raise InvalidToken
+cryptography.fernet.InvalidToken
+
+2026-04-09 13:42:39 [INFO] __main__: Solicitação para abrir janela...
+2026-04-09 13:42:45 [INFO] __main__: ✓ Login bem-sucedido: admin
+2026-04-09 13:42:45 [INFO] __main__: Criando janela principal...
+2026-04-09 13:42:45 [ERROR] __main__: Erro ao criar janela: 
+2026-04-09 13:42:45 [ERROR] __main__: Traceback (most recent call last):
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/venv/lib/python3.12/site-packages/cryptography/fernet.py", line 134, in _verify_signature
+    h.verify(data[-32:])
+cryptography.exceptions.InvalidSignature: Signature did not match digest.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/main.py", line 214, in create_main_window
+    self.main_window = MainWindow(self.db_manager, self.scheduler, self)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/gui/main_window.py", line 135, in __init__
+    self.load_initial_data()
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/gui/main_window.py", line 693, in load_initial_data
+    self.check_connection_status()
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/gui/main_window.py", line 703, in check_connection_status
+    oracle_config = self.db_manager.get_oracle_config()  # ✅ Adicionar self.
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/config/database.py", line 417, in get_oracle_config
+    config_dict['password'] = encryption_manager.decrypt(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/config/encryption.py", line 84, in decrypt
+    decrypted = cipher.decrypt(ciphertext.encode())
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/venv/lib/python3.12/site-packages/cryptography/fernet.py", line 91, in decrypt
+    return self._decrypt_data(data, timestamp, time_info)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/venv/lib/python3.12/site-packages/cryptography/fernet.py", line 152, in _decrypt_data
+    self._verify_signature(data)
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/venv/lib/python3.12/site-packages/cryptography/fernet.py", line 136, in _verify_signature
+    raise InvalidToken
+cryptography.fernet.InvalidToken
+
+2026-04-09 13:42:49 [INFO] __main__: Solicitação para abrir janela...
+2026-04-09 13:43:00 [INFO] __main__: Login cancelado
+2026-04-09 13:43:13 [INFO] __main__: ================================================================================
+2026-04-09 13:43:13 [INFO] __main__: OrionTax Sync - Iniciando Sistema
+2026-04-09 13:43:13 [INFO] __main__: ================================================================================
+2026-04-09 13:43:13 [INFO] __main__: Conectando ao banco de dados...
+2026-04-09 13:43:13 [INFO] __main__: ✓ Banco de dados conectado
+2026-04-09 13:43:13 [INFO] __main__: Iniciando agendador de tarefas...
+2026-04-09 13:43:13 [INFO] apscheduler.scheduler: Scheduler started
+2026-04-09 13:43:13 [INFO] core.scheduler: Scheduler iniciado
+2026-04-09 13:43:13 [INFO] apscheduler.scheduler: Added job "ENVIAR" to job store "default"
+2026-04-09 13:43:13 [INFO] core.scheduler: Job adicionado: 1 - ENVIAR
+2026-04-09 13:43:13 [INFO] apscheduler.scheduler: Added job "BUSCAR" to job store "default"
+2026-04-09 13:43:13 [INFO] core.scheduler: Job adicionado: 2 - BUSCAR
+2026-04-09 13:43:13 [INFO] core.scheduler: 2 agendamentos carregados
+2026-04-09 13:43:13 [INFO] __main__: ✓ Scheduler iniciado
+2026-04-09 13:43:13 [INFO] __main__: 2 job(s) agendado(s)
+2026-04-09 13:43:13 [INFO] apscheduler.scheduler: Added job "Heartbeat" to job store "default"
+2026-04-09 13:43:13 [INFO] core.scheduler: Heartbeat iniciado — intervalo: 5 minuto(s)
+2026-04-09 13:43:13 [INFO] __main__: ✓ Heartbeat iniciado (intervalo: 5 min)
+2026-04-09 13:43:13 [INFO] __main__: ✓ System Tray inicializado
+2026-04-09 13:43:13 [INFO] __main__: Abrindo tela de login...
+2026-04-09 13:43:20 [INFO] __main__: ✓ Login bem-sucedido: admin
+2026-04-09 13:43:20 [INFO] __main__: Criando janela principal...
+2026-04-09 13:43:20 [ERROR] __main__: Erro ao criar janela: 
+2026-04-09 13:43:20 [ERROR] __main__: Traceback (most recent call last):
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/venv/lib/python3.12/site-packages/cryptography/fernet.py", line 134, in _verify_signature
+    h.verify(data[-32:])
+cryptography.exceptions.InvalidSignature: Signature did not match digest.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/main.py", line 214, in create_main_window
+    self.main_window = MainWindow(self.db_manager, self.scheduler, self)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/gui/main_window.py", line 135, in __init__
+    self.load_initial_data()
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/gui/main_window.py", line 693, in load_initial_data
+    self.check_connection_status()
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/gui/main_window.py", line 703, in check_connection_status
+    oracle_config = self.db_manager.get_oracle_config()  # ✅ Adicionar self.
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/config/database.py", line 417, in get_oracle_config
+    config_dict['password'] = encryption_manager.decrypt(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/config/encryption.py", line 84, in decrypt
+    decrypted = cipher.decrypt(ciphertext.encode())
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/venv/lib/python3.12/site-packages/cryptography/fernet.py", line 91, in decrypt
+    return self._decrypt_data(data, timestamp, time_info)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/venv/lib/python3.12/site-packages/cryptography/fernet.py", line 152, in _decrypt_data
+    self._verify_signature(data)
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/venv/lib/python3.12/site-packages/cryptography/fernet.py", line 136, in _verify_signature
+    raise InvalidToken
+cryptography.fernet.InvalidToken
+
+2026-04-09 13:45:43 [INFO] __main__: ================================================================================
+2026-04-09 13:45:43 [INFO] __main__: OrionTax Sync - Iniciando Sistema
+2026-04-09 13:45:43 [INFO] __main__: ================================================================================
+2026-04-09 13:45:43 [INFO] __main__: Conectando ao banco de dados...
+2026-04-09 13:45:43 [INFO] __main__: ✓ Banco de dados conectado
+2026-04-09 13:45:43 [INFO] __main__: Iniciando agendador de tarefas...
+2026-04-09 13:45:43 [INFO] apscheduler.scheduler: Scheduler started
+2026-04-09 13:45:43 [INFO] core.scheduler: Scheduler iniciado
+2026-04-09 13:45:43 [INFO] apscheduler.scheduler: Added job "ENVIAR" to job store "default"
+2026-04-09 13:45:43 [INFO] core.scheduler: Job adicionado: 1 - ENVIAR
+2026-04-09 13:45:43 [INFO] apscheduler.scheduler: Added job "BUSCAR" to job store "default"
+2026-04-09 13:45:43 [INFO] core.scheduler: Job adicionado: 2 - BUSCAR
+2026-04-09 13:45:43 [INFO] core.scheduler: 2 agendamentos carregados
+2026-04-09 13:45:43 [INFO] __main__: ✓ Scheduler iniciado
+2026-04-09 13:45:43 [INFO] __main__: 2 job(s) agendado(s)
+2026-04-09 13:45:43 [INFO] apscheduler.scheduler: Added job "Heartbeat" to job store "default"
+2026-04-09 13:45:43 [INFO] core.scheduler: Heartbeat iniciado — intervalo: 5 minuto(s)
+2026-04-09 13:45:43 [INFO] __main__: ✓ Heartbeat iniciado (intervalo: 5 min)
+2026-04-09 13:45:43 [INFO] __main__: ✓ System Tray inicializado
+2026-04-09 13:45:43 [INFO] __main__: Abrindo tela de login...
+2026-04-09 13:45:47 [INFO] __main__: ✓ Login bem-sucedido: admin
+2026-04-09 13:45:47 [INFO] __main__: Criando janela principal...
+2026-04-09 13:45:47 [WARNING] config.database: Oracle: senha não pôde ser descriptografada (hostname diferente?). Reconfigure as credenciais nas configurações.
+2026-04-09 13:45:47 [WARNING] config.database: OrionTax: senha não pôde ser descriptografada (hostname diferente?). Reconfigure as credenciais nas configurações.
+2026-04-09 13:45:57 [WARNING] config.database: OrionTax: senha não pôde ser descriptografada (hostname diferente?). Reconfigure as credenciais nas configurações.
+2026-04-09 13:46:24 [WARNING] config.database: Oracle: senha não pôde ser descriptografada (hostname diferente?). Reconfigure as credenciais nas configurações.
+2026-04-09 13:46:27 [WARNING] config.database: Oracle: senha não pôde ser descriptografada (hostname diferente?). Reconfigure as credenciais nas configurações.
+2026-04-09 13:46:56 [INFO] core.oracle_client: Config recebida - Host: localhost
+2026-04-09 13:46:56 [INFO] core.oracle_client: Instant Client Path: None
+2026-04-09 13:46:56 [INFO] core.oracle_client: Tentando conexão em modo thin...
+2026-04-09 13:46:56 [INFO] core.oracle_client: ✓ Conectado ao Oracle (modo thin): localhost
+2026-04-09 13:46:56 [INFO] core.oracle_client: Versão Oracle: Oracle AI Database 26ai Free Release 23.26.1.0.0 - Develop, Learn, and Run for Free
+2026-04-09 13:46:56 [INFO] core.oracle_client: Desconectado do Oracle
+2026-04-09 13:47:13 [INFO] config.database: Agendamento 2 atualizado
+2026-04-09 13:47:13 [INFO] apscheduler.scheduler: Removed job schedule_2
+2026-04-09 13:47:13 [INFO] core.scheduler: Job removido: 2
+2026-04-09 13:47:13 [INFO] apscheduler.scheduler: Added job "BUSCAR" to job store "default"
+2026-04-09 13:47:13 [INFO] core.scheduler: Job adicionado: 2 - BUSCAR
+2026-04-09 13:47:13 [INFO] core.scheduler: Job atualizado: 2
+2026-04-09 13:48:00 [INFO] apscheduler.executors.default: Running job "BUSCAR (trigger: cron[hour='13', minute='48'], next run at: 2026-04-10 13:48:00 -03)" (scheduled at 2026-04-09 13:48:00-03:00)
+2026-04-09 13:48:00 [INFO] core.scheduler: ========================================
+2026-04-09 13:48:00 [INFO] core.scheduler: Executando sincronização agendada: BUSCAR
+2026-04-09 13:48:00 [INFO] core.scheduler: ========================================
+2026-04-09 13:48:00 [INFO] core.scheduler: Processando cliente: FLAMBOYANT (CNPJ: 21026390000149)
+2026-04-09 13:48:00 [INFO] core.scheduler: [FLAMBOYANT] Conectando ao OrionTax...
+2026-04-09 13:48:00 [INFO] core.scheduler: Sincronização agendada iniciada para 1 cliente(s)
+2026-04-09 13:48:00 [INFO] apscheduler.executors.default: Job "BUSCAR (trigger: cron[hour='13', minute='48'], next run at: 2026-04-10 13:48:00 -03)" executed successfully
+2026-04-09 13:48:00 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: integrador-oriontax.f5sys.com.br
+2026-04-09 13:48:00 [INFO] core.scheduler: [FLAMBOYANT] Lendo tabelas TMP do OrionTax (CNPJ: 21026390000149)...
+2026-04-09 13:48:00 [INFO] core.oriontax_client: Lendo tabelas TMP do OrionTax para CNPJ: 21026390000149
+2026-04-09 13:48:00 [INFO] core.oriontax_client: Lendo MXF_TMP_ICMS_ENTRADA...
+2026-04-09 13:48:00 [INFO] core.oriontax_client: ✓ ICMS Entrada: 0 registros
+2026-04-09 13:48:00 [INFO] core.oriontax_client: Lendo MXF_TMP_ICMS_SAIDA...
+2026-04-09 13:48:01 [INFO] core.oriontax_client: ✓ ICMS Saída: 18820 registros
+2026-04-09 13:48:01 [INFO] core.oriontax_client: Lendo MXF_TMP_PIS_COFINS...
+2026-04-09 13:48:01 [INFO] core.oriontax_client: ✓ PIS/COFINS: 18820 registros
+2026-04-09 13:48:01 [INFO] core.oriontax_client: Lendo MXF_TMP_CBS_IBS...
+2026-04-09 13:48:02 [INFO] core.oriontax_client: ✓ CBS/IBS: 18820 registros
+2026-04-09 13:48:02 [INFO] core.scheduler: [FLAMBOYANT] ✓ 56460 registros lidos do OrionTax
+2026-04-09 13:48:02 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-04-09 13:48:02 [INFO] core.scheduler: [FLAMBOYANT] Conectando ao Oracle...
+2026-04-09 13:48:02 [INFO] core.oracle_client: Tentando conexão em modo thin...
+2026-04-09 13:48:02 [INFO] core.oracle_client: ✓ Conectado ao Oracle (modo thin): localhost
+2026-04-09 13:48:02 [INFO] core.scheduler: [FLAMBOYANT] Gravando dados no Oracle...
+2026-04-09 13:48:02 [INFO] core.oracle_client: Limpando tabelas TMP do Oracle...
+2026-04-09 13:48:02 [ERROR] core.oracle_client: Erro ao inserir dados no Oracle
+Traceback (most recent call last):
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/core/oracle_client.py", line 601, in write_dataframes_to_tmp_tables
+    cursor.execute("DELETE FROM MXF_TMP_PIS_COFINS")
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/venv/lib/python3.12/site-packages/oracledb/cursor.py", line 383, in execute
+    impl.execute(self)
+  File "src/oracledb/impl/thin/cursor.pyx", line 132, in oracledb.thin_impl.ThinCursorImpl.execute
+  File "src/oracledb/impl/thin/protocol.pyx", line 420, in oracledb.thin_impl.Protocol._process_single_message
+  File "src/oracledb/impl/thin/protocol.pyx", line 421, in oracledb.thin_impl.Protocol._process_single_message
+  File "src/oracledb/impl/thin/protocol.pyx", line 414, in oracledb.thin_impl.Protocol._process_message
+oracledb.exceptions.DatabaseError: ORA-00942: table or view "INTERSOLID"."MXF_TMP_PIS_COFINS" does not exist
+Help: https://docs.oracle.com/error-help/db/ora-00942/
+2026-04-09 13:48:02 [ERROR] core.scheduler: [FLAMBOYANT] Erro: ORA-00942: table or view "INTERSOLID"."MXF_TMP_PIS_COFINS" does not exist
+Help: https://docs.oracle.com/error-help/db/ora-00942/
+
+Traceback (most recent call last):
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/core/scheduler.py", line 348, in _execute_sync_for_client
+    success, message = oracle_client.write_dataframes_to_tmp_tables(dataframes)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/core/oracle_client.py", line 601, in write_dataframes_to_tmp_tables
+    cursor.execute("DELETE FROM MXF_TMP_PIS_COFINS")
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/venv/lib/python3.12/site-packages/oracledb/cursor.py", line 383, in execute
+    impl.execute(self)
+  File "src/oracledb/impl/thin/cursor.pyx", line 132, in oracledb.thin_impl.ThinCursorImpl.execute
+  File "src/oracledb/impl/thin/protocol.pyx", line 420, in oracledb.thin_impl.Protocol._process_single_message
+  File "src/oracledb/impl/thin/protocol.pyx", line 421, in oracledb.thin_impl.Protocol._process_single_message
+  File "src/oracledb/impl/thin/protocol.pyx", line 414, in oracledb.thin_impl.Protocol._process_message
+oracledb.exceptions.DatabaseError: ORA-00942: table or view "INTERSOLID"."MXF_TMP_PIS_COFINS" does not exist
+Help: https://docs.oracle.com/error-help/db/ora-00942/
+
+2026-04-09 13:49:33 [INFO] __main__: Janela minimizada para tray
+2026-04-09 13:49:37 [INFO] __main__: Encerrando aplicação...
+2026-04-09 13:49:37 [INFO] apscheduler.scheduler: Scheduler has been shut down
+2026-04-09 13:49:37 [INFO] core.scheduler: Scheduler parado
+2026-04-09 13:49:37 [INFO] __main__: Janela minimizada para tray

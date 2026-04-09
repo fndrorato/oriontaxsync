@@ -8,12 +8,12 @@ from PyQt5.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                              QAction, QMenu, QMenuBar, QComboBox, QDialog)
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer
 from PyQt5.QtGui import QIcon, QFont, QColor
-from datetime import datetime
+from datetime import datetime, timezone
 import traceback
 import logging
 
 # from config.database import db_manager
-from gui.settings import OracleConfigDialog, OrionTaxConfigDialog
+from gui.settings import OracleConfigDialog, OrionTaxConfigDialog, HeartbeatConfigDialog
 from gui.client_dialog import ClientDialog
 from gui.schedule import ScheduleDialog
 
@@ -394,7 +394,29 @@ class MainWindow(QMainWindow):
         oriontax_layout.addLayout(oriontax_buttons)
         oriontax_group.setLayout(oriontax_layout)
         layout.addWidget(oriontax_group)
-        
+
+        # ========================================
+        # HEARTBEAT
+        # ========================================
+        heartbeat_group = QGroupBox('Heartbeat (Monitoramento de Saúde)')
+        heartbeat_layout = QVBoxLayout()
+
+        interval = self.db_manager.get_heartbeat_interval()
+        self.heartbeat_status_label = QLabel(f'Intervalo atual: {interval} minuto(s)')
+        self.heartbeat_status_label.setStyleSheet('font-weight: bold;')
+        heartbeat_layout.addWidget(self.heartbeat_status_label)
+
+        heartbeat_buttons = QHBoxLayout()
+
+        config_heartbeat_button = QPushButton('⚙️ Configurar Heartbeat')
+        config_heartbeat_button.setMinimumHeight(40)
+        config_heartbeat_button.clicked.connect(self.open_heartbeat_config)
+        heartbeat_buttons.addWidget(config_heartbeat_button)
+
+        heartbeat_layout.addLayout(heartbeat_buttons)
+        heartbeat_group.setLayout(heartbeat_layout)
+        layout.addWidget(heartbeat_group)
+
         # ========================================
         # GERENCIAMENTO DE CLIENTES
         # ========================================
@@ -674,6 +696,11 @@ class MainWindow(QMainWindow):
         self.load_logs()
         self.load_schedules()
         self.log_message('Sistema iniciado', 'SUCCESS')
+
+        # Atualiza logs automaticamente a cada 30s (agendamentos rodam em background)
+        self._log_refresh_timer = QTimer(self)
+        self._log_refresh_timer.timeout.connect(self.load_logs)
+        self._log_refresh_timer.start(30_000)
     
     def check_connection_status(self):
         """Verifica status das conexões"""
@@ -852,9 +879,10 @@ class MainWindow(QMainWindow):
         self.logs_table.setRowCount(len(logs))
         
         for row, log in enumerate(logs):
-            # Data/Hora
-            dt = datetime.fromisoformat(log['created_at'])
-            self.logs_table.setItem(row, 0, QTableWidgetItem(dt.strftime('%d/%m/%Y %H:%M:%S')))
+            # Data/Hora — SQLite armazena em UTC, converter para horário local
+            dt_utc = datetime.fromisoformat(log['created_at']).replace(tzinfo=timezone.utc)
+            dt_local = dt_utc.astimezone(tz=None)
+            self.logs_table.setItem(row, 0, QTableWidgetItem(dt_local.strftime('%d/%m/%Y %H:%M:%S')))
             
             # Operação
             self.logs_table.setItem(row, 1, QTableWidgetItem(log['tipo_operacao']))
@@ -1131,6 +1159,14 @@ class MainWindow(QMainWindow):
         if dialog.exec_():
             self.check_connection_status()
             self.log_message('Configuração OrionTax atualizada', 'SUCCESS')
+
+    def open_heartbeat_config(self):
+        """Abre diálogo de configuração do Heartbeat"""
+        dialog = HeartbeatConfigDialog(self, scheduler=self.scheduler)
+        if dialog.exec_():
+            interval = self.db_manager.get_heartbeat_interval()
+            self.heartbeat_status_label.setText(f'Intervalo atual: {interval} minuto(s)')
+            self.log_message(f'Heartbeat configurado: {interval} minuto(s)', 'SUCCESS')
     
     # def open_schedule_dialog(self):
     #     """Abre diálogo de agendamento"""
@@ -1158,19 +1194,21 @@ class MainWindow(QMainWindow):
     
     def show_about(self):
         """Mostra diálogo sobre"""
+        from version import APP_VERSION
         QMessageBox.about(
             self,
             'Sobre OrionTax Sync',
-            '<h2>OrionTax Sync v1.0.1</h2>'
+            f'<h2>OrionTax Sync v{APP_VERSION}</h2>'
             '<p>Sistema de Sincronização Fiscal</p>'
-            '<p>Desenvolvido para integração entre Oracle e OrionTax</p>'
+            '<p>Desenvolvido para integração entre Oracle/Firebird e OrionTax</p>'
             '<br>'
             '<p><b>Recursos:</b></p>'
             '<ul>'
             '<li>Sincronização bidirecional de dados fiscais</li>'
             '<li>Gerenciamento de múltiplos clientes</li>'
             '<li>Agendamento automático de operações</li>'
-            '<li>Logs detalhados de execução</li>'
+            '<li>Heartbeat — monitoramento remoto de saúde do sistema</li>'
+            '<li>Logs detalhados de execução com atualização automática</li>'
             '<li>Criptografia de senhas</li>'
             '<li>Teste de conexões</li>'
             '</ul>'
