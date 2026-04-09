@@ -114,6 +114,13 @@ hiddenimports = [
     'passlib.utils.binary',
     'passlib.utils.decor',
 
+    # System monitoring
+    'psutil',
+    'psutil._psutil_windows',
+    'psutil._psutil_linux',
+    'psutil._psutil_osx',
+    'psutil._common',
+
     # Data processing
     'pandas',
     'pandas._libs',
