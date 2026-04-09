@@ -7,30 +7,17 @@ block_cipher = None
 project_root = os.path.abspath(SPECPATH)
 
 # ============================================================
-# VENV SITE-PACKAGES
-# Injeta o site-packages do venv explicitamente para garantir
-# que PyInstaller encontre PyQt5 e todas as dependências.
+# SITE-PACKAGES
+# Usa sysconfig para localizar o site-packages correto,
+# funcionando tanto com venv local quanto com Python de sistema
+# (ex: GitHub Actions onde não há venv).
 # ============================================================
-# Tentar detectar via sys.executable (mais confiável que construir o path manualmente)
-_venv_scripts_dir = os.path.dirname(sys.executable)  # venv\Scripts ou venv/bin
-_venv_root = os.path.dirname(_venv_scripts_dir)       # venv\
+import sysconfig
 
-# Windows: venv\Lib\site-packages
-venv_site_packages = os.path.join(_venv_root, 'Lib', 'site-packages')
-if not os.path.exists(venv_site_packages):
-    # Linux/macOS: venv/lib/python3.x/site-packages
-    import glob as _glob
-    _matches = _glob.glob(os.path.join(_venv_root, 'lib', 'python*', 'site-packages'))
-    venv_site_packages = _matches[0] if _matches else None
-
-if venv_site_packages:
-    if venv_site_packages not in sys.path:
-        sys.path.insert(0, venv_site_packages)
-        print(f"✓ venv site-packages adicionado ao sys.path: {venv_site_packages}")
-    else:
-        print(f"✓ venv site-packages já no sys.path: {venv_site_packages}")
-else:
-    print(f"AVISO: venv site-packages não encontrado! sys.executable={sys.executable}")
+venv_site_packages = sysconfig.get_paths()['purelib']
+if venv_site_packages not in sys.path:
+    sys.path.insert(0, venv_site_packages)
+print(f"OK site-packages: {venv_site_packages}")
 
 # ============================================================
 # ÍCONE
@@ -66,6 +53,12 @@ try:
     datas += collect_data_files('PyQt5')
 except Exception as e:
     print(f"AVISO: collect_data_files('PyQt5') falhou: {e}")
+
+# jaraco.text: inclui arquivo de dados 'Lorem ipsum.txt' requerido pelo pkg_resources
+try:
+    datas += collect_data_files('jaraco.text')
+except Exception as e:
+    print(f"AVISO: collect_data_files('jaraco.text') falhou: {e}")
 
 # ============================================================
 # BINÁRIOS

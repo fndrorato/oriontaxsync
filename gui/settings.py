@@ -614,9 +614,131 @@ class OrionTaxConfigDialog(QDialog):
             )
 
 
+class HeartbeatConfigDialog(QDialog):
+    """Diálogo de Configuração do Heartbeat"""
+
+    def __init__(self, parent=None, scheduler=None):
+        """
+        Args:
+            parent: Widget pai
+            scheduler: Instância do Scheduler (para reiniciar o heartbeat ao salvar)
+        """
+        super().__init__(parent)
+        self.scheduler = scheduler
+        self.init_ui()
+        self.load_config()
+
+    def init_ui(self):
+        self.setWindowTitle('Configuração do Heartbeat')
+        self.setMinimumWidth(420)
+
+        layout = QVBoxLayout()
+        layout.setSpacing(15)
+
+        group = QGroupBox('Monitoramento de Saúde (Heartbeat)')
+        form = QFormLayout()
+        form.setSpacing(12)
+
+        self.interval_spin = QSpinBox()
+        self.interval_spin.setRange(1, 1440)
+        self.interval_spin.setValue(5)
+        self.interval_spin.setSuffix(' minuto(s)')
+        form.addRow('Intervalo de envio:', self.interval_spin)
+
+        group.setLayout(form)
+        layout.addWidget(group)
+
+        info_label = QLabel(
+            'O heartbeat envia métricas do sistema (CPU, memória, disco) '
+            'ao servidor OrionTax a cada intervalo configurado.\n'
+            'Mínimo: 1 minuto | Máximo: 1440 minutos (24 horas)'
+        )
+        info_label.setWordWrap(True)
+        info_label.setStyleSheet('color: #7f8c8d; font-size: 11px;')
+        layout.addWidget(info_label)
+
+        buttons = QHBoxLayout()
+        buttons.addStretch()
+
+        save_btn = QPushButton('Salvar')
+        save_btn.setDefault(True)
+        save_btn.clicked.connect(self.save_config)
+        buttons.addWidget(save_btn)
+
+        cancel_btn = QPushButton('Cancelar')
+        cancel_btn.clicked.connect(self.reject)
+        buttons.addWidget(cancel_btn)
+
+        layout.addLayout(buttons)
+        self.setLayout(layout)
+
+        self.setStyleSheet("""
+            QGroupBox {
+                font-weight: bold;
+                border: 2px solid #bdc3c7;
+                border-radius: 5px;
+                margin-top: 10px;
+                padding-top: 10px;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 10px;
+                padding: 0 5px;
+            }
+            QSpinBox {
+                padding: 8px;
+                border: 1px solid #bdc3c7;
+                border-radius: 3px;
+            }
+            QSpinBox:focus {
+                border: 2px solid #3498db;
+            }
+            QPushButton {
+                padding: 8px 20px;
+                background-color: #27ae60;
+                color: white;
+                border: none;
+                border-radius: 3px;
+                min-width: 100px;
+            }
+            QPushButton:hover {
+                background-color: #229954;
+            }
+        """)
+
+    def load_config(self):
+        interval = db_manager.get_heartbeat_interval()
+        self.interval_spin.setValue(interval)
+
+    def save_config(self):
+        interval = self.interval_spin.value()
+
+        if not db_manager.set_heartbeat_interval(interval):
+            QMessageBox.critical(self, 'Erro', 'Não foi possível salvar a configuração.')
+            return
+
+        # Reinicia o heartbeat com o novo intervalo se o scheduler estiver disponível
+        if self.scheduler:
+            try:
+                heartbeat_job = self.scheduler.scheduler.get_job('heartbeat')
+                if heartbeat_job:
+                    heartbeat_service = heartbeat_job.func.__self__
+                    self.scheduler.start_heartbeat(heartbeat_service, interval)
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).warning(f'Não foi possível reiniciar heartbeat: {e}')
+
+        QMessageBox.information(
+            self,
+            'Sucesso',
+            f'Heartbeat configurado para enviar a cada {interval} minuto(s).'
+        )
+        self.accept()
+
+
 # class ScheduleDialog(QDialog):
 #     """Diálogo de Agendamento"""
-    
+
 #     DIAS_SEMANA = {
 #         0: 'Segunda-feira',
 #         1: 'Terça-feira',

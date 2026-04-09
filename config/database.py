@@ -138,6 +138,14 @@ class DatabaseManager:
             )
         """)
         
+        # Tabela de configurações gerais (chave-valor)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS configuracoes (
+                chave TEXT PRIMARY KEY,
+                valor TEXT NOT NULL
+            )
+        """)
+
         # Migração: adicionar colunas de Firebird na config_oracle
         migration_columns = [
             ("db_type", "TEXT DEFAULT 'oracle'"),
@@ -406,14 +414,21 @@ class DatabaseManager:
         if config:
             config_dict = dict(config)
             # Descriptografar senha
-            config_dict['password'] = encryption_manager.decrypt(
-                config_dict['password_encrypted']
-            )
+            password = encryption_manager.decrypt(config_dict['password_encrypted'])
             del config_dict['password_encrypted']
+            if not password:
+                # Chave inválida (banco veio de outra máquina) — força reconfiguração
+                import logging
+                logging.getLogger(__name__).warning(
+                    'Oracle: senha não pôde ser descriptografada (hostname diferente?). '
+                    'Reconfigure as credenciais nas configurações.'
+                )
+                return None
+            config_dict['password'] = password
             return config_dict
-        
+
         return None
-    
+
     # ================================================================
     # MÉTODOS DE CONFIGURAÇÃO ORIONTAX
     # ================================================================
@@ -454,14 +469,20 @@ class DatabaseManager:
         
         if config:
             config_dict = dict(config)
-            config_dict['password'] = encryption_manager.decrypt(
-                config_dict['password_encrypted']
-            )
+            password = encryption_manager.decrypt(config_dict['password_encrypted'])
             del config_dict['password_encrypted']
+            if not password:
+                import logging
+                logging.getLogger(__name__).warning(
+                    'OrionTax: senha não pôde ser descriptografada (hostname diferente?). '
+                    'Reconfigure as credenciais nas configurações.'
+                )
+                return None
+            config_dict['password'] = password
             return config_dict
-        
+
         return None
-    
+
     # ================================================================
     # MÉTODOS DE AGENDAMENTO
     # ================================================================
@@ -853,6 +874,48 @@ class DatabaseManager:
             cursor.close()
             conn.close()    
             
+    # ================================================================
+    # MÉTODOS DE CONFIGURAÇÕES GERAIS
+    # ================================================================
+
+    def get_configuracao(self, chave: str, default: str = None) -> Optional[str]:
+        """Obtém valor de uma configuração geral"""
+        conn = self._get_thread_safe_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SELECT valor FROM configuracoes WHERE chave = ?", (chave,))
+            row = cursor.fetchone()
+            return row[0] if row else default
+        finally:
+            cursor.close()
+            conn.close()
+
+    def set_configuracao(self, chave: str, valor: str) -> bool:
+        """Salva ou atualiza uma configuração geral"""
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute("""
+                INSERT INTO configuracoes (chave, valor) VALUES (?, ?)
+                ON CONFLICT(chave) DO UPDATE SET valor = excluded.valor
+            """, (chave, str(valor)))
+            self.conn.commit()
+            return True
+        except Exception as e:
+            self.logger.error(f"Erro ao salvar configuração '{chave}': {e}")
+            return False
+
+    def get_heartbeat_interval(self) -> int:
+        """Retorna o intervalo do heartbeat em minutos (padrão: 5)"""
+        valor = self.get_configuracao('heartbeat_interval_minutos', '5')
+        try:
+            return max(1, int(valor))
+        except (ValueError, TypeError):
+            return 5
+
+    def set_heartbeat_interval(self, minutos: int) -> bool:
+        """Salva o intervalo do heartbeat em minutos"""
+        return self.set_configuracao('heartbeat_interval_minutos', str(max(1, int(minutos))))
+
     def change_password(self, username: str, old_password: str, new_password: str) -> tuple:
         """
         Altera senha do usuário

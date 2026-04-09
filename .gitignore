@@ -2,7 +2,17 @@
 /data/*.db
 /debug/
 
+/OrionTaxSync/
+/OrionTaxSync2/
 # Ignorar o instaclient
 /instantclient_23_0/
 *.zip
 *.exe
+
+/OrionTaxSync 2/
+
+*.db
+tables_oracle.txt
+
+*.pyc
+*.cpython-*

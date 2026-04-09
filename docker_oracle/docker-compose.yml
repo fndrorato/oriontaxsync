@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  oracle-test:
+    image: container-registry.oracle.com/database/free:latest
+    container_name: oracle-intersolid-test
+    ports:
+      - "1521:1521"
+    environment:
+      - ORACLE_PWD=Oracle123
+      - ORACLE_CHARACTERSET=AL32UTF8
+    volumes:
+      - oracle-test-data:/opt/oracle/oradata
+      - ./init-scripts:/opt/oracle/scripts/startup
+    shm_size: 1g
+
+volumes:
+  oracle-test-data:
