@@ -446,12 +446,13 @@ class OracleClient:
                         )
                         return None
 
-                # Colunas não-numéricas: converte numpy scalars para tipo Python nativo
-                # (numpy.int64, numpy.float64, numpy.bool_, etc. causam erros no modo thick)
-                if hasattr(value, 'item'):
-                    return value.item()
-
-                return value
+                # Colunas não-numéricas com tipo numérico (int/float/numpy scalar):
+                # converte para string preservando exatamente o valor do PostgreSQL.
+                # Evita que Oracle receba um int e armazene sem os zeros à esquerda.
+                native = value.item() if hasattr(value, 'item') else value
+                if isinstance(native, (int, float)):
+                    return str(int(native))
+                return native
 
             except Exception as e:
                 logger.error(
