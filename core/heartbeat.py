@@ -202,26 +202,34 @@ class HeartbeatService:
 
     def _read_log_file(self) -> str:
         """
-        Lê o arquivo de log do dia atual (e do dia anterior se necessário)
-        e retorna as linhas das últimas 12h como string.
+        Lê todos os arquivos de log da pasta /logs e retorna as linhas
+        das últimas 12h como string, independente do nome do arquivo.
         """
         try:
             log_dir = Path(__file__).parent.parent / 'logs'
+            if not log_dir.exists():
+                return ''
+
             limite = datetime.now() - timedelta(hours=12)
-            hoje = datetime.now().strftime('%Y%m%d')
-            ontem = (datetime.now() - timedelta(days=1)).strftime('%Y%m%d')
+
+            # Coleta todos os arquivos .log ordenados por data de modificação
+            arquivos = sorted(
+                log_dir.glob('*.log*'),
+                key=lambda p: p.stat().st_mtime
+            )
 
             linhas = []
-            for data in (ontem, hoje):
-                log_file = log_dir / f'oriontax_{data}.log'
-                if log_file.exists():
-                    with open(log_file, 'r', encoding='utf-8', errors='replace') as f:
-                        linhas.extend(f.readlines())
+            for arquivo in arquivos:
+                # Pula arquivos modificados antes da janela de 12h
+                if arquivo.stat().st_mtime < limite.timestamp():
+                    continue
+                with open(arquivo, 'r', encoding='utf-8', errors='replace') as f:
+                    linhas.extend(f.readlines())
 
             if not linhas:
                 return ''
 
-            # Filtra apenas linhas das últimas 12h pelo timestamp no início de cada linha
+            # Filtra linha a linha pelo timestamp
             linhas_filtradas = []
             for linha in linhas:
                 try:
@@ -229,7 +237,7 @@ class HeartbeatService:
                     if ts >= limite:
                         linhas_filtradas.append(linha)
                 except (ValueError, IndexError):
-                    # Linha de continuação (traceback, etc.) — inclui se já há contexto
+                    # Linha de continuação (traceback, etc.)
                     if linhas_filtradas:
                         linhas_filtradas.append(linha)
 

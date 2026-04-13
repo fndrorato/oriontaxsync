@@ -16,3 +16,5 @@ tables_oracle.txt
 
 *.pyc
 *.cpython-*
+*.csv
+*.DS_Store
