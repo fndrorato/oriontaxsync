@@ -4,7 +4,7 @@ ALTER SESSION SET CURRENT_SCHEMA = intersolid;
 
 -- Tabela CBS/IBS
 CREATE TABLE MXF_TMP_CBS_IBS (
-  codigo_produto   NUMBER(10),
+  codigo_produto   VARCHAR2(60),
   ean              NUMBER(14),
   cclasstrib       VARCHAR2(6),
   cst_cbs_ibs      VARCHAR2(3),
@@ -27,7 +27,7 @@ CREATE TABLE MXF_TMP_CBS_IBS (
 
 -- Tabela ICMS Entrada
 CREATE TABLE MXF_TMP_ICMS_ENTRADA (
-  codigo_produto    NUMBER(10),
+  codigo_produto    VARCHAR2(60),
   ean               NUMBER(14),
   tipo_mva          VARCHAR2(2),
   mva               NUMBER(7,3),
@@ -65,7 +65,7 @@ CREATE TABLE MXF_TMP_ICMS_ENTRADA (
 
 -- Tabela ICMS Saída
 CREATE TABLE MXF_TMP_ICMS_SAIDA (
-  codigo_produto   NUMBER(10),
+  codigo_produto   VARCHAR2(60),
   ean              NUMBER(14),
   sac_cst          VARCHAR2(3),
   sac_alq          NUMBER(7,3),
@@ -104,7 +104,7 @@ CREATE TABLE MXF_TMP_ICMS_SAIDA (
 
 -- Tabela Produtos
 CREATE TABLE MXF_TMP_PRODUTOS (
-  codigo_produto   NUMBER(10),
+  codigo_produto   VARCHAR2(60),
   ean              NUMBER(14),
   ncm              VARCHAR2(10),
   icms_cst_e       VARCHAR2(3),

@@ -286,10 +286,12 @@ class FirebirdClient:
                         )
                         return None
 
-                if hasattr(value, 'item'):
-                    return value.item()
-
-                return value
+                # Colunas não-numéricas com tipo numérico (int/float/numpy scalar):
+                # converte para string preservando exatamente o valor do PostgreSQL.
+                native = value.item() if hasattr(value, 'item') else value
+                if isinstance(native, (int, float)):
+                    return str(int(native))
+                return native
             except Exception as e:
                 logger.error(
                     f"{table_name} | {col_name} | Erro no valor '{value}': {e}"

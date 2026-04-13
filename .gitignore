@@ -18,3 +18,4 @@ tables_oracle.txt
 *.cpython-*
 *.csv
 *.DS_Store
+/instalador/
