@@ -19,11 +19,15 @@ from version import APP_VERSION
 logger = logging.getLogger(__name__)
 
 def setup_logging():
-    """Configura sistema de logging (console + arquivo)"""
+    """Configura sistema de logging (console + arquivo com rotação diária)"""
+    from logging.handlers import TimedRotatingFileHandler
+
     log_dir = Path(__file__).parent / 'logs'
     log_dir.mkdir(exist_ok=True)
 
-    log_filename = log_dir / f'oriontax_{datetime.now().strftime("%Y%m%d")}.log'
+    # Arquivo base — o handler cria oriontax.log e rotaciona para
+    # oriontax.log.YYYY-MM-DD à meia-noite, mantendo até 30 dias
+    log_filename = log_dir / 'oriontax.log'
 
     log_format = '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
     date_format = '%Y-%m-%d %H:%M:%S'
@@ -39,7 +43,15 @@ def setup_logging():
     console_handler.setFormatter(formatter)
     root.addHandler(console_handler)
 
-    file_handler = logging.FileHandler(log_filename, encoding='utf-8')
+    # Rotaciona à meia-noite, sufixo YYYY-MM-DD, mantém 30 arquivos
+    file_handler = TimedRotatingFileHandler(
+        log_filename,
+        when='midnight',
+        interval=1,
+        backupCount=30,
+        encoding='utf-8'
+    )
+    file_handler.suffix = '%Y-%m-%d'
     file_handler.setFormatter(formatter)
     root.addHandler(file_handler)
 
