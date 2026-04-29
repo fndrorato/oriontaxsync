@@ -18,11 +18,18 @@ from version import APP_VERSION
 
 logger = logging.getLogger(__name__)
 
+def get_base_dir() -> Path:
+    """Retorna o diretório base correto tanto em dev quanto no executável PyInstaller."""
+    if getattr(sys, 'frozen', False):
+        return Path(sys.executable).parent
+    return Path(__file__).parent
+
+
 def setup_logging():
     """Configura sistema de logging (console + arquivo com rotação diária)"""
     from logging.handlers import TimedRotatingFileHandler
 
-    log_dir = Path(__file__).parent / 'logs'
+    log_dir = get_base_dir() / 'logs'
     log_dir.mkdir(exist_ok=True)
 
     # Arquivo base — o handler cria oriontax.log e rotaciona para

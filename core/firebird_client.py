@@ -369,9 +369,6 @@ class FirebirdClient:
                 df = dataframes[df_key]
                 if df.empty:
                     continue
-                if table_name == 'MXF_TMP_ICMS_ENTRADA':
-                    continue
-
                 self.logger.info(f"Inserindo {len(df)} registros em {table_name}...")
 
                 inserted = self._insert_dataframe_firebird(

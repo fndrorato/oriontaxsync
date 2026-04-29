@@ -517,12 +517,17 @@ class MainWindow(QMainWindow):
         """Abre janela para visualizar arquivo de log"""
         from PyQt5.QtWidgets import QDialog, QVBoxLayout, QTextEdit, QPushButton
         from pathlib import Path
-        from datetime import datetime
-        
-        # Caminho do log de hoje
-        log_dir = Path(__file__).parent.parent / 'logs'
-        log_filename = log_dir / f'oriontax_{datetime.now().strftime("%Y%m%d")}.log'
-        
+        import sys
+
+        # Usa o mesmo base_dir que main.py para apontar ao log correto
+        if getattr(sys, 'frozen', False):
+            base_dir = Path(sys.executable).parent
+        else:
+            base_dir = Path(__file__).parent.parent
+
+        log_dir = base_dir / 'logs'
+        log_filename = log_dir / 'oriontax.log'
+
         if not log_filename.exists():
             QMessageBox.warning(self, "Aviso", "Arquivo de log não encontrado.")
             return
@@ -1213,6 +1218,7 @@ class MainWindow(QMainWindow):
             '<li>Teste de conexões</li>'
             '</ul>'
             '<br>'
+            '<p><b>Data de lançamento:</b> 29/04/2026</p>'
             '<p>© 2025 OrionTax. Todos os direitos reservados.</p>'
         )
     

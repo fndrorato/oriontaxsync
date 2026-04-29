@@ -1,0 +1,450 @@
+2026-04-17 09:33:44 [INFO] __main__: ================================================================================
+2026-04-17 09:33:44 [INFO] __main__: OrionTax Sync - Iniciando Sistema
+2026-04-17 09:33:44 [INFO] __main__: ================================================================================
+2026-04-17 09:33:44 [INFO] __main__: Conectando ao banco de dados...
+2026-04-17 09:33:44 [INFO] __main__: ✓ Banco de dados conectado
+2026-04-17 09:33:44 [INFO] __main__: Iniciando agendador de tarefas...
+2026-04-17 09:33:44 [INFO] apscheduler.scheduler: Scheduler started
+2026-04-17 09:33:44 [INFO] core.scheduler: Scheduler iniciado
+2026-04-17 09:33:44 [INFO] apscheduler.scheduler: Added job "ENVIAR" to job store "default"
+2026-04-17 09:33:44 [INFO] core.scheduler: Job adicionado: 1 - ENVIAR
+2026-04-17 09:33:44 [INFO] apscheduler.scheduler: Added job "BUSCAR" to job store "default"
+2026-04-17 09:33:44 [INFO] core.scheduler: Job adicionado: 2 - BUSCAR
+2026-04-17 09:33:44 [INFO] core.scheduler: 2 agendamentos carregados
+2026-04-17 09:33:44 [INFO] __main__: ✓ Scheduler iniciado
+2026-04-17 09:33:44 [INFO] __main__: 2 job(s) agendado(s)
+2026-04-17 09:33:44 [INFO] apscheduler.scheduler: Added job "Heartbeat" to job store "default"
+2026-04-17 09:33:44 [INFO] core.scheduler: Heartbeat iniciado — intervalo: 5 minuto(s)
+2026-04-17 09:33:44 [INFO] __main__: ✓ Heartbeat iniciado (intervalo: 5 min)
+2026-04-17 09:33:44 [INFO] __main__: ✓ System Tray inicializado
+2026-04-17 09:33:44 [INFO] __main__: Abrindo tela de login...
+2026-04-17 09:33:48 [INFO] __main__: ✓ Login bem-sucedido: admin
+2026-04-17 09:33:48 [INFO] __main__: Criando janela principal...
+2026-04-17 09:33:57 [INFO] core.oracle_client: Config recebida - Host: localhost
+2026-04-17 09:33:57 [INFO] core.oracle_client: Instant Client Path: None
+2026-04-17 09:33:57 [INFO] core.oracle_client: Tentando conexão em modo thin...
+2026-04-17 09:33:57 [INFO] core.oracle_client: ✓ Conectado ao Oracle (modo thin): localhost
+2026-04-17 09:33:57 [INFO] core.oracle_client: Versão Oracle: Oracle AI Database 26ai Free Release 23.26.1.0.0 - Develop, Learn, and Run for Free
+2026-04-17 09:33:57 [INFO] core.oracle_client: Desconectado do Oracle
+2026-04-17 09:34:40 [INFO] apscheduler.scheduler: Removed job heartbeat
+2026-04-17 09:34:40 [INFO] core.scheduler: Heartbeat parado
+2026-04-17 09:34:40 [INFO] apscheduler.scheduler: Added job "Heartbeat" to job store "default"
+2026-04-17 09:34:40 [INFO] core.scheduler: Heartbeat iniciado — intervalo: 1440 minuto(s)
+2026-04-17 11:27:48 [INFO] __main__: Janela minimizada para tray
+2026-04-17 11:37:17 [INFO] __main__: ================================================================================
+2026-04-17 11:37:17 [INFO] __main__: OrionTax Sync - Iniciando Sistema
+2026-04-17 11:37:17 [INFO] __main__: ================================================================================
+2026-04-17 11:37:17 [INFO] __main__: Conectando ao banco de dados...
+2026-04-17 11:37:17 [INFO] __main__: ✓ Banco de dados conectado
+2026-04-17 11:37:17 [INFO] __main__: Iniciando agendador de tarefas...
+2026-04-17 11:37:17 [INFO] apscheduler.scheduler: Scheduler started
+2026-04-17 11:37:17 [INFO] core.scheduler: Scheduler iniciado
+2026-04-17 11:37:17 [INFO] apscheduler.scheduler: Added job "ENVIAR" to job store "default"
+2026-04-17 11:37:17 [INFO] core.scheduler: Job adicionado: 1 - ENVIAR
+2026-04-17 11:37:17 [INFO] apscheduler.scheduler: Added job "BUSCAR" to job store "default"
+2026-04-17 11:37:17 [INFO] core.scheduler: Job adicionado: 2 - BUSCAR
+2026-04-17 11:37:17 [INFO] core.scheduler: 2 agendamentos carregados
+2026-04-17 11:37:17 [INFO] __main__: ✓ Scheduler iniciado
+2026-04-17 11:37:17 [INFO] __main__: 2 job(s) agendado(s)
+2026-04-17 11:37:17 [INFO] apscheduler.scheduler: Added job "Heartbeat" to job store "default"
+2026-04-17 11:37:17 [INFO] core.scheduler: Heartbeat iniciado — intervalo: 1440 minuto(s)
+2026-04-17 11:37:17 [INFO] __main__: ✓ Heartbeat iniciado (intervalo: 1440 min)
+2026-04-17 11:37:17 [INFO] __main__: ✓ System Tray inicializado
+2026-04-17 11:37:17 [INFO] __main__: Abrindo tela de login...
+2026-04-17 11:37:25 [INFO] __main__: ✓ Login bem-sucedido: admin
+2026-04-17 11:37:25 [INFO] __main__: Criando janela principal...
+2026-04-17 13:12:25 [INFO] core.oracle_client: Tentando conexão em modo thin...
+2026-04-17 13:12:25 [INFO] core.oracle_client: ✓ Conectado ao Oracle (modo thin): localhost
+2026-04-17 13:12:25 [INFO] core.oracle_client: Lendo VIEWs Oracle (todos os registros)...
+2026-04-17 13:12:25 [INFO] core.oracle_client: Lendo MXF_VW_ICMS_ENTRADA...
+2026-04-17 13:12:26 [ERROR] core.oracle_client: Erro ao ler VIEWs: Execution failed on sql '
+                SELECT * FROM MXF_VW_ICMS_ENTRADA
+            ': ORA-00942: table or view "INTERSOLID"."MXF_VW_ICMS_ENTRADA" does not exist
+Help: https://docs.oracle.com/error-help/db/ora-00942/
+2026-04-17 13:24:39 [INFO] core.oracle_client: Tentando conexão em modo thin...
+2026-04-17 13:24:39 [INFO] core.oracle_client: ✓ Conectado ao Oracle (modo thin): localhost
+2026-04-17 13:24:39 [INFO] core.oracle_client: Lendo VIEWs Oracle (todos os registros)...
+2026-04-17 13:24:39 [INFO] core.oracle_client: Lendo MXF_VW_ICMS_ENTRADA...
+2026-04-17 13:24:40 [INFO] core.oracle_client: ✓ ICMS Entrada: 18974 registros
+2026-04-17 13:24:40 [INFO] core.oracle_client: Lendo MXF_VW_ICMS...
+2026-04-17 13:24:40 [INFO] core.oracle_client: ✓ ICMS Saída: 18974 registros
+2026-04-17 13:24:40 [INFO] core.oracle_client: Lendo MXF_VW_PIS_COFINS...
+2026-04-17 13:24:40 [INFO] core.oracle_client: ✓ PIS/COFINS: 45562 registros
+2026-04-17 13:24:40 [INFO] core.oracle_client: Lendo MXF_VW_CBS_IBS...
+2026-04-17 13:24:40 [INFO] core.oracle_client: ✓ CBS/IBS: 18974 registros
+2026-04-17 13:24:40 [INFO] core.oracle_client: Desconectado do Oracle
+2026-04-17 13:24:40 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: localhost
+2026-04-17 13:24:40 [INFO] core.oriontax_client: 
+============================================================
+2026-04-17 13:24:40 [INFO] core.oriontax_client: Processando mxf_vw_icms_entrada
+2026-04-17 13:24:40 [INFO] core.oriontax_client: Registros: 18974
+2026-04-17 13:24:40 [INFO] core.oriontax_client: Colunas originais: 24
+2026-04-17 13:24:40 [WARNING] core.oriontax_client: Removendo 3 colunas não existentes na tabela:
+2026-04-17 13:24:40 [WARNING] core.oriontax_client:   - nfd_cst
+2026-04-17 13:24:40 [WARNING] core.oriontax_client:   - status
+2026-04-17 13:24:40 [WARNING] core.oriontax_client:   - dta_ult_venda
+2026-04-17 13:24:40 [INFO] core.oriontax_client: Colunas da tabela ausentes no DataFrame (16): ['tipo_mva', 'mva', 'mva_data_ini', 'mva_data_fim', 'credito_outorgado']...
+2026-04-17 13:24:40 [INFO] core.oriontax_client: DataFrame filtrado: 24 → 21 colunas
+2026-04-17 13:24:40 [INFO] core.oriontax_client: ✓ Nenhuma duplicata encontrada
+2026-04-17 13:24:40 [WARNING] core.oriontax_client: ⚠️  Truncando 18974 valores em 'ed_cst' (max=3)
+2026-04-17 13:24:40 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 13:24:40 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 13:24:40 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 13:24:40 [WARNING] core.oriontax_client: ⚠️  Truncando 18974 valores em 'es_cst' (max=3)
+2026-04-17 13:24:40 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 13:24:40 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 13:24:40 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 13:24:40 [WARNING] core.oriontax_client: ⚠️  Truncando 18974 valores em 'nfi_cst' (max=3)
+2026-04-17 13:24:40 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 13:24:40 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 13:24:40 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 13:24:40 [WARNING] core.oriontax_client: ✂️  Total de valores truncados: 56922
+2026-04-17 13:24:40 [INFO] core.oriontax_client: Executando UPSERT em mxf_vw_icms_entrada: 18974 registros
+2026-04-17 13:24:41 [INFO] core.oriontax_client:   Processados 10000/18974 registros...
+2026-04-17 13:24:42 [INFO] core.oriontax_client: ✓ 18974 registros processados em mxf_vw_icms_entrada
+2026-04-17 13:24:42 [INFO] core.oriontax_client: 
+============================================================
+2026-04-17 13:24:42 [INFO] core.oriontax_client: Processando mxf_vw_icms
+2026-04-17 13:24:42 [INFO] core.oriontax_client: Registros: 18974
+2026-04-17 13:24:42 [INFO] core.oriontax_client: Colunas originais: 33
+2026-04-17 13:24:42 [WARNING] core.oriontax_client: Removendo 11 colunas não existentes na tabela:
+2026-04-17 13:24:42 [WARNING] core.oriontax_client:   - sac_alq_st
+2026-04-17 13:24:42 [WARNING] core.oriontax_client:   - sac_rbc_st
+2026-04-17 13:24:42 [WARNING] core.oriontax_client:   - sas_alq_st
+2026-04-17 13:24:42 [WARNING] core.oriontax_client:   - sas_rbc_st
+2026-04-17 13:24:42 [WARNING] core.oriontax_client:   - svc_alq_st
+2026-04-17 13:24:42 [WARNING] core.oriontax_client:   - svc_rbc_st
+2026-04-17 13:24:42 [WARNING] core.oriontax_client:   - snc_alq_st
+2026-04-17 13:24:42 [WARNING] core.oriontax_client:   - snc_rbc_st
+2026-04-17 13:24:42 [WARNING] core.oriontax_client:   - alq_saida_final
+2026-04-17 13:24:42 [WARNING] core.oriontax_client:   - status
+2026-04-17 13:24:42 [WARNING] core.oriontax_client:   - dta_ult_venda
+2026-04-17 13:24:42 [INFO] core.oriontax_client: Colunas da tabela ausentes no DataFrame (18): ['sac_alqst', 'sac_rbcst', 'sac_alq_benef', 'sac_cbenef', 'sas_alqst']...
+2026-04-17 13:24:42 [INFO] core.oriontax_client: DataFrame filtrado: 33 → 22 colunas
+2026-04-17 13:24:42 [INFO] core.oriontax_client: ✓ Nenhuma duplicata encontrada
+2026-04-17 13:24:42 [WARNING] core.oriontax_client: ⚠️  Truncando 18974 valores em 'sas_cst' (max=3)
+2026-04-17 13:24:42 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 13:24:42 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 13:24:42 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 13:24:42 [WARNING] core.oriontax_client: ⚠️  Truncando 1 valores em 'svc_cst' (max=3)
+2026-04-17 13:24:42 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 13:24:42 [WARNING] core.oriontax_client: ⚠️  Truncando 16090 valores em 'sss_csosn' (max=4)
+2026-04-17 13:24:42 [WARNING] core.oriontax_client:      [5 chars] 00102...
+2026-04-17 13:24:42 [WARNING] core.oriontax_client:      [5 chars] 00102...
+2026-04-17 13:24:42 [WARNING] core.oriontax_client:      [5 chars] 00102...
+2026-04-17 13:24:42 [WARNING] core.oriontax_client: ✂️  Total de valores truncados: 35065
+2026-04-17 13:24:42 [INFO] core.oriontax_client: Executando UPSERT em mxf_vw_icms: 18974 registros
+2026-04-17 13:24:43 [INFO] core.oriontax_client:   Processados 10000/18974 registros...
+2026-04-17 13:24:43 [INFO] core.oriontax_client: ✓ 18974 registros processados em mxf_vw_icms
+2026-04-17 13:24:43 [INFO] core.oriontax_client: 
+============================================================
+2026-04-17 13:24:43 [INFO] core.oriontax_client: Processando mxf_vw_pis_cofins
+2026-04-17 13:24:43 [INFO] core.oriontax_client: Registros: 45562
+2026-04-17 13:24:43 [INFO] core.oriontax_client: Colunas originais: 22
+2026-04-17 13:24:43 [WARNING] core.oriontax_client: Removendo 2 colunas não existentes na tabela:
+2026-04-17 13:24:43 [WARNING] core.oriontax_client:   - depto
+2026-04-17 13:24:43 [WARNING] core.oriontax_client:   - dta_ult_venda
+2026-04-17 13:24:43 [INFO] core.oriontax_client: Colunas da tabela ausentes no DataFrame (7): ['fundamento_legal', 'dta_alteracao', 'dta_cadastro', 'des_sigla', 'tipo_regime']...
+2026-04-17 13:24:43 [INFO] core.oriontax_client: DataFrame filtrado: 22 → 20 colunas
+2026-04-17 13:24:43 [INFO] core.oriontax_client: ✓ Nenhuma duplicata encontrada
+2026-04-17 13:24:43 [INFO] core.oriontax_client: ✓ Nenhum valor precisa ser truncado
+2026-04-17 13:24:43 [INFO] core.oriontax_client: Executando UPSERT em mxf_vw_pis_cofins: 45562 registros
+2026-04-17 13:24:44 [INFO] core.oriontax_client:   Processados 10000/45562 registros...
+2026-04-17 13:24:45 [INFO] core.oriontax_client:   Processados 20000/45562 registros...
+2026-04-17 13:24:46 [INFO] core.oriontax_client:   Processados 30000/45562 registros...
+2026-04-17 13:24:46 [INFO] core.oriontax_client:   Processados 40000/45562 registros...
+2026-04-17 13:24:46 [INFO] core.oriontax_client: ✓ 45562 registros processados em mxf_vw_pis_cofins
+2026-04-17 13:24:46 [INFO] core.oriontax_client: 
+============================================================
+2026-04-17 13:24:46 [INFO] core.oriontax_client: Processando mxf_vw_cbs_ibs
+2026-04-17 13:24:46 [INFO] core.oriontax_client: Registros: 18974
+2026-04-17 13:24:46 [INFO] core.oriontax_client: Colunas originais: 15
+2026-04-17 13:24:46 [INFO] core.oriontax_client: Colunas da tabela ausentes no DataFrame (7): ['fundamento_legal', 'dta_alteracao', 'dta_cadastro', 'des_sigla', 'tipo_regime']...
+2026-04-17 13:24:46 [INFO] core.oriontax_client: DataFrame filtrado: 15 → 15 colunas
+2026-04-17 13:24:46 [INFO] core.oriontax_client: ✓ Nenhuma duplicata encontrada
+2026-04-17 13:24:47 [WARNING] core.oriontax_client: ⚠️  Truncando 18974 valores em 'cst_is' (max=3)
+2026-04-17 13:24:47 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 13:24:47 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 13:24:47 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 13:24:47 [WARNING] core.oriontax_client: ✂️  Total de valores truncados: 18974
+2026-04-17 13:24:47 [INFO] core.oriontax_client: Executando UPSERT em mxf_vw_cbs_ibs: 18974 registros
+2026-04-17 13:24:47 [INFO] core.oriontax_client:   Processados 10000/18974 registros...
+2026-04-17 13:24:47 [INFO] core.oriontax_client: ✓ 18974 registros processados em mxf_vw_cbs_ibs
+2026-04-17 13:24:47 [INFO] core.oriontax_client: 
+============================================================
+2026-04-17 13:24:47 [INFO] core.oriontax_client: ✓ Total processado: 102484 registros
+2026-04-17 13:24:47 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-04-17 13:40:38 [INFO] core.oracle_client: Tentando conexão em modo thin...
+2026-04-17 13:40:38 [INFO] core.oracle_client: ✓ Conectado ao Oracle (modo thin): localhost
+2026-04-17 13:40:38 [INFO] core.oracle_client: Lendo VIEWs Oracle (todos os registros)...
+2026-04-17 13:40:38 [INFO] core.oracle_client: Lendo MXF_VW_ICMS_ENTRADA...
+2026-04-17 13:40:38 [INFO] core.oracle_client: ✓ ICMS Entrada: 18974 registros
+2026-04-17 13:40:38 [INFO] core.oracle_client: Lendo MXF_VW_ICMS...
+2026-04-17 13:40:38 [INFO] core.oracle_client: ✓ ICMS Saída: 18974 registros
+2026-04-17 13:40:38 [INFO] core.oracle_client: Lendo MXF_VW_PIS_COFINS...
+2026-04-17 13:40:38 [INFO] core.oracle_client: ✓ PIS/COFINS: 45562 registros
+2026-04-17 13:40:38 [INFO] core.oracle_client: Lendo MXF_VW_CBS_IBS...
+2026-04-17 13:40:38 [INFO] core.oracle_client: ✓ CBS/IBS: 18974 registros
+2026-04-17 13:40:38 [INFO] core.oracle_client: Desconectado do Oracle
+2026-04-17 13:40:39 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: localhost
+2026-04-17 13:40:39 [INFO] core.oriontax_client: 
+============================================================
+2026-04-17 13:40:39 [INFO] core.oriontax_client: Processando mxf_vw_icms_entrada
+2026-04-17 13:40:39 [INFO] core.oriontax_client: Registros: 18974
+2026-04-17 13:40:39 [INFO] core.oriontax_client: Colunas originais: 24
+2026-04-17 13:40:39 [WARNING] core.oriontax_client: Removendo 3 colunas não existentes na tabela:
+2026-04-17 13:40:39 [WARNING] core.oriontax_client:   - nfd_cst
+2026-04-17 13:40:39 [WARNING] core.oriontax_client:   - status
+2026-04-17 13:40:39 [WARNING] core.oriontax_client:   - dta_ult_venda
+2026-04-17 13:40:39 [INFO] core.oriontax_client: Colunas da tabela ausentes no DataFrame (16): ['tipo_mva', 'mva', 'mva_data_ini', 'mva_data_fim', 'credito_outorgado']...
+2026-04-17 13:40:39 [INFO] core.oriontax_client: DataFrame filtrado: 24 → 21 colunas
+2026-04-17 13:40:39 [INFO] core.oriontax_client: ✓ Nenhuma duplicata encontrada
+2026-04-17 13:40:39 [WARNING] core.oriontax_client: ⚠️  Truncando 18974 valores em 'ed_cst' (max=3)
+2026-04-17 13:40:39 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 13:40:39 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 13:40:39 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 13:40:39 [WARNING] core.oriontax_client: ⚠️  Truncando 18974 valores em 'es_cst' (max=3)
+2026-04-17 13:40:39 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 13:40:39 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 13:40:39 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 13:40:39 [WARNING] core.oriontax_client: ⚠️  Truncando 18974 valores em 'nfi_cst' (max=3)
+2026-04-17 13:40:39 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 13:40:39 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 13:40:39 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 13:40:39 [WARNING] core.oriontax_client: ✂️  Total de valores truncados: 56922
+2026-04-17 13:40:39 [INFO] core.oriontax_client: Executando UPSERT em mxf_vw_icms_entrada: 18974 registros
+2026-04-17 13:40:39 [INFO] core.oriontax_client:   Processados 10000/18974 registros...
+2026-04-17 13:40:39 [INFO] core.oriontax_client: ✓ 18974 registros processados em mxf_vw_icms_entrada
+2026-04-17 13:40:39 [INFO] core.oriontax_client: 
+============================================================
+2026-04-17 13:40:39 [INFO] core.oriontax_client: Processando mxf_vw_icms
+2026-04-17 13:40:39 [INFO] core.oriontax_client: Registros: 18974
+2026-04-17 13:40:39 [INFO] core.oriontax_client: Colunas originais: 33
+2026-04-17 13:40:39 [WARNING] core.oriontax_client: Removendo 11 colunas não existentes na tabela:
+2026-04-17 13:40:39 [WARNING] core.oriontax_client:   - sac_alq_st
+2026-04-17 13:40:39 [WARNING] core.oriontax_client:   - sac_rbc_st
+2026-04-17 13:40:39 [WARNING] core.oriontax_client:   - sas_alq_st
+2026-04-17 13:40:39 [WARNING] core.oriontax_client:   - sas_rbc_st
+2026-04-17 13:40:39 [WARNING] core.oriontax_client:   - svc_alq_st
+2026-04-17 13:40:39 [WARNING] core.oriontax_client:   - svc_rbc_st
+2026-04-17 13:40:39 [WARNING] core.oriontax_client:   - snc_alq_st
+2026-04-17 13:40:39 [WARNING] core.oriontax_client:   - snc_rbc_st
+2026-04-17 13:40:39 [WARNING] core.oriontax_client:   - alq_saida_final
+2026-04-17 13:40:39 [WARNING] core.oriontax_client:   - status
+2026-04-17 13:40:39 [WARNING] core.oriontax_client:   - dta_ult_venda
+2026-04-17 13:40:39 [INFO] core.oriontax_client: Colunas da tabela ausentes no DataFrame (18): ['sac_alqst', 'sac_rbcst', 'sac_alq_benef', 'sac_cbenef', 'sas_alqst']...
+2026-04-17 13:40:39 [INFO] core.oriontax_client: DataFrame filtrado: 33 → 22 colunas
+2026-04-17 13:40:39 [INFO] core.oriontax_client: ✓ Nenhuma duplicata encontrada
+2026-04-17 13:40:39 [WARNING] core.oriontax_client: ⚠️  Truncando 18974 valores em 'sas_cst' (max=3)
+2026-04-17 13:40:39 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 13:40:39 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 13:40:39 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 13:40:39 [WARNING] core.oriontax_client: ⚠️  Truncando 1 valores em 'svc_cst' (max=3)
+2026-04-17 13:40:39 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 13:40:39 [WARNING] core.oriontax_client: ⚠️  Truncando 16090 valores em 'sss_csosn' (max=4)
+2026-04-17 13:40:39 [WARNING] core.oriontax_client:      [5 chars] 00102...
+2026-04-17 13:40:39 [WARNING] core.oriontax_client:      [5 chars] 00102...
+2026-04-17 13:40:39 [WARNING] core.oriontax_client:      [5 chars] 00102...
+2026-04-17 13:40:39 [WARNING] core.oriontax_client: ✂️  Total de valores truncados: 35065
+2026-04-17 13:40:39 [INFO] core.oriontax_client: Executando UPSERT em mxf_vw_icms: 18974 registros
+2026-04-17 13:40:40 [INFO] core.oriontax_client:   Processados 10000/18974 registros...
+2026-04-17 13:40:40 [INFO] core.oriontax_client: ✓ 18974 registros processados em mxf_vw_icms
+2026-04-17 13:40:40 [INFO] core.oriontax_client: 
+============================================================
+2026-04-17 13:40:40 [INFO] core.oriontax_client: Processando mxf_vw_pis_cofins
+2026-04-17 13:40:40 [INFO] core.oriontax_client: Registros: 45562
+2026-04-17 13:40:40 [INFO] core.oriontax_client: Colunas originais: 22
+2026-04-17 13:40:40 [WARNING] core.oriontax_client: Removendo 2 colunas não existentes na tabela:
+2026-04-17 13:40:40 [WARNING] core.oriontax_client:   - depto
+2026-04-17 13:40:40 [WARNING] core.oriontax_client:   - dta_ult_venda
+2026-04-17 13:40:40 [INFO] core.oriontax_client: Colunas da tabela ausentes no DataFrame (7): ['fundamento_legal', 'dta_alteracao', 'dta_cadastro', 'des_sigla', 'tipo_regime']...
+2026-04-17 13:40:40 [INFO] core.oriontax_client: DataFrame filtrado: 22 → 20 colunas
+2026-04-17 13:40:40 [INFO] core.oriontax_client: ✓ Nenhuma duplicata encontrada
+2026-04-17 13:40:40 [INFO] core.oriontax_client: ✓ Nenhum valor precisa ser truncado
+2026-04-17 13:40:40 [INFO] core.oriontax_client: Executando UPSERT em mxf_vw_pis_cofins: 45562 registros
+2026-04-17 13:40:41 [INFO] core.oriontax_client:   Processados 10000/45562 registros...
+2026-04-17 13:40:41 [INFO] core.oriontax_client:   Processados 20000/45562 registros...
+2026-04-17 13:40:42 [INFO] core.oriontax_client:   Processados 30000/45562 registros...
+2026-04-17 13:40:42 [INFO] core.oriontax_client:   Processados 40000/45562 registros...
+2026-04-17 13:40:42 [INFO] core.oriontax_client: ✓ 45562 registros processados em mxf_vw_pis_cofins
+2026-04-17 13:40:42 [INFO] core.oriontax_client: 
+============================================================
+2026-04-17 13:40:42 [INFO] core.oriontax_client: Processando mxf_vw_cbs_ibs
+2026-04-17 13:40:42 [INFO] core.oriontax_client: Registros: 18974
+2026-04-17 13:40:42 [INFO] core.oriontax_client: Colunas originais: 15
+2026-04-17 13:40:42 [INFO] core.oriontax_client: Colunas da tabela ausentes no DataFrame (7): ['fundamento_legal', 'dta_alteracao', 'dta_cadastro', 'des_sigla', 'tipo_regime']...
+2026-04-17 13:40:42 [INFO] core.oriontax_client: DataFrame filtrado: 15 → 15 colunas
+2026-04-17 13:40:42 [INFO] core.oriontax_client: ✓ Nenhuma duplicata encontrada
+2026-04-17 13:40:43 [WARNING] core.oriontax_client: ⚠️  Truncando 18974 valores em 'cst_is' (max=3)
+2026-04-17 13:40:43 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 13:40:43 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 13:40:43 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 13:40:43 [WARNING] core.oriontax_client: ✂️  Total de valores truncados: 18974
+2026-04-17 13:40:43 [INFO] core.oriontax_client: Executando UPSERT em mxf_vw_cbs_ibs: 18974 registros
+2026-04-17 13:40:43 [INFO] core.oriontax_client:   Processados 10000/18974 registros...
+2026-04-17 13:40:43 [INFO] core.oriontax_client: ✓ 18974 registros processados em mxf_vw_cbs_ibs
+2026-04-17 13:40:43 [INFO] core.oriontax_client: 
+============================================================
+2026-04-17 13:40:43 [INFO] core.oriontax_client: ✓ Total processado: 102484 registros
+2026-04-17 13:40:43 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-04-17 13:48:00 [INFO] apscheduler.executors.default: Running job "BUSCAR (trigger: cron[hour='13', minute='48'], next run at: 2026-04-18 13:48:00 -03)" (scheduled at 2026-04-17 13:48:00-03:00)
+2026-04-17 13:48:00 [INFO] core.scheduler: ========================================
+2026-04-17 13:48:00 [INFO] core.scheduler: Executando sincronização agendada: BUSCAR
+2026-04-17 13:48:00 [INFO] core.scheduler: ========================================
+2026-04-17 13:48:00 [INFO] core.scheduler: Processando cliente: FLAMBOYANT (CNPJ: 21026390000149)
+2026-04-17 13:48:00 [INFO] core.scheduler: [FLAMBOYANT] Conectando ao OrionTax...
+2026-04-17 13:48:00 [INFO] core.scheduler: Sincronização agendada iniciada para 1 cliente(s)
+2026-04-17 13:48:00 [INFO] apscheduler.executors.default: Job "BUSCAR (trigger: cron[hour='13', minute='48'], next run at: 2026-04-18 13:48:00 -03)" executed successfully
+2026-04-17 13:48:00 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: localhost
+2026-04-17 13:48:00 [INFO] core.scheduler: [FLAMBOYANT] Lendo tabelas TMP do OrionTax (CNPJ: 21026390000149)...
+2026-04-17 13:48:00 [INFO] core.oriontax_client: Lendo tabelas TMP do OrionTax para CNPJ: 21026390000149
+2026-04-17 13:48:00 [INFO] core.oriontax_client: Lendo MXF_TMP_ICMS_ENTRADA...
+2026-04-17 13:48:00 [INFO] core.oriontax_client: ✓ ICMS Entrada: 0 registros
+2026-04-17 13:48:00 [INFO] core.oriontax_client: Lendo MXF_TMP_ICMS_SAIDA...
+2026-04-17 13:48:00 [INFO] core.oriontax_client: ✓ ICMS Saída: 18820 registros
+2026-04-17 13:48:00 [INFO] core.oriontax_client: Lendo MXF_TMP_PIS_COFINS...
+2026-04-17 13:48:00 [INFO] core.oriontax_client: ✓ PIS/COFINS: 18820 registros
+2026-04-17 13:48:00 [INFO] core.oriontax_client: Lendo MXF_TMP_CBS_IBS...
+2026-04-17 13:48:00 [INFO] core.oriontax_client: ✓ CBS/IBS: 18820 registros
+2026-04-17 13:48:00 [INFO] core.scheduler: [FLAMBOYANT] ✓ 56460 registros lidos do OrionTax
+2026-04-17 13:48:00 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-04-17 13:48:00 [INFO] core.scheduler: [FLAMBOYANT] Conectando ao Oracle...
+2026-04-17 13:48:00 [INFO] core.oracle_client: Tentando conexão em modo thin...
+2026-04-17 13:48:00 [INFO] core.oracle_client: ✓ Conectado ao Oracle (modo thin): localhost
+2026-04-17 13:48:00 [INFO] core.scheduler: [FLAMBOYANT] Gravando dados no Oracle...
+2026-04-17 13:48:00 [INFO] core.oracle_client: Limpando tabelas TMP do Oracle...
+2026-04-17 13:48:00 [ERROR] core.oracle_client: Erro ao inserir dados no Oracle
+Traceback (most recent call last):
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/core/oracle_client.py", line 602, in write_dataframes_to_tmp_tables
+    cursor.execute("DELETE FROM MXF_TMP_PIS_COFINS")
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/venv/lib/python3.12/site-packages/oracledb/cursor.py", line 383, in execute
+    impl.execute(self)
+  File "src/oracledb/impl/thin/cursor.pyx", line 132, in oracledb.thin_impl.ThinCursorImpl.execute
+  File "src/oracledb/impl/thin/protocol.pyx", line 420, in oracledb.thin_impl.Protocol._process_single_message
+  File "src/oracledb/impl/thin/protocol.pyx", line 421, in oracledb.thin_impl.Protocol._process_single_message
+  File "src/oracledb/impl/thin/protocol.pyx", line 414, in oracledb.thin_impl.Protocol._process_message
+oracledb.exceptions.DatabaseError: ORA-00942: table or view "INTERSOLID"."MXF_TMP_PIS_COFINS" does not exist
+Help: https://docs.oracle.com/error-help/db/ora-00942/
+2026-04-17 13:48:00 [ERROR] core.scheduler: [FLAMBOYANT] Erro: ORA-00942: table or view "INTERSOLID"."MXF_TMP_PIS_COFINS" does not exist
+Help: https://docs.oracle.com/error-help/db/ora-00942/
+
+Traceback (most recent call last):
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/core/scheduler.py", line 348, in _execute_sync_for_client
+    success, message = oracle_client.write_dataframes_to_tmp_tables(dataframes)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/core/oracle_client.py", line 602, in write_dataframes_to_tmp_tables
+    cursor.execute("DELETE FROM MXF_TMP_PIS_COFINS")
+  File "/Users/fernandororato/Documents/F5Sys/OrionTax/OriontaxSync/venv/lib/python3.12/site-packages/oracledb/cursor.py", line 383, in execute
+    impl.execute(self)
+  File "src/oracledb/impl/thin/cursor.pyx", line 132, in oracledb.thin_impl.ThinCursorImpl.execute
+  File "src/oracledb/impl/thin/protocol.pyx", line 420, in oracledb.thin_impl.Protocol._process_single_message
+  File "src/oracledb/impl/thin/protocol.pyx", line 421, in oracledb.thin_impl.Protocol._process_single_message
+  File "src/oracledb/impl/thin/protocol.pyx", line 414, in oracledb.thin_impl.Protocol._process_message
+oracledb.exceptions.DatabaseError: ORA-00942: table or view "INTERSOLID"."MXF_TMP_PIS_COFINS" does not exist
+Help: https://docs.oracle.com/error-help/db/ora-00942/
+
+2026-04-17 14:41:46 [INFO] core.oracle_client: Tentando conexão em modo thin...
+2026-04-17 14:41:46 [INFO] core.oracle_client: ✓ Conectado ao Oracle (modo thin): localhost
+2026-04-17 14:41:46 [INFO] core.oracle_client: Lendo VIEWs Oracle (todos os registros)...
+2026-04-17 14:41:46 [INFO] core.oracle_client: Lendo MXF_VW_ICMS_ENTRADA...
+2026-04-17 14:41:46 [INFO] core.oracle_client: ✓ ICMS Entrada: 18974 registros
+2026-04-17 14:41:46 [INFO] core.oracle_client: Lendo MXF_VW_ICMS...
+2026-04-17 14:41:46 [INFO] core.oracle_client: ✓ ICMS Saída: 18974 registros
+2026-04-17 14:41:46 [INFO] core.oracle_client: Lendo MXF_VW_PIS_COFINS...
+2026-04-17 14:41:47 [INFO] core.oracle_client: ✓ PIS/COFINS: 45562 registros
+2026-04-17 14:41:47 [INFO] core.oracle_client: Lendo MXF_VW_CBS_IBS...
+2026-04-17 14:41:47 [INFO] core.oracle_client: ✓ CBS/IBS: 18974 registros
+2026-04-17 14:41:47 [INFO] core.oracle_client: Desconectado do Oracle
+2026-04-17 14:41:47 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: localhost
+2026-04-17 14:41:47 [INFO] core.oriontax_client: 
+============================================================
+2026-04-17 14:41:47 [INFO] core.oriontax_client: Processando mxf_vw_icms_entrada
+2026-04-17 14:41:47 [INFO] core.oriontax_client: Registros: 18974
+2026-04-17 14:41:47 [INFO] core.oriontax_client: Colunas originais: 24
+2026-04-17 14:41:47 [WARNING] core.oriontax_client: Removendo 3 colunas não existentes na tabela:
+2026-04-17 14:41:47 [WARNING] core.oriontax_client:   - nfd_cst
+2026-04-17 14:41:47 [WARNING] core.oriontax_client:   - status
+2026-04-17 14:41:47 [WARNING] core.oriontax_client:   - dta_ult_venda
+2026-04-17 14:41:47 [INFO] core.oriontax_client: Colunas da tabela ausentes no DataFrame (16): ['tipo_mva', 'mva', 'mva_data_ini', 'mva_data_fim', 'credito_outorgado']...
+2026-04-17 14:41:47 [INFO] core.oriontax_client: DataFrame filtrado: 24 → 21 colunas
+2026-04-17 14:41:47 [INFO] core.oriontax_client: ✓ Nenhuma duplicata encontrada
+2026-04-17 14:41:47 [WARNING] core.oriontax_client: ⚠️  Truncando 18974 valores em 'ed_cst' (max=3)
+2026-04-17 14:41:47 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 14:41:47 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 14:41:47 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 14:41:47 [WARNING] core.oriontax_client: ⚠️  Truncando 18974 valores em 'es_cst' (max=3)
+2026-04-17 14:41:47 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 14:41:47 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 14:41:47 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 14:41:47 [WARNING] core.oriontax_client: ⚠️  Truncando 18974 valores em 'nfi_cst' (max=3)
+2026-04-17 14:41:47 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 14:41:47 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 14:41:47 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 14:41:47 [WARNING] core.oriontax_client: ✂️  Total de valores truncados: 56922
+2026-04-17 14:41:47 [INFO] core.oriontax_client: Executando UPSERT em mxf_vw_icms_entrada: 18974 registros
+2026-04-17 14:41:47 [INFO] core.oriontax_client:   Processados 10000/18974 registros...
+2026-04-17 14:41:48 [INFO] core.oriontax_client: ✓ 18974 registros processados em mxf_vw_icms_entrada
+2026-04-17 14:41:48 [INFO] core.oriontax_client: 
+============================================================
+2026-04-17 14:41:48 [INFO] core.oriontax_client: Processando mxf_vw_icms
+2026-04-17 14:41:48 [INFO] core.oriontax_client: Registros: 18974
+2026-04-17 14:41:48 [INFO] core.oriontax_client: Colunas originais: 33
+2026-04-17 14:41:48 [WARNING] core.oriontax_client: Removendo 2 colunas não existentes na tabela:
+2026-04-17 14:41:48 [WARNING] core.oriontax_client:   - status
+2026-04-17 14:41:48 [WARNING] core.oriontax_client:   - dta_ult_venda
+2026-04-17 14:41:48 [INFO] core.oriontax_client: Colunas da tabela ausentes no DataFrame (18): ['sac_alqst', 'sac_rbcst', 'sac_alq_benef', 'sac_cbenef', 'sas_alqst']...
+2026-04-17 14:41:48 [INFO] core.oriontax_client: DataFrame filtrado: 33 → 31 colunas
+2026-04-17 14:41:48 [INFO] core.oriontax_client: ✓ Nenhuma duplicata encontrada
+2026-04-17 14:41:48 [WARNING] core.oriontax_client: ⚠️  Truncando 18974 valores em 'sas_cst' (max=3)
+2026-04-17 14:41:48 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 14:41:48 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 14:41:48 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 14:41:48 [WARNING] core.oriontax_client: ⚠️  Truncando 1 valores em 'svc_cst' (max=3)
+2026-04-17 14:41:48 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 14:41:48 [WARNING] core.oriontax_client: ⚠️  Truncando 16090 valores em 'sss_csosn' (max=4)
+2026-04-17 14:41:48 [WARNING] core.oriontax_client:      [5 chars] 00102...
+2026-04-17 14:41:48 [WARNING] core.oriontax_client:      [5 chars] 00102...
+2026-04-17 14:41:48 [WARNING] core.oriontax_client:      [5 chars] 00102...
+2026-04-17 14:41:48 [WARNING] core.oriontax_client: ✂️  Total de valores truncados: 35065
+2026-04-17 14:41:48 [INFO] core.oriontax_client: Executando UPSERT em mxf_vw_icms: 18974 registros
+2026-04-17 14:41:48 [INFO] core.oriontax_client:   Processados 10000/18974 registros...
+2026-04-17 14:41:49 [INFO] core.oriontax_client: ✓ 18974 registros processados em mxf_vw_icms
+2026-04-17 14:41:49 [INFO] core.oriontax_client: 
+============================================================
+2026-04-17 14:41:49 [INFO] core.oriontax_client: Processando mxf_vw_pis_cofins
+2026-04-17 14:41:49 [INFO] core.oriontax_client: Registros: 45562
+2026-04-17 14:41:49 [INFO] core.oriontax_client: Colunas originais: 22
+2026-04-17 14:41:49 [WARNING] core.oriontax_client: Removendo 2 colunas não existentes na tabela:
+2026-04-17 14:41:49 [WARNING] core.oriontax_client:   - depto
+2026-04-17 14:41:49 [WARNING] core.oriontax_client:   - dta_ult_venda
+2026-04-17 14:41:49 [INFO] core.oriontax_client: Colunas da tabela ausentes no DataFrame (7): ['fundamento_legal', 'dta_alteracao', 'dta_cadastro', 'des_sigla', 'tipo_regime']...
+2026-04-17 14:41:49 [INFO] core.oriontax_client: DataFrame filtrado: 22 → 20 colunas
+2026-04-17 14:41:49 [INFO] core.oriontax_client: ✓ Nenhuma duplicata encontrada
+2026-04-17 14:41:49 [INFO] core.oriontax_client: ✓ Nenhum valor precisa ser truncado
+2026-04-17 14:41:49 [INFO] core.oriontax_client: Executando UPSERT em mxf_vw_pis_cofins: 45562 registros
+2026-04-17 14:41:49 [INFO] core.oriontax_client:   Processados 10000/45562 registros...
+2026-04-17 14:41:50 [INFO] core.oriontax_client:   Processados 20000/45562 registros...
+2026-04-17 14:41:50 [INFO] core.oriontax_client:   Processados 30000/45562 registros...
+2026-04-17 14:41:51 [INFO] core.oriontax_client:   Processados 40000/45562 registros...
+2026-04-17 14:41:51 [INFO] core.oriontax_client: ✓ 45562 registros processados em mxf_vw_pis_cofins
+2026-04-17 14:41:51 [INFO] core.oriontax_client: 
+============================================================
+2026-04-17 14:41:51 [INFO] core.oriontax_client: Processando mxf_vw_cbs_ibs
+2026-04-17 14:41:51 [INFO] core.oriontax_client: Registros: 18974
+2026-04-17 14:41:51 [INFO] core.oriontax_client: Colunas originais: 15
+2026-04-17 14:41:51 [INFO] core.oriontax_client: Colunas da tabela ausentes no DataFrame (7): ['fundamento_legal', 'dta_alteracao', 'dta_cadastro', 'des_sigla', 'tipo_regime']...
+2026-04-17 14:41:51 [INFO] core.oriontax_client: DataFrame filtrado: 15 → 15 colunas
+2026-04-17 14:41:51 [INFO] core.oriontax_client: ✓ Nenhuma duplicata encontrada
+2026-04-17 14:41:51 [WARNING] core.oriontax_client: ⚠️  Truncando 18974 valores em 'cst_is' (max=3)
+2026-04-17 14:41:51 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 14:41:51 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 14:41:51 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-04-17 14:41:51 [WARNING] core.oriontax_client: ✂️  Total de valores truncados: 18974
+2026-04-17 14:41:51 [INFO] core.oriontax_client: Executando UPSERT em mxf_vw_cbs_ibs: 18974 registros
+2026-04-17 14:41:51 [INFO] core.oriontax_client:   Processados 10000/18974 registros...
+2026-04-17 14:41:52 [INFO] core.oriontax_client: ✓ 18974 registros processados em mxf_vw_cbs_ibs
+2026-04-17 14:41:52 [INFO] core.oriontax_client: 
+============================================================
+2026-04-17 14:41:52 [INFO] core.oriontax_client: ✓ Total processado: 102484 registros
+2026-04-17 14:41:52 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-04-17 15:31:30 [INFO] __main__: Janela minimizada para tray
