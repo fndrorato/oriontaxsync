@@ -133,4 +133,110 @@ CREATE TABLE MXF_TMP_PRODUTOS (
   tipo_regime      NUMBER(5) DEFAULT 0 NOT NULL
 );
 
+-- Tabela VW CBS/IBS
+CREATE TABLE MXF_VW_CBS_IBS (
+  codigo_produto   VARCHAR2(60),
+  ean              NUMBER(14),
+  cclasstrib       VARCHAR2(6),
+  cst_cbs_ibs      VARCHAR2(3),
+  alq_cbs          NUMBER(7,3),
+  rbc_cbs          NUMBER(7,3),
+  alq_ibs          NUMBER(7,3),
+  alq_ibs_mun      NUMBER(7,3),
+  rbc_ibs          NUMBER(7,3),
+  rbc_ibs_mun      NUMBER(7,3),
+  alq_is           NUMBER(7,3),
+  alq_is_espec     NUMBER(7,3),
+  cst_is           VARCHAR2(3),
+  cclasstrib_is    VARCHAR2(6)
+);
+
+-- Tabela VW ICMS
+CREATE TABLE MXF_VW_ICMS (
+  codigo_produto   VARCHAR2(60),
+  ean              NUMBER(14),
+  tipo_mva         VARCHAR2(2),
+  mva              NUMBER(7,3),
+  cest             VARCHAR2(10),
+  sac_cst          VARCHAR2(3),
+  sac_alq          NUMBER(7,3),
+  sac_alq_st       NUMBER(7,3),
+  sac_rbc          NUMBER(7,3),
+  sac_rbc_st       NUMBER(7,3),
+  sas_cst          VARCHAR2(3),
+  sas_alq          NUMBER(7,3),
+  sas_alq_st       NUMBER(7,3),
+  sas_rbc          NUMBER(7,3),
+  sas_rbc_st       NUMBER(7,3),
+  svc_cst          VARCHAR2(3),
+  svc_alq          NUMBER(7,3),
+  svc_alq_st       NUMBER(7,3),
+  svc_rbc          NUMBER(7,3),
+  svc_rbc_st       NUMBER(7,3),
+  snc_cst          VARCHAR2(3),
+  snc_alq          NUMBER(7,3),
+  snc_alq_st       NUMBER(7,3),
+  snc_rbc          NUMBER(7,3),
+  snc_rbc_st       NUMBER(7,3),
+  fecp             NUMBER(7,3),
+  alq_saida_final  NUMBER(7,3),
+  snc_alq_benef    NUMBER(7,3),
+  snc_cbenef       VARCHAR2(10),
+  sss_csosn        VARCHAR2(5),
+  status           VARCHAR2(10),
+  dta_ult_venda    DATE
+);
+
+-- Tabela VW PIS/COFINS
+CREATE TABLE MXF_VW_PIS_COFINS (
+  codigo_produto        VARCHAR2(60),
+  ean                   NUMBER(14),
+  descritivo_produto    VARCHAR2(200),
+  ncm                   VARCHAR2(10),
+  ncm_ex                VARCHAR2(5),
+  cod_natureza_receita  VARCHAR2(10),
+  credito_presumido     NUMBER(3),
+  pis_cst_e             VARCHAR2(3),
+  pis_cst_s             VARCHAR2(3),
+  pis_alq_e             NUMBER(7,3),
+  pis_alq_s             NUMBER(7,3),
+  cofins_cst_e          VARCHAR2(3),
+  cofins_cst_s          VARCHAR2(3),
+  cofins_alq_e          NUMBER(7,3),
+  cofins_alq_s          NUMBER(7,3),
+  depto                 VARCHAR2(60),
+  secao                 VARCHAR2(60),
+  grupo                 VARCHAR2(60),
+  subgrupo              VARCHAR2(100),
+  status                VARCHAR2(10),
+  dta_ult_venda         DATE
+);
+
+-- Tabela VW ICMS Entrada
+CREATE TABLE MXF_VW_ICMS_ENTRADA (
+  codigo_produto   VARCHAR2(60),
+  ean              NUMBER(14),
+  ei_cst           VARCHAR2(3),
+  ei_alq           NUMBER(7,3),
+  ei_alqst         NUMBER(7,3),
+  ei_rbc           NUMBER(7,3),
+  ei_rbcst         NUMBER(7,3),
+  ed_cst           VARCHAR2(3),
+  ed_alq           NUMBER(7,3),
+  ed_alqst         NUMBER(7,3),
+  ed_rbc           NUMBER(7,3),
+  ed_rbcst         NUMBER(7,3),
+  es_cst           VARCHAR2(3),
+  es_alq           NUMBER(7,3),
+  es_alqst         NUMBER(7,3),
+  es_rbc           NUMBER(7,3),
+  es_rbcst         NUMBER(7,3),
+  nfi_cst          VARCHAR2(3),
+  nfd_cst          VARCHAR2(3),
+  nfs_csosn        VARCHAR2(5),
+  nf_alq           NUMBER(7,3),
+  status           VARCHAR2(10),
+  dta_ult_venda    DATE
+);
+
 SELECT 'Tabelas criadas com sucesso!' FROM DUAL;

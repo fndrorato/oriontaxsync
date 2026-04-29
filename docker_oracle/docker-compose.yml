@@ -12,6 +12,7 @@ services:
     volumes:
       - oracle-test-data:/opt/oracle/oradata
       - ./init-scripts:/opt/oracle/scripts/startup
+      - ./:/opt/oracle/csv-data:ro
     shm_size: 1g
 
 volumes:

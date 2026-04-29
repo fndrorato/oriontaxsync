@@ -627,28 +627,24 @@ class OracleClient:
                 if df.empty:
                     continue
                 
-                if table_name == 'MXF_TMP_ICMS_ENTRADA':
-                    continue
-                else:
-                    self.logger.info(
-                        f"Inserindo {len(df)} registros em {table_name}..."
-                    )
+                self.logger.info(
+                    f"Inserindo {len(df)} registros em {table_name}..."
+                )
 
-                    df = self._normalize_dataframe_for_oracle(df)
-                    
-                    
-                    inserted = self._insert_dataframe_oracle(
-                        df=df, 
-                        table_name=table_name, 
-                        cursor=cursor,
-                        batch_size=5000
-                    )
+                df = self._normalize_dataframe_for_oracle(df)
 
-                    total_inserted += inserted
+                inserted = self._insert_dataframe_oracle(
+                    df=df,
+                    table_name=table_name,
+                    cursor=cursor,
+                    batch_size=5000
+                )
 
-                    self.logger.info(
-                        f"✓ {inserted} registros inseridos em {table_name}"
-                    )
+                total_inserted += inserted
+
+                self.logger.info(
+                    f"✓ {inserted} registros inseridos em {table_name}"
+                )
 
             # -------------------------------------------------
             # 4. Commit final

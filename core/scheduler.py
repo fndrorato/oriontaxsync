@@ -271,17 +271,17 @@ class Scheduler:
             nome_cliente: Nome do cliente
         """
         from datetime import datetime
-        from core.oracle_client import OracleClient
+        from core.oracle_client import create_db_client
         from core.oriontax_client import OrionTaxClient
-        
+
         try:
             start_time = datetime.now()
-            
+
             if operation_type == 'ENVIAR':
-                # ✅ ENVIAR: Oracle → PostgreSQL (OrionTax)
-                
-                self.logger.info(f'[{nome_cliente}] Conectando ao Oracle...')
-                oracle_client = OracleClient(oracle_config)
+                # ✅ ENVIAR: BD Intersolid VIEWs → PostgreSQL (OrionTax)
+
+                self.logger.info(f'[{nome_cliente}] Conectando ao BD Intersolid...')
+                oracle_client = create_db_client(oracle_config)
                 oracle_client.connect()
                 
                 self.logger.info(f'[{nome_cliente}] Lendo VIEWs do Oracle (CNPJ: {cnpj})...')
@@ -340,11 +340,11 @@ class Scheduler:
                 
                 oriontax_client.disconnect()
                 
-                self.logger.info(f'[{nome_cliente}] Conectando ao Oracle...')
-                oracle_client = OracleClient(oracle_config)
+                self.logger.info(f'[{nome_cliente}] Conectando ao BD Intersolid...')
+                oracle_client = create_db_client(oracle_config)
                 oracle_client.connect()
-                
-                self.logger.info(f'[{nome_cliente}] Gravando dados no Oracle...')
+
+                self.logger.info(f'[{nome_cliente}] Gravando dados no BD Intersolid...')
                 success, message = oracle_client.write_dataframes_to_tmp_tables(dataframes)
                 
                 oracle_client.disconnect()

@@ -19,3 +19,9 @@ tables_oracle.txt
 *.csv
 *.DS_Store
 /instalador/
+
+/docker_bd-integrador/
+
+/docker_oracle/*
+
+*.pyc
