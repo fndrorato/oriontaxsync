@@ -245,6 +245,28 @@ class FirebirdClient:
             """
             expected_cols = 15
 
+        elif table_name == "MXF_TMP_ICMS_ENTRADA":
+            insert_sql = """
+                INSERT INTO MXF_TMP_ICMS_ENTRADA (
+                    CODIGO_PRODUTO, EAN,
+                    EI_CST, EI_ALQ, EI_ALQST, EI_RBC, EI_RBCST,
+                    ED_CST, ED_ALQ, ED_ALQST, ED_RBC, ED_RBCST,
+                    ES_CST, ES_ALQ, ES_ALQST, ES_RBC, ES_RBCST,
+                    NFI_CST, NFD_CST, NFS_CSOSN, NF_ALQ,
+                    FUNDAMENTO_LEGAL, NCM,
+                    DTA_ALTERACAO, DTA_CADASTRO
+                ) VALUES (
+                    ?, ?,
+                    ?, ?, ?, ?, ?,
+                    ?, ?, ?, ?, ?,
+                    ?, ?, ?, ?, ?,
+                    ?, ?, ?, ?,
+                    ?, ?,
+                    CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+                )
+            """
+            expected_cols = 23
+
         else:
             raise ValueError(f"Tabela não suportada: {table_name}")
 

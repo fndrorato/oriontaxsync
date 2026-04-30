@@ -34,6 +34,15 @@ TABLE_COLUMNS = {
         "ALQ_IBS_MUN", "RBC_IBS_MUN",
         "ALQ_IS", "ALQ_IS_ESPEC", "CST_IS", "CCLASSTRIB_IS",
         "FUNDAMENTO_LEGAL"
+    ],
+
+    "MXF_TMP_ICMS_ENTRADA": [
+        "CODIGO_PRODUTO", "EAN",
+        "EI_CST", "EI_ALQ", "EI_ALQST", "EI_RBC", "EI_RBCST",
+        "ED_CST", "ED_ALQ", "ED_ALQST", "ED_RBC", "ED_RBCST",
+        "ES_CST", "ES_ALQ", "ES_ALQST", "ES_RBC", "ES_RBCST",
+        "NFI_CST", "NFD_CST", "NFS_CSOSN", "NF_ALQ",
+        "FUNDAMENTO_LEGAL", "NCM"
     ]
 }
 
@@ -63,6 +72,13 @@ TABLE_NUMBER_COLUMNS = {
         "ALQ_CBS", "RBC_CBS", "ALQ_IBS", "RBC_IBS",
         "ALQ_IBS_MUN", "RBC_IBS_MUN",
         "ALQ_IS", "ALQ_IS_ESPEC"
+    },
+
+    "MXF_TMP_ICMS_ENTRADA": {
+        "EI_ALQ", "EI_ALQST", "EI_RBC", "EI_RBCST",
+        "ED_ALQ", "ED_ALQST", "ED_RBC", "ED_RBCST",
+        "ES_ALQ", "ES_ALQST", "ES_RBC", "ES_RBCST",
+        "NF_ALQ"
     }
 }
 
@@ -397,6 +413,28 @@ class OracleClient:
                 )
             """
             expected_cols = 15
+
+        elif table_name == "MXF_TMP_ICMS_ENTRADA":
+            insert_sql = """
+                INSERT INTO MXF_TMP_ICMS_ENTRADA (
+                    CODIGO_PRODUTO, EAN,
+                    EI_CST, EI_ALQ, EI_ALQST, EI_RBC, EI_RBCST,
+                    ED_CST, ED_ALQ, ED_ALQST, ED_RBC, ED_RBCST,
+                    ES_CST, ES_ALQ, ES_ALQST, ES_RBC, ES_RBCST,
+                    NFI_CST, NFD_CST, NFS_CSOSN, NF_ALQ,
+                    FUNDAMENTO_LEGAL, NCM,
+                    DTA_ALTERACAO, DTA_CADASTRO
+                ) VALUES (
+                    :1, :2,
+                    :3, :4, :5, :6, :7,
+                    :8, :9, :10, :11, :12,
+                    :13, :14, :15, :16, :17,
+                    :18, :19, :20, :21,
+                    :22, :23,
+                    SYSDATE, SYSDATE
+                )
+            """
+            expected_cols = 23
 
         else:
             raise ValueError(f"Tabela não suportada: {table_name}")
