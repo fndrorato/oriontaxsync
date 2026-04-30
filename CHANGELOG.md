@@ -2,6 +2,16 @@
 
 ---
 
+## [1.0.2.3] — 2026-04-30
+
+### Corrigido
+
+#### Gravação dos dados de ICMS Entrada na operação ENVIAR
+- Na operação **ENVIAR** (Intersolid → OrionTax), os dados lidos da view `MXF_VW_ICMS_ENTRADA` passaram a ser gravados também na tabela `mxf_tmp_icms_entrada` do PostgreSQL, além da `mxf_vw_icms_entrada`.
+- Isso garante que a operação **BUSCAR** subsequente encontre os dados corretamente em `mxf_tmp_icms_entrada` e os devolva para a tabela `MXF_TMP_ICMS_ENTRADA` do Oracle/Firebird.
+
+---
+
 ## [1.0.2] — 2026-04-09
 
 ### Adicionado

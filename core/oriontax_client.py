@@ -434,14 +434,16 @@ class OrionTaxClient:
             total_processed = 0
             
             # Mapeamento de chaves para nomes de tabelas
-            mapping = {
-                'icms_entrada': 'mxf_vw_icms_entrada',
-                'icms_saida': 'mxf_vw_icms',
-                'pis_cofins': 'mxf_vw_pis_cofins',
-                'cbs_ibs': 'mxf_vw_cbs_ibs'
-            }
-            
-            for key, table_name in mapping.items():
+            # icms_entrada é gravado em duas tabelas: vw (leitura) e tmp (devolução para Intersolid)
+            table_pairs = [
+                ('icms_entrada', 'mxf_vw_icms_entrada'),
+                ('icms_entrada', 'mxf_tmp_icms_entrada'),
+                ('icms_saida',   'mxf_vw_icms'),
+                ('pis_cofins',   'mxf_vw_pis_cofins'),
+                ('cbs_ibs',      'mxf_vw_cbs_ibs'),
+            ]
+
+            for key, table_name in table_pairs:
                 if key not in dataframes:
                     self.logger.info(f"DataFrame '{key}' não encontrado, pulando...")
                     continue
