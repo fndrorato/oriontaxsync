@@ -2,6 +2,17 @@
 
 ---
 
+## [1.0.2.4] — 2026-05-06
+
+### Corrigido
+
+#### Filtro de produtos ativos em PIS/COFINS
+- A leitura da view `MXF_VW_PIS_COFINS` passou a aplicar o filtro `STATUS = 'ATIVO'`, tanto no cliente Firebird (`firebird_client.py`) quanto no Oracle (`oracle_client.py`).
+- Antes, todos os produtos eram retornados independentemente do status, podendo incluir itens inativos no envio à OrionTax.
+- No Firebird, o método `_read_view` ganhou o parâmetro opcional `where_clause` para suportar filtros sem duplicar código.
+
+---
+
 ## [1.0.2.3] — 2026-04-30
 
 ### Corrigido
