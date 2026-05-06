@@ -109,11 +109,14 @@ class FirebirdClient:
             return value.decode(self._python_codec, errors='replace')
         return value
 
-    def _read_view(self, view_name: str) -> pd.DataFrame:
+    def _read_view(self, view_name: str, where_clause: str = None) -> pd.DataFrame:
         """Lê uma VIEW e retorna um DataFrame."""
         codec = getattr(self, '_python_codec', 'cp1252')
         cursor = self.connection.cursor()
-        cursor.execute(f"SELECT * FROM {view_name}")
+        sql = f"SELECT * FROM {view_name}"
+        if where_clause:
+            sql += f" WHERE {where_clause}"
+        cursor.execute(sql)
         columns = [
             (desc[0].decode(codec, errors='replace') if isinstance(desc[0], bytes) else desc[0]).strip()
             for desc in cursor.description
@@ -147,7 +150,7 @@ class FirebirdClient:
             self.logger.info(f"✓ ICMS Saída: {len(df_icms_saida)} registros")
 
             self.logger.info("Lendo MXF_VW_PIS_COFINS...")
-            df_pis_cofins = self._read_view("MXF_VW_PIS_COFINS")
+            df_pis_cofins = self._read_view("MXF_VW_PIS_COFINS", "STATUS = 'ATIVO'")
             self.logger.info(f"✓ PIS/COFINS: {len(df_pis_cofins)} registros")
 
             self.logger.info("Lendo MXF_VW_CBS_IBS...")

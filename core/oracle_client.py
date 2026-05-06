@@ -579,7 +579,7 @@ class OracleClient:
             # 3. PIS/COFINS
             self.logger.info("Lendo MXF_VW_PIS_COFINS...")
             df_pis_cofins = pd.read_sql("""
-                SELECT * FROM MXF_VW_PIS_COFINS
+                SELECT * FROM MXF_VW_PIS_COFINS WHERE STATUS = 'ATIVO'
             """, self.connection)
             self.logger.info(f"✓ PIS/COFINS: {len(df_pis_cofins)} registros")
             
