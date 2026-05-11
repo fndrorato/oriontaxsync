@@ -2,6 +2,18 @@
 
 ---
 
+## [1.0.2.5] — 2026-05-11
+
+### Alterado
+
+#### Substituição de UPSERT por DELETE + INSERT no envio para OrionTax
+- Na operação **ENVIAR** (Oracle/Firebird → PostgreSQL), o mecanismo de `INSERT ON CONFLICT DO UPDATE` foi substituído por `DELETE WHERE cnpj = X` seguido de `INSERT` simples.
+- Novo método `delete_and_insert_dataframe` em `oriontax_client.py` responsável pela operação.
+- DELETE e INSERTs ocorrem na mesma transação: em caso de falha, o rollback desfaz tudo.
+- A operação **BUSCAR** (PostgreSQL → Oracle/Firebird) não foi alterada.
+
+---
+
 ## [1.0.2.4] — 2026-05-06
 
 ### Corrigido

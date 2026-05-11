@@ -222,6 +222,60 @@ class OrionTaxClient:
         
         return df_filtered            
     
+    def delete_and_insert_dataframe(
+        self,
+        table_name: str,
+        df: pd.DataFrame,
+        cnpj: str,
+    ) -> int:
+        """
+        Deleta os registros do CNPJ na tabela e insere os novos dados.
+
+        Args:
+            table_name: Nome da tabela PostgreSQL
+            df: DataFrame com os dados a inserir
+            cnpj: CNPJ do cliente (usado no DELETE)
+
+        Returns:
+            Número de registros inseridos
+        """
+        if df.empty:
+            self.logger.info(f"DataFrame vazio para {table_name}, pulando...")
+            return 0
+
+        try:
+            df_clean = self._clean_dataframe_for_insert(df)
+
+            cols = list(df_clean.columns)
+            values = [tuple(row) for row in df_clean.to_numpy()]
+
+            cols_sql = ', '.join(cols)
+            insert_sql = f"INSERT INTO {table_name} ({cols_sql}) VALUES %s"
+
+            chunk_size = 1000
+            total_inserted = 0
+
+            with self.connection.cursor() as cursor:
+                cursor.execute(f"DELETE FROM {table_name} WHERE cnpj = %s", (cnpj,))
+                self.logger.info(f"  Deletados registros existentes de {table_name} para CNPJ {cnpj}")
+
+                for i in range(0, len(values), chunk_size):
+                    chunk = values[i:i + chunk_size]
+                    execute_values(cursor, insert_sql, chunk, page_size=chunk_size)
+                    total_inserted += len(chunk)
+
+                    if (i // chunk_size + 1) % 10 == 0:
+                        self.logger.info(f"  Inseridos {total_inserted}/{len(values)} registros...")
+
+            self.logger.info(f"✓ {total_inserted} registros inseridos em {table_name}")
+            return total_inserted
+
+        except Exception as e:
+            self.logger.error(f"Erro ao inserir em {table_name}: {e}")
+            import traceback
+            self.logger.error(traceback.format_exc())
+            raise
+
     def upsert_dataframe_psycopg2(
         self,
         table_name: str,
@@ -231,73 +285,73 @@ class OrionTaxClient:
     ) -> int:
         """
         Faz UPSERT (INSERT ... ON CONFLICT DO UPDATE) no PostgreSQL
-        
+
         Args:
             table_name: Nome da tabela
             df: DataFrame com dados
             conflict_cols: Colunas da chave única (ex: ['cnpj', 'codigo_produto'])
             update_cols: Colunas a atualizar em caso de conflito
-            
+
         Returns:
             Número de registros processados
         """
         if df.empty:
             self.logger.info(f"DataFrame vazio para {table_name}, pulando...")
             return 0
-        
+
         try:
             # Limpar DataFrame
             df_clean = self._clean_dataframe_for_insert(df)
-            
+
             # Garantir que constraint existe
             self._ensure_constraint_exists(table_name, conflict_cols)
-            
+
             # Preparar colunas e valores
             cols = list(df_clean.columns)
             values = [tuple(row) for row in df_clean.to_numpy()]
-            
+
             # Construir SQL de UPSERT
             cols_sql = ', '.join(cols)
-            
+
             # Placeholder para VALUES: (%s, %s, %s, ...)
             placeholders = ', '.join(['%s'] * len(cols))
-            
+
             # Cláusula UPDATE SET
             update_set = ', '.join([f"{col} = EXCLUDED.{col}" for col in update_cols])
-            
+
             insert_sql = f"""
                 INSERT INTO {table_name} ({cols_sql})
                 VALUES %s
                 ON CONFLICT ({', '.join(conflict_cols)})
                 DO UPDATE SET {update_set}
             """
-            
+
             self.logger.info(f"Executando UPSERT em {table_name}: {len(values)} registros")
-            
+
             # Executar em chunks para performance
             chunk_size = 1000
             total_inserted = 0
-            
+
             with self.connection.cursor() as cursor:
                 for i in range(0, len(values), chunk_size):
                     chunk = values[i:i + chunk_size]
-                    
+
                     execute_values(
                         cursor,
                         insert_sql,
                         chunk,
                         page_size=chunk_size
                     )
-                    
+
                     total_inserted += len(chunk)
-                    
+
                     if (i // chunk_size + 1) % 10 == 0:  # Log a cada 10 chunks
                         self.logger.info(f"  Processados {total_inserted}/{len(values)} registros...")
-            
+
             self.logger.info(f"✓ {total_inserted} registros processados em {table_name}")
-            
+
             return total_inserted
-            
+
         except Exception as e:
             self.logger.error(f"Erro no UPSERT de {table_name}: {e}")
             import traceback
@@ -496,32 +550,21 @@ class OrionTaxClient:
                     self.logger.error(f"Colunas obrigatórias (cnpj, codigo_produto) não encontradas após filtro")
                     continue
                 
-                # Colunas de conflito (chave única)
-                conflict_cols = ['cnpj', 'codigo_produto']
-                
                 # ✅ REMOVER DUPLICATAS baseado na chave única
-                df = self._remove_duplicates(df, conflict_cols)
-                
+                df = self._remove_duplicates(df, ['cnpj', 'codigo_produto'])
+
                 if df.empty:
                     self.logger.warning(f"DataFrame '{key}' ficou vazio após remover duplicatas")
                     continue
-                
+
                 # ✅ TRUNCAR COLUNAS DE TEXTO que excedem o limite
                 df = self._truncate_string_columns(df, table_name)
-                
-                # Colunas para atualizar (todas exceto as de conflito)
-                update_cols = [c for c in df.columns if c not in conflict_cols]
-                
-                if not update_cols:
-                    self.logger.warning(f"Nenhuma coluna para atualizar em {table_name}")
-                    continue
-                
-                # Executar UPSERT
-                count = self.upsert_dataframe_psycopg2(
+
+                # Executar DELETE + INSERT
+                count = self.delete_and_insert_dataframe(
                     table_name=table_name,
                     df=df,
-                    conflict_cols=conflict_cols,
-                    update_cols=update_cols
+                    cnpj=cnpj,
                 )
                 
                 total_processed += count
