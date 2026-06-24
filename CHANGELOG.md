@@ -2,6 +2,19 @@
 
 ---
 
+## [1.0.3] — 2026-06-24
+
+### Adicionado
+
+#### Sincronização da tabela TAB_CODIGO_BARRA na operação ENVIAR
+- A operação **ENVIAR** (Oracle/Firebird → PostgreSQL) passou a incluir a tabela `TAB_CODIGO_BARRA`.
+- Os dados são lidos do banco de origem (`TAB_CODIGO_BARRA`) e gravados na tabela `mxf_tab_codigo_barra` do PostgreSQL, com o CNPJ do cliente injetado automaticamente.
+- A chave de deduplicação e de DELETE é composta por `cnpj + cod_produto + cod_ean`, refletindo a PK original da tabela no Oracle/Firebird.
+- A operação **BUSCAR** não foi alterada — `mxf_tab_codigo_barra` é somente gravação.
+- Internamente, `table_pairs` em `oriontax_client.py` passou de 2-tupla para 3-tupla `(key, table_name, dedup_cols)`, permitindo que cada tabela defina sua própria chave de dedup sem impactar as demais.
+
+---
+
 ## [1.0.2.5] — 2026-05-11
 
 ### Alterado

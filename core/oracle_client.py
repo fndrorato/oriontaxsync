@@ -589,12 +589,20 @@ class OracleClient:
                 SELECT * FROM MXF_VW_CBS_IBS
             """, self.connection)
             self.logger.info(f"✓ CBS/IBS: {len(df_cbs_ibs)} registros")
-            
+
+            # 5. CÓDIGO DE BARRAS
+            self.logger.info("Lendo TAB_CODIGO_BARRA...")
+            df_codigo_barra = pd.read_sql("""
+                SELECT * FROM TAB_CODIGO_BARRA
+            """, self.connection)
+            self.logger.info(f"✓ Código de Barras: {len(df_codigo_barra)} registros")
+
             return {
                 'icms_entrada': df_icms_entrada,
                 'icms_saida': df_icms_saida,
                 'pis_cofins': df_pis_cofins,
-                'cbs_ibs': df_cbs_ibs
+                'cbs_ibs': df_cbs_ibs,
+                'codigo_barra': df_codigo_barra,
             }
             
         except Exception as e:

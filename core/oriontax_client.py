@@ -487,71 +487,75 @@ class OrionTaxClient:
             
             total_processed = 0
             
-            # Mapeamento de chaves para nomes de tabelas
+            # Mapeamento de chaves para nomes de tabelas e colunas de dedup (PK)
             # icms_entrada é gravado em duas tabelas: vw (leitura) e tmp (devolução para Intersolid)
             table_pairs = [
-                ('icms_entrada', 'mxf_vw_icms_entrada'),
-                ('icms_entrada', 'mxf_tmp_icms_entrada'),
-                ('icms_saida',   'mxf_vw_icms'),
-                ('pis_cofins',   'mxf_vw_pis_cofins'),
-                ('cbs_ibs',      'mxf_vw_cbs_ibs'),
+                ('icms_entrada', 'mxf_vw_icms_entrada', ['cnpj', 'codigo_produto']),
+                ('icms_entrada', 'mxf_tmp_icms_entrada', ['cnpj', 'codigo_produto']),
+                ('icms_saida',   'mxf_vw_icms',          ['cnpj', 'codigo_produto']),
+                ('pis_cofins',   'mxf_vw_pis_cofins',    ['cnpj', 'codigo_produto']),
+                ('cbs_ibs',      'mxf_vw_cbs_ibs',       ['cnpj', 'codigo_produto']),
+                ('codigo_barra', 'mxf_tab_codigo_barra',  ['cnpj', 'cod_produto', 'cod_ean']),
             ]
 
-            for key, table_name in table_pairs:
+            for key, table_name, dedup_cols in table_pairs:
                 if key not in dataframes:
                     self.logger.info(f"DataFrame '{key}' não encontrado, pulando...")
                     continue
-                
+
                 df = dataframes[key]
-                
+
                 if df.empty:
                     self.logger.info(f"DataFrame '{key}' está vazio, pulando...")
                     continue
-                
+
                 # Fazer cópia para não modificar original
                 df = df.copy()
-                
+
                 # Converter nomes de colunas para lowercase (padrão PostgreSQL)
                 df.columns = [c.lower() for c in df.columns]
-                
+
                 # Adicionar/substituir CNPJ
                 df['cnpj'] = cnpj
-                
-                # Garantir que codigo_produto não seja None
-                if 'codigo_produto' not in df.columns:
-                    raise ValueError(f"Coluna 'codigo_produto' não encontrada no DataFrame '{key}'")
-                
-                # Remover linhas onde codigo_produto é None
+
+                # Coluna principal da PK (primeiro campo não-cnpj de dedup_cols)
+                pk_col = dedup_cols[1]
+
+                if pk_col not in df.columns:
+                    raise ValueError(f"Coluna '{pk_col}' não encontrada no DataFrame '{key}'")
+
+                # Remover linhas onde a coluna PK principal é None
                 original_count = len(df)
-                df = df[df['codigo_produto'].notna()]
+                df = df[df[pk_col].notna()]
                 removed_count = original_count - len(df)
-                
+
                 if removed_count > 0:
-                    self.logger.warning(f"  Removidas {removed_count} linhas sem codigo_produto")
-                
+                    self.logger.warning(f"  Removidas {removed_count} linhas sem {pk_col}")
+
                 if df.empty:
-                    self.logger.warning(f"DataFrame '{key}' ficou vazio após filtrar codigo_produto nulos")
+                    self.logger.warning(f"DataFrame '{key}' ficou vazio após filtrar {pk_col} nulos")
                     continue
-                
+
                 self.logger.info(f"\n{'='*60}")
                 self.logger.info(f"Processando {table_name}")
                 self.logger.info(f"Registros: {len(df)}")
                 self.logger.info(f"Colunas originais: {len(df.columns)}")
-                
+
                 # ✅ FILTRAR COLUNAS - Manter apenas as que existem na tabela
                 df = self._filter_dataframe_columns(df, table_name)
-                
+
                 if df.empty:
                     self.logger.warning(f"DataFrame '{key}' ficou vazio após filtrar colunas")
                     continue
-                
+
                 # Verificar se temos as colunas obrigatórias
-                if 'cnpj' not in df.columns or 'codigo_produto' not in df.columns:
-                    self.logger.error(f"Colunas obrigatórias (cnpj, codigo_produto) não encontradas após filtro")
+                missing = [c for c in dedup_cols if c not in df.columns]
+                if missing:
+                    self.logger.error(f"Colunas obrigatórias ausentes após filtro: {missing}")
                     continue
-                
-                # ✅ REMOVER DUPLICATAS baseado na chave única
-                df = self._remove_duplicates(df, ['cnpj', 'codigo_produto'])
+
+                # ✅ REMOVER DUPLICATAS baseado na chave única da tabela
+                df = self._remove_duplicates(df, dedup_cols)
 
                 if df.empty:
                     self.logger.warning(f"DataFrame '{key}' ficou vazio após remover duplicatas")

@@ -157,11 +157,16 @@ class FirebirdClient:
             df_cbs_ibs = self._read_view("MXF_VW_CBS_IBS")
             self.logger.info(f"✓ CBS/IBS: {len(df_cbs_ibs)} registros")
 
+            self.logger.info("Lendo TAB_CODIGO_BARRA...")
+            df_codigo_barra = self._read_view("TAB_CODIGO_BARRA")
+            self.logger.info(f"✓ Código de Barras: {len(df_codigo_barra)} registros")
+
             return {
                 'icms_entrada': df_icms_entrada,
                 'icms_saida': df_icms_saida,
                 'pis_cofins': df_pis_cofins,
                 'cbs_ibs': df_cbs_ibs,
+                'codigo_barra': df_codigo_barra,
             }
 
         except Exception as e:
