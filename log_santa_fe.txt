@@ -1,0 +1,566 @@
+2026-07-03 00:28:16 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 00:58:16 -03)" (scheduled at 2026-07-03 00:28:16.115220-03:00)
+2026-07-03 00:28:16 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: integrador-oriontax.f5sys.com.br
+2026-07-03 00:28:17 [INFO] core.heartbeat: Heartbeat OK | CNPJ=54178593000100 | CPU=0.0% | MEM=52.2% | DISCO=32.5% | STATUS=running
+2026-07-03 00:28:17 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-07-03 00:28:17 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 00:58:16 -03)" executed successfully
+2026-07-03 00:58:16 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 01:28:16 -03)" (scheduled at 2026-07-03 00:58:16.115220-03:00)
+2026-07-03 00:58:16 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: integrador-oriontax.f5sys.com.br
+2026-07-03 00:58:17 [INFO] core.heartbeat: Heartbeat OK | CNPJ=54178593000100 | CPU=0.0% | MEM=52.5% | DISCO=32.5% | STATUS=running
+2026-07-03 00:58:17 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-07-03 00:58:17 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 01:28:16 -03)" executed successfully
+2026-07-03 01:28:16 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 01:58:16 -03)" (scheduled at 2026-07-03 01:28:16.115220-03:00)
+2026-07-03 01:28:16 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: integrador-oriontax.f5sys.com.br
+2026-07-03 01:28:17 [INFO] core.heartbeat: Heartbeat OK | CNPJ=54178593000100 | CPU=1.6% | MEM=52.3% | DISCO=32.5% | STATUS=running
+2026-07-03 01:28:17 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-07-03 01:28:17 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 01:58:16 -03)" executed successfully
+2026-07-03 01:58:16 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 02:28:16 -03)" (scheduled at 2026-07-03 01:58:16.115220-03:00)
+2026-07-03 01:58:16 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: integrador-oriontax.f5sys.com.br
+2026-07-03 01:58:17 [INFO] core.heartbeat: Heartbeat OK | CNPJ=54178593000100 | CPU=0.0% | MEM=52.6% | DISCO=32.5% | STATUS=running
+2026-07-03 01:58:17 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-07-03 01:58:17 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 02:28:16 -03)" executed successfully
+2026-07-03 02:28:16 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 02:58:16 -03)" (scheduled at 2026-07-03 02:28:16.115220-03:00)
+2026-07-03 02:28:16 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: integrador-oriontax.f5sys.com.br
+2026-07-03 02:28:17 [INFO] core.heartbeat: Heartbeat OK | CNPJ=54178593000100 | CPU=1.6% | MEM=52.1% | DISCO=32.5% | STATUS=running
+2026-07-03 02:28:17 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-07-03 02:28:17 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 02:58:16 -03)" executed successfully
+2026-07-03 02:58:16 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 03:28:16 -03)" (scheduled at 2026-07-03 02:58:16.115220-03:00)
+2026-07-03 02:58:16 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: integrador-oriontax.f5sys.com.br
+2026-07-03 02:58:17 [INFO] core.heartbeat: Heartbeat OK | CNPJ=54178593000100 | CPU=0.0% | MEM=52.6% | DISCO=32.6% | STATUS=running
+2026-07-03 02:58:17 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-07-03 02:58:17 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 03:28:16 -03)" executed successfully
+2026-07-03 03:00:00 [INFO] apscheduler.executors.default: Running job "ENVIAR (trigger: cron[hour='3', minute='0'], next run at: 2026-07-04 03:00:00 -03)" (scheduled at 2026-07-03 03:00:00-03:00)
+2026-07-03 03:00:00 [INFO] core.scheduler: ========================================
+2026-07-03 03:00:00 [INFO] core.scheduler: Executando sincronização agendada: ENVIAR
+2026-07-03 03:00:00 [INFO] core.scheduler: ========================================
+2026-07-03 03:00:00 [INFO] core.scheduler: Processando cliente: santa fe (CNPJ: 54178593000100)
+2026-07-03 03:00:00 [INFO] core.scheduler: [santa fe] Conectando ao BD Intersolid...
+2026-07-03 03:00:00 [INFO] core.oracle_client: Tentando conexão em modo thin...
+2026-07-03 03:00:00 [INFO] core.oracle_client: ✓ Conectado ao Oracle (modo thin): 192.168.10.208
+2026-07-03 03:00:00 [INFO] core.scheduler: [santa fe] Lendo VIEWs do Oracle (CNPJ: 54178593000100)...
+2026-07-03 03:00:00 [INFO] core.oracle_client: Lendo VIEWs Oracle (todos os registros)...
+2026-07-03 03:00:00 [INFO] core.oracle_client: Lendo MXF_VW_ICMS_ENTRADA...
+2026-07-03 03:00:00 [INFO] core.scheduler: Sincronização agendada iniciada para 1 cliente(s)
+2026-07-03 03:00:00 [INFO] apscheduler.executors.default: Job "ENVIAR (trigger: cron[hour='3', minute='0'], next run at: 2026-07-04 03:00:00 -03)" executed successfully
+2026-07-03 03:00:11 [INFO] core.oracle_client: ✓ ICMS Entrada: 78352 registros
+2026-07-03 03:00:11 [INFO] core.oracle_client: Lendo MXF_VW_ICMS...
+2026-07-03 03:00:15 [INFO] core.oracle_client: ✓ ICMS Saída: 78352 registros
+2026-07-03 03:00:15 [INFO] core.oracle_client: Lendo MXF_VW_PIS_COFINS...
+2026-07-03 03:00:17 [INFO] core.oracle_client: ✓ PIS/COFINS: 42768 registros
+2026-07-03 03:00:17 [INFO] core.oracle_client: Lendo MXF_VW_CBS_IBS...
+2026-07-03 03:00:20 [INFO] core.oracle_client: ✓ CBS/IBS: 71385 registros
+2026-07-03 03:00:20 [INFO] core.oracle_client: Lendo TAB_CODIGO_BARRA...
+2026-07-03 03:00:20 [INFO] core.oracle_client: ✓ Código de Barras: 39190 registros
+2026-07-03 03:00:20 [INFO] core.scheduler: [santa fe] ✓ 310047 registros lidos do Oracle
+2026-07-03 03:00:20 [INFO] core.oracle_client: Desconectado do Oracle
+2026-07-03 03:00:20 [INFO] core.scheduler: [santa fe] Conectando ao OrionTax...
+2026-07-03 03:00:20 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: integrador-oriontax.f5sys.com.br
+2026-07-03 03:00:20 [INFO] core.scheduler: [santa fe] Enviando dados para OrionTax...
+2026-07-03 03:00:20 [INFO] core.oriontax_client: 
+============================================================
+2026-07-03 03:00:20 [INFO] core.oriontax_client: Processando mxf_vw_icms_entrada
+2026-07-03 03:00:20 [INFO] core.oriontax_client: Registros: 78352
+2026-07-03 03:00:20 [INFO] core.oriontax_client: Colunas originais: 24
+2026-07-03 03:00:21 [WARNING] core.oriontax_client: Removendo 3 colunas não existentes na tabela:
+2026-07-03 03:00:21 [WARNING] core.oriontax_client:   - nfd_cst
+2026-07-03 03:00:21 [WARNING] core.oriontax_client:   - status
+2026-07-03 03:00:21 [WARNING] core.oriontax_client:   - dta_ult_venda
+2026-07-03 03:00:21 [INFO] core.oriontax_client: Colunas da tabela ausentes no DataFrame (16): ['tipo_mva', 'mva', 'mva_data_ini', 'mva_data_fim', 'credito_outorgado']...
+2026-07-03 03:00:21 [INFO] core.oriontax_client: DataFrame filtrado: 24 → 21 colunas
+2026-07-03 03:00:21 [WARNING] core.oriontax_client: ⚠️  Removidas 39171 duplicatas (chave: ['cnpj', 'codigo_produto'])
+2026-07-03 03:00:21 [WARNING] core.oriontax_client:    78352 → 39181 registros
+2026-07-03 03:00:21 [WARNING] core.oriontax_client: ⚠️  Truncando 39181 valores em 'ed_cst' (max=3)
+2026-07-03 03:00:21 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 03:00:21 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 03:00:21 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 03:00:21 [WARNING] core.oriontax_client: ⚠️  Truncando 39181 valores em 'es_cst' (max=3)
+2026-07-03 03:00:21 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 03:00:21 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 03:00:21 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 03:00:21 [WARNING] core.oriontax_client: ⚠️  Truncando 39181 valores em 'nfi_cst' (max=3)
+2026-07-03 03:00:21 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 03:00:21 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 03:00:21 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 03:00:21 [WARNING] core.oriontax_client: ✂️  Total de valores truncados: 117543
+2026-07-03 03:00:22 [INFO] core.oriontax_client:   Deletados registros existentes de mxf_vw_icms_entrada para CNPJ 54178593000100
+2026-07-03 03:00:25 [INFO] core.oriontax_client:   Inseridos 10000/39181 registros...
+2026-07-03 03:00:29 [INFO] core.oriontax_client:   Inseridos 20000/39181 registros...
+2026-07-03 03:00:33 [INFO] core.oriontax_client:   Inseridos 30000/39181 registros...
+2026-07-03 03:00:36 [INFO] core.oriontax_client:   Inseridos 39181/39181 registros...
+2026-07-03 03:00:36 [INFO] core.oriontax_client: ✓ 39181 registros inseridos em mxf_vw_icms_entrada
+2026-07-03 03:00:36 [INFO] core.oriontax_client: 
+============================================================
+2026-07-03 03:00:36 [INFO] core.oriontax_client: Processando mxf_tmp_icms_entrada
+2026-07-03 03:00:36 [INFO] core.oriontax_client: Registros: 78352
+2026-07-03 03:00:36 [INFO] core.oriontax_client: Colunas originais: 24
+2026-07-03 03:00:36 [WARNING] core.oriontax_client: Removendo 10 colunas não existentes na tabela:
+2026-07-03 03:00:36 [WARNING] core.oriontax_client:   - es_cst
+2026-07-03 03:00:36 [WARNING] core.oriontax_client:   - es_alq
+2026-07-03 03:00:36 [WARNING] core.oriontax_client:   - es_alqst
+2026-07-03 03:00:36 [WARNING] core.oriontax_client:   - es_rbc
+2026-07-03 03:00:36 [WARNING] core.oriontax_client:   - es_rbcst
+2026-07-03 03:00:36 [WARNING] core.oriontax_client:   - nfi_cst
+2026-07-03 03:00:36 [WARNING] core.oriontax_client:   - nfd_cst
+2026-07-03 03:00:36 [WARNING] core.oriontax_client:   - nfs_csosn
+2026-07-03 03:00:36 [WARNING] core.oriontax_client:   - nf_alq
+2026-07-03 03:00:36 [WARNING] core.oriontax_client:   - status
+2026-07-03 03:00:36 [INFO] core.oriontax_client: Colunas da tabela ausentes no DataFrame (9): ['tipo_mva', 'mva', 'credito_outorgado', 'gera_debito', 'sub_rbc_alq']...
+2026-07-03 03:00:36 [INFO] core.oriontax_client: DataFrame filtrado: 24 → 14 colunas
+2026-07-03 03:00:37 [WARNING] core.oriontax_client: ⚠️  Removidas 39171 duplicatas (chave: ['cnpj', 'codigo_produto'])
+2026-07-03 03:00:37 [WARNING] core.oriontax_client:    78352 → 39181 registros
+2026-07-03 03:00:37 [WARNING] core.oriontax_client: ⚠️  Truncando 39181 valores em 'ed_cst' (max=3)
+2026-07-03 03:00:37 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 03:00:37 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 03:00:37 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 03:00:37 [WARNING] core.oriontax_client: ✂️  Total de valores truncados: 39181
+2026-07-03 03:00:37 [INFO] core.oriontax_client:   Deletados registros existentes de mxf_tmp_icms_entrada para CNPJ 54178593000100
+2026-07-03 03:00:39 [INFO] core.oriontax_client:   Inseridos 10000/39181 registros...
+2026-07-03 03:00:41 [INFO] core.oriontax_client:   Inseridos 20000/39181 registros...
+2026-07-03 03:00:43 [INFO] core.oriontax_client:   Inseridos 30000/39181 registros...
+2026-07-03 03:00:44 [INFO] core.oriontax_client:   Inseridos 39181/39181 registros...
+2026-07-03 03:00:44 [INFO] core.oriontax_client: ✓ 39181 registros inseridos em mxf_tmp_icms_entrada
+2026-07-03 03:00:44 [INFO] core.oriontax_client: 
+============================================================
+2026-07-03 03:00:44 [INFO] core.oriontax_client: Processando mxf_vw_icms
+2026-07-03 03:00:44 [INFO] core.oriontax_client: Registros: 78352
+2026-07-03 03:00:44 [INFO] core.oriontax_client: Colunas originais: 33
+2026-07-03 03:00:44 [WARNING] core.oriontax_client: Removendo 2 colunas não existentes na tabela:
+2026-07-03 03:00:44 [WARNING] core.oriontax_client:   - status
+2026-07-03 03:00:44 [WARNING] core.oriontax_client:   - dta_ult_venda
+2026-07-03 03:00:44 [INFO] core.oriontax_client: Colunas da tabela ausentes no DataFrame (18): ['sac_alqst', 'sac_rbcst', 'sac_alq_benef', 'sac_cbenef', 'sas_alqst']...
+2026-07-03 03:00:45 [INFO] core.oriontax_client: DataFrame filtrado: 33 → 31 colunas
+2026-07-03 03:00:45 [WARNING] core.oriontax_client: ⚠️  Removidas 39171 duplicatas (chave: ['cnpj', 'codigo_produto'])
+2026-07-03 03:00:45 [WARNING] core.oriontax_client:    78352 → 39181 registros
+2026-07-03 03:00:45 [WARNING] core.oriontax_client: ⚠️  Truncando 39181 valores em 'sas_cst' (max=3)
+2026-07-03 03:00:45 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 03:00:45 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 03:00:45 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 03:00:45 [WARNING] core.oriontax_client: ⚠️  Truncando 1502 valores em 'svc_cst' (max=3)
+2026-07-03 03:00:45 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 03:00:45 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 03:00:45 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 03:00:45 [WARNING] core.oriontax_client: ✂️  Total de valores truncados: 40683
+2026-07-03 03:00:46 [INFO] core.oriontax_client:   Deletados registros existentes de mxf_vw_icms para CNPJ 54178593000100
+2026-07-03 03:00:49 [INFO] core.oriontax_client:   Inseridos 10000/39181 registros...
+2026-07-03 03:00:53 [INFO] core.oriontax_client:   Inseridos 20000/39181 registros...
+2026-07-03 03:00:56 [INFO] core.oriontax_client:   Inseridos 30000/39181 registros...
+2026-07-03 03:00:59 [INFO] core.oriontax_client:   Inseridos 39181/39181 registros...
+2026-07-03 03:00:59 [INFO] core.oriontax_client: ✓ 39181 registros inseridos em mxf_vw_icms
+2026-07-03 03:00:59 [INFO] core.oriontax_client: 
+============================================================
+2026-07-03 03:00:59 [INFO] core.oriontax_client: Processando mxf_vw_pis_cofins
+2026-07-03 03:00:59 [INFO] core.oriontax_client: Registros: 42768
+2026-07-03 03:00:59 [INFO] core.oriontax_client: Colunas originais: 22
+2026-07-03 03:00:59 [WARNING] core.oriontax_client: Removendo 2 colunas não existentes na tabela:
+2026-07-03 03:00:59 [WARNING] core.oriontax_client:   - depto
+2026-07-03 03:00:59 [WARNING] core.oriontax_client:   - dta_ult_venda
+2026-07-03 03:00:59 [INFO] core.oriontax_client: Colunas da tabela ausentes no DataFrame (7): ['fundamento_legal', 'dta_alteracao', 'dta_cadastro', 'des_sigla', 'tipo_regime']...
+2026-07-03 03:00:59 [INFO] core.oriontax_client: DataFrame filtrado: 22 → 20 colunas
+2026-07-03 03:00:59 [WARNING] core.oriontax_client: ⚠️  Removidas 3587 duplicatas (chave: ['cnpj', 'codigo_produto'])
+2026-07-03 03:00:59 [WARNING] core.oriontax_client:    42768 → 39181 registros
+2026-07-03 03:01:00 [INFO] core.oriontax_client: ✓ Nenhum valor precisa ser truncado
+2026-07-03 03:01:01 [INFO] core.oriontax_client:   Deletados registros existentes de mxf_vw_pis_cofins para CNPJ 54178593000100
+2026-07-03 03:01:04 [INFO] core.oriontax_client:   Inseridos 10000/39181 registros...
+2026-07-03 03:01:07 [INFO] core.oriontax_client:   Inseridos 20000/39181 registros...
+2026-07-03 03:01:10 [INFO] core.oriontax_client:   Inseridos 30000/39181 registros...
+2026-07-03 03:01:13 [INFO] core.oriontax_client:   Inseridos 39181/39181 registros...
+2026-07-03 03:01:13 [INFO] core.oriontax_client: ✓ 39181 registros inseridos em mxf_vw_pis_cofins
+2026-07-03 03:01:13 [INFO] core.oriontax_client: 
+============================================================
+2026-07-03 03:01:13 [INFO] core.oriontax_client: Processando mxf_vw_cbs_ibs
+2026-07-03 03:01:13 [INFO] core.oriontax_client: Registros: 71385
+2026-07-03 03:01:13 [INFO] core.oriontax_client: Colunas originais: 15
+2026-07-03 03:01:13 [INFO] core.oriontax_client: Colunas da tabela ausentes no DataFrame (7): ['fundamento_legal', 'dta_alteracao', 'dta_cadastro', 'des_sigla', 'tipo_regime']...
+2026-07-03 03:01:13 [INFO] core.oriontax_client: DataFrame filtrado: 15 → 15 colunas
+2026-07-03 03:01:13 [WARNING] core.oriontax_client: ⚠️  Removidas 32983 duplicatas (chave: ['cnpj', 'codigo_produto'])
+2026-07-03 03:01:13 [WARNING] core.oriontax_client:    71385 → 38402 registros
+2026-07-03 03:01:13 [WARNING] core.oriontax_client: ⚠️  Truncando 38402 valores em 'cst_is' (max=3)
+2026-07-03 03:01:13 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 03:01:13 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 03:01:13 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 03:01:13 [WARNING] core.oriontax_client: ✂️  Total de valores truncados: 38402
+2026-07-03 03:01:14 [INFO] core.oriontax_client:   Deletados registros existentes de mxf_vw_cbs_ibs para CNPJ 54178593000100
+2026-07-03 03:01:16 [INFO] core.oriontax_client:   Inseridos 10000/38402 registros...
+2026-07-03 03:01:18 [INFO] core.oriontax_client:   Inseridos 20000/38402 registros...
+2026-07-03 03:01:20 [INFO] core.oriontax_client:   Inseridos 30000/38402 registros...
+2026-07-03 03:01:22 [INFO] core.oriontax_client: ✓ 38402 registros inseridos em mxf_vw_cbs_ibs
+2026-07-03 03:01:22 [INFO] core.oriontax_client: 
+============================================================
+2026-07-03 03:01:22 [INFO] core.oriontax_client: Processando mxf_tab_codigo_barra
+2026-07-03 03:01:22 [INFO] core.oriontax_client: Registros: 39190
+2026-07-03 03:01:22 [INFO] core.oriontax_client: Colunas originais: 5
+2026-07-03 03:01:22 [INFO] core.oriontax_client: DataFrame filtrado: 5 → 5 colunas
+2026-07-03 03:01:22 [INFO] core.oriontax_client: ✓ Nenhuma duplicata encontrada
+2026-07-03 03:01:22 [INFO] core.oriontax_client: ✓ Nenhum valor precisa ser truncado
+2026-07-03 03:01:23 [INFO] core.oriontax_client:   Deletados registros existentes de mxf_tab_codigo_barra para CNPJ 54178593000100
+2026-07-03 03:01:24 [INFO] core.oriontax_client:   Inseridos 10000/39190 registros...
+2026-07-03 03:01:25 [INFO] core.oriontax_client:   Inseridos 20000/39190 registros...
+2026-07-03 03:01:26 [INFO] core.oriontax_client:   Inseridos 30000/39190 registros...
+2026-07-03 03:01:27 [INFO] core.oriontax_client:   Inseridos 39190/39190 registros...
+2026-07-03 03:01:27 [INFO] core.oriontax_client: ✓ 39190 registros inseridos em mxf_tab_codigo_barra
+2026-07-03 03:01:27 [INFO] core.oriontax_client: 
+============================================================
+2026-07-03 03:01:27 [INFO] core.oriontax_client: ✓ Total processado: 234316 registros
+2026-07-03 03:01:27 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-07-03 03:01:27 [INFO] core.scheduler: [santa fe] ✓ Dados enviados com sucesso! (87.86s)
+2026-07-03 03:01:27 [INFO] core.scheduler: [santa fe] ✓ 234316 registros processados com sucesso para CNPJ 54178593000100!
+2026-07-03 03:28:16 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 03:58:16 -03)" (scheduled at 2026-07-03 03:28:16.115220-03:00)
+2026-07-03 03:28:16 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: integrador-oriontax.f5sys.com.br
+2026-07-03 03:28:17 [INFO] core.heartbeat: Heartbeat OK | CNPJ=54178593000100 | CPU=1.6% | MEM=52.8% | DISCO=32.6% | STATUS=running
+2026-07-03 03:28:17 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-07-03 03:28:17 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 03:58:16 -03)" executed successfully
+2026-07-03 03:58:16 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 04:28:16 -03)" (scheduled at 2026-07-03 03:58:16.115220-03:00)
+2026-07-03 03:58:16 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: integrador-oriontax.f5sys.com.br
+2026-07-03 03:58:17 [INFO] core.heartbeat: Heartbeat OK | CNPJ=54178593000100 | CPU=1.6% | MEM=52.9% | DISCO=32.6% | STATUS=running
+2026-07-03 03:58:17 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-07-03 03:58:17 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 04:28:16 -03)" executed successfully
+2026-07-03 04:28:16 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 04:58:16 -03)" (scheduled at 2026-07-03 04:28:16.115220-03:00)
+2026-07-03 04:28:16 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: integrador-oriontax.f5sys.com.br
+2026-07-03 04:28:17 [INFO] core.heartbeat: Heartbeat OK | CNPJ=54178593000100 | CPU=1.6% | MEM=53.1% | DISCO=32.6% | STATUS=running
+2026-07-03 04:28:17 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-07-03 04:28:17 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 04:58:16 -03)" executed successfully
+2026-07-03 04:58:16 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 05:28:16 -03)" (scheduled at 2026-07-03 04:58:16.115220-03:00)
+2026-07-03 04:58:16 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: integrador-oriontax.f5sys.com.br
+2026-07-03 04:58:17 [INFO] core.heartbeat: Heartbeat OK | CNPJ=54178593000100 | CPU=1.6% | MEM=53.4% | DISCO=32.6% | STATUS=running
+2026-07-03 04:58:17 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-07-03 04:58:17 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 05:28:16 -03)" executed successfully
+2026-07-03 05:28:16 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 05:58:16 -03)" (scheduled at 2026-07-03 05:28:16.115220-03:00)
+2026-07-03 05:28:16 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: integrador-oriontax.f5sys.com.br
+2026-07-03 05:28:17 [INFO] core.heartbeat: Heartbeat OK | CNPJ=54178593000100 | CPU=0.0% | MEM=53.2% | DISCO=32.6% | STATUS=running
+2026-07-03 05:28:17 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-07-03 05:28:17 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 05:58:16 -03)" executed successfully
+2026-07-03 05:58:16 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 06:28:16 -03)" (scheduled at 2026-07-03 05:58:16.115220-03:00)
+2026-07-03 05:58:16 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: integrador-oriontax.f5sys.com.br
+2026-07-03 05:58:17 [INFO] core.heartbeat: Heartbeat OK | CNPJ=54178593000100 | CPU=0.0% | MEM=53.7% | DISCO=32.6% | STATUS=running
+2026-07-03 05:58:17 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-07-03 05:58:17 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 06:28:16 -03)" executed successfully
+2026-07-03 06:28:16 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 06:58:16 -03)" (scheduled at 2026-07-03 06:28:16.115220-03:00)
+2026-07-03 06:28:16 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: integrador-oriontax.f5sys.com.br
+2026-07-03 06:28:17 [INFO] core.heartbeat: Heartbeat OK | CNPJ=54178593000100 | CPU=3.1% | MEM=53.3% | DISCO=32.6% | STATUS=running
+2026-07-03 06:28:17 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-07-03 06:28:17 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 06:58:16 -03)" executed successfully
+2026-07-03 06:58:16 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 07:28:16 -03)" (scheduled at 2026-07-03 06:58:16.115220-03:00)
+2026-07-03 06:58:16 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: integrador-oriontax.f5sys.com.br
+2026-07-03 06:58:17 [INFO] core.heartbeat: Heartbeat OK | CNPJ=54178593000100 | CPU=1.6% | MEM=53.6% | DISCO=32.6% | STATUS=running
+2026-07-03 06:58:17 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-07-03 06:58:17 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 07:28:16 -03)" executed successfully
+2026-07-03 07:28:16 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 07:58:16 -03)" (scheduled at 2026-07-03 07:28:16.115220-03:00)
+2026-07-03 07:28:16 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: integrador-oriontax.f5sys.com.br
+2026-07-03 07:28:17 [INFO] core.heartbeat: Heartbeat OK | CNPJ=54178593000100 | CPU=3.1% | MEM=53.5% | DISCO=32.6% | STATUS=running
+2026-07-03 07:28:17 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-07-03 07:28:17 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 07:58:16 -03)" executed successfully
+2026-07-03 07:58:16 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 08:28:16 -03)" (scheduled at 2026-07-03 07:58:16.115220-03:00)
+2026-07-03 07:58:16 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: integrador-oriontax.f5sys.com.br
+2026-07-03 07:58:17 [INFO] core.heartbeat: Heartbeat OK | CNPJ=54178593000100 | CPU=21.9% | MEM=46.4% | DISCO=32.5% | STATUS=running
+2026-07-03 07:58:17 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-07-03 07:58:17 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 08:28:16 -03)" executed successfully
+2026-07-03 08:00:00 [INFO] apscheduler.executors.default: Running job "ENVIAR (trigger: cron[hour='8', minute='0'], next run at: 2026-07-04 08:00:00 -03)" (scheduled at 2026-07-03 08:00:00-03:00)
+2026-07-03 08:00:00 [INFO] core.scheduler: ========================================
+2026-07-03 08:00:00 [INFO] core.scheduler: Executando sincronização agendada: ENVIAR
+2026-07-03 08:00:00 [INFO] core.scheduler: ========================================
+2026-07-03 08:00:00 [INFO] core.scheduler: Processando cliente: santa fe (CNPJ: 54178593000100)
+2026-07-03 08:00:00 [INFO] core.scheduler: [santa fe] Conectando ao BD Intersolid...
+2026-07-03 08:00:00 [INFO] core.oracle_client: Tentando conexão em modo thin...
+2026-07-03 08:00:00 [INFO] core.oracle_client: ✓ Conectado ao Oracle (modo thin): 192.168.10.208
+2026-07-03 08:00:00 [INFO] core.scheduler: [santa fe] Lendo VIEWs do Oracle (CNPJ: 54178593000100)...
+2026-07-03 08:00:00 [INFO] core.oracle_client: Lendo VIEWs Oracle (todos os registros)...
+2026-07-03 08:00:00 [INFO] core.oracle_client: Lendo MXF_VW_ICMS_ENTRADA...
+2026-07-03 08:00:00 [INFO] core.scheduler: Sincronização agendada iniciada para 1 cliente(s)
+2026-07-03 08:00:00 [INFO] apscheduler.executors.default: Job "ENVIAR (trigger: cron[hour='8', minute='0'], next run at: 2026-07-04 08:00:00 -03)" executed successfully
+2026-07-03 08:00:03 [INFO] core.oracle_client: ✓ ICMS Entrada: 78352 registros
+2026-07-03 08:00:03 [INFO] core.oracle_client: Lendo MXF_VW_ICMS...
+2026-07-03 08:00:07 [INFO] core.oracle_client: ✓ ICMS Saída: 78352 registros
+2026-07-03 08:00:07 [INFO] core.oracle_client: Lendo MXF_VW_PIS_COFINS...
+2026-07-03 08:00:08 [INFO] core.oracle_client: ✓ PIS/COFINS: 42888 registros
+2026-07-03 08:00:08 [INFO] core.oracle_client: Lendo MXF_VW_CBS_IBS...
+2026-07-03 08:00:10 [INFO] core.oracle_client: ✓ CBS/IBS: 71385 registros
+2026-07-03 08:00:10 [INFO] core.oracle_client: Lendo TAB_CODIGO_BARRA...
+2026-07-03 08:00:10 [INFO] core.oracle_client: ✓ Código de Barras: 39190 registros
+2026-07-03 08:00:10 [INFO] core.scheduler: [santa fe] ✓ 310167 registros lidos do Oracle
+2026-07-03 08:00:10 [INFO] core.oracle_client: Desconectado do Oracle
+2026-07-03 08:00:10 [INFO] core.scheduler: [santa fe] Conectando ao OrionTax...
+2026-07-03 08:00:11 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: integrador-oriontax.f5sys.com.br
+2026-07-03 08:00:11 [INFO] core.scheduler: [santa fe] Enviando dados para OrionTax...
+2026-07-03 08:00:11 [INFO] core.oriontax_client: 
+============================================================
+2026-07-03 08:00:11 [INFO] core.oriontax_client: Processando mxf_vw_icms_entrada
+2026-07-03 08:00:11 [INFO] core.oriontax_client: Registros: 78352
+2026-07-03 08:00:11 [INFO] core.oriontax_client: Colunas originais: 24
+2026-07-03 08:00:11 [WARNING] core.oriontax_client: Removendo 3 colunas não existentes na tabela:
+2026-07-03 08:00:11 [WARNING] core.oriontax_client:   - nfd_cst
+2026-07-03 08:00:11 [WARNING] core.oriontax_client:   - status
+2026-07-03 08:00:11 [WARNING] core.oriontax_client:   - dta_ult_venda
+2026-07-03 08:00:11 [INFO] core.oriontax_client: Colunas da tabela ausentes no DataFrame (16): ['tipo_mva', 'mva', 'mva_data_ini', 'mva_data_fim', 'credito_outorgado']...
+2026-07-03 08:00:11 [INFO] core.oriontax_client: DataFrame filtrado: 24 → 21 colunas
+2026-07-03 08:00:11 [WARNING] core.oriontax_client: ⚠️  Removidas 39171 duplicatas (chave: ['cnpj', 'codigo_produto'])
+2026-07-03 08:00:11 [WARNING] core.oriontax_client:    78352 → 39181 registros
+2026-07-03 08:00:11 [WARNING] core.oriontax_client: ⚠️  Truncando 39181 valores em 'ed_cst' (max=3)
+2026-07-03 08:00:11 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 08:00:11 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 08:00:11 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 08:00:11 [WARNING] core.oriontax_client: ⚠️  Truncando 39181 valores em 'es_cst' (max=3)
+2026-07-03 08:00:11 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 08:00:11 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 08:00:11 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 08:00:11 [WARNING] core.oriontax_client: ⚠️  Truncando 39181 valores em 'nfi_cst' (max=3)
+2026-07-03 08:00:11 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 08:00:11 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 08:00:11 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 08:00:12 [WARNING] core.oriontax_client: ✂️  Total de valores truncados: 117543
+2026-07-03 08:00:12 [INFO] core.oriontax_client:   Deletados registros existentes de mxf_vw_icms_entrada para CNPJ 54178593000100
+2026-07-03 08:00:15 [INFO] core.oriontax_client:   Inseridos 10000/39181 registros...
+2026-07-03 08:00:18 [INFO] core.oriontax_client:   Inseridos 20000/39181 registros...
+2026-07-03 08:00:20 [INFO] core.oriontax_client:   Inseridos 30000/39181 registros...
+2026-07-03 08:00:22 [INFO] core.oriontax_client:   Inseridos 39181/39181 registros...
+2026-07-03 08:00:22 [INFO] core.oriontax_client: ✓ 39181 registros inseridos em mxf_vw_icms_entrada
+2026-07-03 08:00:22 [INFO] core.oriontax_client: 
+============================================================
+2026-07-03 08:00:22 [INFO] core.oriontax_client: Processando mxf_tmp_icms_entrada
+2026-07-03 08:00:22 [INFO] core.oriontax_client: Registros: 78352
+2026-07-03 08:00:22 [INFO] core.oriontax_client: Colunas originais: 24
+2026-07-03 08:00:22 [WARNING] core.oriontax_client: Removendo 10 colunas não existentes na tabela:
+2026-07-03 08:00:22 [WARNING] core.oriontax_client:   - es_cst
+2026-07-03 08:00:22 [WARNING] core.oriontax_client:   - es_alq
+2026-07-03 08:00:22 [WARNING] core.oriontax_client:   - es_alqst
+2026-07-03 08:00:22 [WARNING] core.oriontax_client:   - es_rbc
+2026-07-03 08:00:22 [WARNING] core.oriontax_client:   - es_rbcst
+2026-07-03 08:00:22 [WARNING] core.oriontax_client:   - nfi_cst
+2026-07-03 08:00:22 [WARNING] core.oriontax_client:   - nfd_cst
+2026-07-03 08:00:22 [WARNING] core.oriontax_client:   - nfs_csosn
+2026-07-03 08:00:22 [WARNING] core.oriontax_client:   - nf_alq
+2026-07-03 08:00:22 [WARNING] core.oriontax_client:   - status
+2026-07-03 08:00:22 [INFO] core.oriontax_client: Colunas da tabela ausentes no DataFrame (9): ['tipo_mva', 'mva', 'credito_outorgado', 'gera_debito', 'sub_rbc_alq']...
+2026-07-03 08:00:23 [INFO] core.oriontax_client: DataFrame filtrado: 24 → 14 colunas
+2026-07-03 08:00:23 [WARNING] core.oriontax_client: ⚠️  Removidas 39171 duplicatas (chave: ['cnpj', 'codigo_produto'])
+2026-07-03 08:00:23 [WARNING] core.oriontax_client:    78352 → 39181 registros
+2026-07-03 08:00:23 [WARNING] core.oriontax_client: ⚠️  Truncando 39181 valores em 'ed_cst' (max=3)
+2026-07-03 08:00:23 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 08:00:23 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 08:00:23 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 08:00:23 [WARNING] core.oriontax_client: ✂️  Total de valores truncados: 39181
+2026-07-03 08:00:23 [INFO] core.oriontax_client:   Deletados registros existentes de mxf_tmp_icms_entrada para CNPJ 54178593000100
+2026-07-03 08:00:25 [INFO] core.oriontax_client:   Inseridos 10000/39181 registros...
+2026-07-03 08:00:26 [INFO] core.oriontax_client:   Inseridos 20000/39181 registros...
+2026-07-03 08:00:28 [INFO] core.oriontax_client:   Inseridos 30000/39181 registros...
+2026-07-03 08:00:29 [INFO] core.oriontax_client:   Inseridos 39181/39181 registros...
+2026-07-03 08:00:29 [INFO] core.oriontax_client: ✓ 39181 registros inseridos em mxf_tmp_icms_entrada
+2026-07-03 08:00:29 [INFO] core.oriontax_client: 
+============================================================
+2026-07-03 08:00:29 [INFO] core.oriontax_client: Processando mxf_vw_icms
+2026-07-03 08:00:29 [INFO] core.oriontax_client: Registros: 78352
+2026-07-03 08:00:29 [INFO] core.oriontax_client: Colunas originais: 33
+2026-07-03 08:00:29 [WARNING] core.oriontax_client: Removendo 2 colunas não existentes na tabela:
+2026-07-03 08:00:29 [WARNING] core.oriontax_client:   - status
+2026-07-03 08:00:29 [WARNING] core.oriontax_client:   - dta_ult_venda
+2026-07-03 08:00:29 [INFO] core.oriontax_client: Colunas da tabela ausentes no DataFrame (18): ['sac_alqst', 'sac_rbcst', 'sac_alq_benef', 'sac_cbenef', 'sas_alqst']...
+2026-07-03 08:00:29 [INFO] core.oriontax_client: DataFrame filtrado: 33 → 31 colunas
+2026-07-03 08:00:29 [WARNING] core.oriontax_client: ⚠️  Removidas 39171 duplicatas (chave: ['cnpj', 'codigo_produto'])
+2026-07-03 08:00:29 [WARNING] core.oriontax_client:    78352 → 39181 registros
+2026-07-03 08:00:30 [WARNING] core.oriontax_client: ⚠️  Truncando 39181 valores em 'sas_cst' (max=3)
+2026-07-03 08:00:30 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 08:00:30 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 08:00:30 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 08:00:30 [WARNING] core.oriontax_client: ⚠️  Truncando 1502 valores em 'svc_cst' (max=3)
+2026-07-03 08:00:30 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 08:00:30 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 08:00:30 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 08:00:30 [WARNING] core.oriontax_client: ✂️  Total de valores truncados: 40683
+2026-07-03 08:00:31 [INFO] core.oriontax_client:   Deletados registros existentes de mxf_vw_icms para CNPJ 54178593000100
+2026-07-03 08:00:34 [INFO] core.oriontax_client:   Inseridos 10000/39181 registros...
+2026-07-03 08:00:37 [INFO] core.oriontax_client:   Inseridos 20000/39181 registros...
+2026-07-03 08:00:41 [INFO] core.oriontax_client:   Inseridos 30000/39181 registros...
+2026-07-03 08:00:43 [INFO] core.oriontax_client:   Inseridos 39181/39181 registros...
+2026-07-03 08:00:43 [INFO] core.oriontax_client: ✓ 39181 registros inseridos em mxf_vw_icms
+2026-07-03 08:00:44 [INFO] core.oriontax_client: 
+============================================================
+2026-07-03 08:00:44 [INFO] core.oriontax_client: Processando mxf_vw_pis_cofins
+2026-07-03 08:00:44 [INFO] core.oriontax_client: Registros: 42888
+2026-07-03 08:00:44 [INFO] core.oriontax_client: Colunas originais: 22
+2026-07-03 08:00:44 [WARNING] core.oriontax_client: Removendo 2 colunas não existentes na tabela:
+2026-07-03 08:00:44 [WARNING] core.oriontax_client:   - depto
+2026-07-03 08:00:44 [WARNING] core.oriontax_client:   - dta_ult_venda
+2026-07-03 08:00:44 [INFO] core.oriontax_client: Colunas da tabela ausentes no DataFrame (7): ['fundamento_legal', 'dta_alteracao', 'dta_cadastro', 'des_sigla', 'tipo_regime']...
+2026-07-03 08:00:44 [INFO] core.oriontax_client: DataFrame filtrado: 22 → 20 colunas
+2026-07-03 08:00:44 [WARNING] core.oriontax_client: ⚠️  Removidas 3707 duplicatas (chave: ['cnpj', 'codigo_produto'])
+2026-07-03 08:00:44 [WARNING] core.oriontax_client:    42888 → 39181 registros
+2026-07-03 08:00:44 [INFO] core.oriontax_client: ✓ Nenhum valor precisa ser truncado
+2026-07-03 08:00:45 [INFO] core.oriontax_client:   Deletados registros existentes de mxf_vw_pis_cofins para CNPJ 54178593000100
+2026-07-03 08:00:48 [INFO] core.oriontax_client:   Inseridos 10000/39181 registros...
+2026-07-03 08:00:51 [INFO] core.oriontax_client:   Inseridos 20000/39181 registros...
+2026-07-03 08:00:54 [INFO] core.oriontax_client:   Inseridos 30000/39181 registros...
+2026-07-03 08:00:57 [INFO] core.oriontax_client:   Inseridos 39181/39181 registros...
+2026-07-03 08:00:57 [INFO] core.oriontax_client: ✓ 39181 registros inseridos em mxf_vw_pis_cofins
+2026-07-03 08:00:57 [INFO] core.oriontax_client: 
+============================================================
+2026-07-03 08:00:57 [INFO] core.oriontax_client: Processando mxf_vw_cbs_ibs
+2026-07-03 08:00:57 [INFO] core.oriontax_client: Registros: 71385
+2026-07-03 08:00:57 [INFO] core.oriontax_client: Colunas originais: 15
+2026-07-03 08:00:57 [INFO] core.oriontax_client: Colunas da tabela ausentes no DataFrame (7): ['fundamento_legal', 'dta_alteracao', 'dta_cadastro', 'des_sigla', 'tipo_regime']...
+2026-07-03 08:00:57 [INFO] core.oriontax_client: DataFrame filtrado: 15 → 15 colunas
+2026-07-03 08:00:57 [WARNING] core.oriontax_client: ⚠️  Removidas 32983 duplicatas (chave: ['cnpj', 'codigo_produto'])
+2026-07-03 08:00:57 [WARNING] core.oriontax_client:    71385 → 38402 registros
+2026-07-03 08:00:58 [WARNING] core.oriontax_client: ⚠️  Truncando 38402 valores em 'cst_is' (max=3)
+2026-07-03 08:00:58 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 08:00:58 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 08:00:58 [WARNING] core.oriontax_client:      [4 chars] None...
+2026-07-03 08:00:58 [WARNING] core.oriontax_client: ✂️  Total de valores truncados: 38402
+2026-07-03 08:00:58 [INFO] core.oriontax_client:   Deletados registros existentes de mxf_vw_cbs_ibs para CNPJ 54178593000100
+2026-07-03 08:01:01 [INFO] core.oriontax_client:   Inseridos 10000/38402 registros...
+2026-07-03 08:01:03 [INFO] core.oriontax_client:   Inseridos 20000/38402 registros...
+2026-07-03 08:01:05 [INFO] core.oriontax_client:   Inseridos 30000/38402 registros...
+2026-07-03 08:01:06 [INFO] core.oriontax_client: ✓ 38402 registros inseridos em mxf_vw_cbs_ibs
+2026-07-03 08:01:06 [INFO] core.oriontax_client: 
+============================================================
+2026-07-03 08:01:06 [INFO] core.oriontax_client: Processando mxf_tab_codigo_barra
+2026-07-03 08:01:06 [INFO] core.oriontax_client: Registros: 39190
+2026-07-03 08:01:06 [INFO] core.oriontax_client: Colunas originais: 5
+2026-07-03 08:01:06 [INFO] core.oriontax_client: DataFrame filtrado: 5 → 5 colunas
+2026-07-03 08:01:07 [INFO] core.oriontax_client: ✓ Nenhuma duplicata encontrada
+2026-07-03 08:01:07 [INFO] core.oriontax_client: ✓ Nenhum valor precisa ser truncado
+2026-07-03 08:01:07 [INFO] core.oriontax_client:   Deletados registros existentes de mxf_tab_codigo_barra para CNPJ 54178593000100
+2026-07-03 08:01:08 [INFO] core.oriontax_client:   Inseridos 10000/39190 registros...
+2026-07-03 08:01:10 [INFO] core.oriontax_client:   Inseridos 20000/39190 registros...
+2026-07-03 08:01:11 [INFO] core.oriontax_client:   Inseridos 30000/39190 registros...
+2026-07-03 08:01:12 [INFO] core.oriontax_client:   Inseridos 39190/39190 registros...
+2026-07-03 08:01:12 [INFO] core.oriontax_client: ✓ 39190 registros inseridos em mxf_tab_codigo_barra
+2026-07-03 08:01:12 [INFO] core.oriontax_client: 
+============================================================
+2026-07-03 08:01:12 [INFO] core.oriontax_client: ✓ Total processado: 234316 registros
+2026-07-03 08:01:12 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-07-03 08:01:12 [INFO] core.scheduler: [santa fe] ✓ Dados enviados com sucesso! (72.36s)
+2026-07-03 08:01:12 [INFO] core.scheduler: [santa fe] ✓ 234316 registros processados com sucesso para CNPJ 54178593000100!
+2026-07-03 08:28:16 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 08:58:16 -03)" (scheduled at 2026-07-03 08:28:16.115220-03:00)
+2026-07-03 08:28:16 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: integrador-oriontax.f5sys.com.br
+2026-07-03 08:28:17 [INFO] core.heartbeat: Heartbeat OK | CNPJ=54178593000100 | CPU=37.5% | MEM=59.4% | DISCO=32.5% | STATUS=running
+2026-07-03 08:28:17 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-07-03 08:28:17 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 08:58:16 -03)" executed successfully
+2026-07-03 08:30:00 [INFO] apscheduler.executors.default: Running job "BUSCAR (trigger: cron[hour='8', minute='30'], next run at: 2026-07-04 08:30:00 -03)" (scheduled at 2026-07-03 08:30:00-03:00)
+2026-07-03 08:30:00 [INFO] core.scheduler: ========================================
+2026-07-03 08:30:00 [INFO] core.scheduler: Executando sincronização agendada: BUSCAR
+2026-07-03 08:30:00 [INFO] core.scheduler: ========================================
+2026-07-03 08:30:00 [INFO] core.scheduler: Processando cliente: santa fe (CNPJ: 54178593000100)
+2026-07-03 08:30:00 [INFO] core.scheduler: [santa fe] Conectando ao OrionTax...
+2026-07-03 08:30:00 [INFO] core.scheduler: Sincronização agendada iniciada para 1 cliente(s)
+2026-07-03 08:30:00 [INFO] apscheduler.executors.default: Job "BUSCAR (trigger: cron[hour='8', minute='30'], next run at: 2026-07-04 08:30:00 -03)" executed successfully
+2026-07-03 08:30:00 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: integrador-oriontax.f5sys.com.br
+2026-07-03 08:30:00 [INFO] core.scheduler: [santa fe] Lendo tabelas TMP do OrionTax (CNPJ: 54178593000100)...
+2026-07-03 08:30:00 [INFO] core.oriontax_client: Lendo tabelas TMP do OrionTax para CNPJ: 54178593000100
+2026-07-03 08:30:00 [INFO] core.oriontax_client: Lendo MXF_TMP_ICMS_ENTRADA...
+2026-07-03 08:30:02 [INFO] core.oriontax_client: ✓ ICMS Entrada: 39181 registros
+2026-07-03 08:30:02 [INFO] core.oriontax_client: Lendo MXF_TMP_ICMS_SAIDA...
+2026-07-03 08:30:02 [INFO] core.oriontax_client: ✓ ICMS Saída: 864 registros
+2026-07-03 08:30:02 [INFO] core.oriontax_client: Lendo MXF_TMP_PIS_COFINS...
+2026-07-03 08:30:02 [INFO] core.oriontax_client: ✓ PIS/COFINS: 864 registros
+2026-07-03 08:30:02 [INFO] core.oriontax_client: Lendo MXF_TMP_CBS_IBS...
+2026-07-03 08:30:02 [INFO] core.oriontax_client: ✓ CBS/IBS: 864 registros
+2026-07-03 08:30:02 [INFO] core.scheduler: [santa fe] ✓ 41773 registros lidos do OrionTax
+2026-07-03 08:30:02 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-07-03 08:30:02 [INFO] core.scheduler: [santa fe] Conectando ao BD Intersolid...
+2026-07-03 08:30:02 [INFO] core.oracle_client: Tentando conexão em modo thin...
+2026-07-03 08:30:02 [INFO] core.oracle_client: ✓ Conectado ao Oracle (modo thin): 192.168.10.208
+2026-07-03 08:30:02 [INFO] core.scheduler: [santa fe] Gravando dados no BD Intersolid...
+2026-07-03 08:30:02 [INFO] core.oracle_client: Limpando tabelas TMP do Oracle...
+2026-07-03 08:30:02 [INFO] core.oracle_client: ✓ Tabelas TMP limpas
+2026-07-03 08:30:02 [INFO] core.oracle_client: Inserindo 39181 registros em MXF_TMP_ICMS_ENTRADA...
+2026-07-03 08:30:03 [INFO] core.oracle_client: MXF_TMP_ICMS_ENTRADA | Colunas finais para insert: ['CODIGO_PRODUTO', 'EAN', 'EI_CST', 'EI_ALQ', 'EI_ALQST', 'EI_RBC', 'EI_RBCST', 'ED_CST', 'ED_ALQ', 'ED_ALQST', 'ED_RBC', 'ED_RBCST', 'ES_CST', 'ES_ALQ', 'ES_ALQST', 'ES_RBC', 'ES_RBCST', 'NFI_CST', 'NFD_CST', 'NFS_CSOSN', 'NF_ALQ', 'FUNDAMENTO_LEGAL', 'NCM']
+2026-07-03 08:30:15 [INFO] core.oracle_client: MXF_TMP_ICMS_ENTRADA | Inseridos 39181 registros com sucesso
+2026-07-03 08:30:15 [INFO] core.oracle_client: ✓ 39181 registros inseridos em MXF_TMP_ICMS_ENTRADA
+2026-07-03 08:30:15 [INFO] core.oracle_client: Inserindo 864 registros em MXF_TMP_ICMS_SAIDA...
+2026-07-03 08:30:15 [INFO] core.oracle_client: MXF_TMP_ICMS_SAIDA | Colunas finais para insert: ['CODIGO_PRODUTO', 'EAN', 'NCM', 'FUNDAMENTO_LEGAL', 'CEST', 'FECP', 'SSS_CSOSN', 'SNC_CST', 'SNC_ALQ', 'SNC_ALQST', 'SNC_RBC', 'SNC_RBCST', 'SNC_CBENEF', 'SNC_ALQ_BENEF', 'SAC_CST', 'SAC_ALQ', 'SAC_ALQST', 'SAC_RBC', 'SAC_RBCST', 'SAC_CBENEF', 'SAC_ALQ_BENEF', 'SVC_CST', 'SVC_ALQ', 'SVC_ALQST', 'SVC_RBC', 'SVC_RBCST']
+2026-07-03 08:58:16 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 09:28:16 -03)" (scheduled at 2026-07-03 08:58:16.115220-03:00)
+2026-07-03 08:58:16 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: integrador-oriontax.f5sys.com.br
+2026-07-03 08:58:17 [INFO] core.heartbeat: Heartbeat OK | CNPJ=54178593000100 | CPU=12.3% | MEM=60.5% | DISCO=32.5% | STATUS=running
+2026-07-03 08:58:17 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-07-03 08:58:17 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 09:28:16 -03)" executed successfully
+2026-07-03 09:22:10 [INFO] __main__: Solicitação para abrir janela...
+2026-07-03 09:22:16 [INFO] __main__: Solicitação para abrir janela...
+2026-07-03 09:28:16 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 09:58:16 -03)" (scheduled at 2026-07-03 09:28:16.115220-03:00)
+2026-07-03 09:28:16 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: integrador-oriontax.f5sys.com.br
+2026-07-03 09:28:17 [INFO] core.heartbeat: Heartbeat OK | CNPJ=54178593000100 | CPU=36.4% | MEM=67.2% | DISCO=32.6% | STATUS=running
+2026-07-03 09:28:17 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-07-03 09:28:17 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 09:58:16 -03)" executed successfully
+2026-07-03 09:58:03 [INFO] core.oracle_client: MXF_TMP_ICMS_SAIDA | Inseridos 864 registros com sucesso
+2026-07-03 09:58:03 [INFO] core.oracle_client: ✓ 864 registros inseridos em MXF_TMP_ICMS_SAIDA
+2026-07-03 09:58:03 [INFO] core.oracle_client: Inserindo 864 registros em MXF_TMP_PIS_COFINS...
+2026-07-03 09:58:03 [INFO] core.oracle_client: MXF_TMP_PIS_COFINS | Colunas finais para insert: ['CODIGO_PRODUTO', 'EAN', 'NCM', 'COD_NATUREZA_RECEITA', 'PIS_CST_E', 'PIS_ALQ_E', 'PIS_CST_S', 'PIS_ALQ_S', 'COFINS_CST_E', 'COFINS_ALQ_E', 'COFINS_CST_S', 'COFINS_ALQ_S', 'FUNDAMENTO_LEGAL']
+2026-07-03 09:58:04 [INFO] core.oracle_client: MXF_TMP_PIS_COFINS | Inseridos 864 registros com sucesso
+2026-07-03 09:58:04 [INFO] core.oracle_client: ✓ 864 registros inseridos em MXF_TMP_PIS_COFINS
+2026-07-03 09:58:04 [INFO] core.oracle_client: Inserindo 864 registros em MXF_TMP_CBS_IBS...
+2026-07-03 09:58:04 [INFO] core.oracle_client: MXF_TMP_CBS_IBS | Colunas finais para insert: ['CODIGO_PRODUTO', 'EAN', 'CCLASSTRIB', 'CST_CBS_IBS', 'ALQ_CBS', 'RBC_CBS', 'ALQ_IBS', 'RBC_IBS', 'ALQ_IBS_MUN', 'RBC_IBS_MUN', 'ALQ_IS', 'ALQ_IS_ESPEC', 'CST_IS', 'CCLASSTRIB_IS', 'FUNDAMENTO_LEGAL']
+2026-07-03 09:58:05 [INFO] core.oracle_client: MXF_TMP_CBS_IBS | Inseridos 864 registros com sucesso
+2026-07-03 09:58:05 [INFO] core.oracle_client: ✓ 864 registros inseridos em MXF_TMP_CBS_IBS
+2026-07-03 09:58:05 [INFO] core.oracle_client: ✓ 41773 registros inseridos no Oracle!
+2026-07-03 09:58:05 [INFO] core.oracle_client: Desconectado do Oracle
+2026-07-03 09:58:05 [INFO] core.scheduler: [santa fe] ✓ Dados recebidos com sucesso! (5285.07s)
+2026-07-03 09:58:05 [INFO] core.scheduler: [santa fe] ✓ 41773 registros inseridos no Oracle!
+2026-07-03 09:58:16 [INFO] apscheduler.executors.default: Running job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 10:28:16 -03)" (scheduled at 2026-07-03 09:58:16.115220-03:00)
+2026-07-03 09:58:16 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: integrador-oriontax.f5sys.com.br
+2026-07-03 09:58:17 [INFO] core.heartbeat: Heartbeat OK | CNPJ=54178593000100 | CPU=4.7% | MEM=63.4% | DISCO=32.6% | STATUS=running
+2026-07-03 09:58:17 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-07-03 09:58:17 [INFO] apscheduler.executors.default: Job "Heartbeat (trigger: interval[0:30:00], next run at: 2026-07-03 10:28:16 -03)" executed successfully
+2026-07-03 10:04:11 [INFO] __main__: Login cancelado
+2026-07-03 10:04:12 [INFO] __main__: Login cancelado
+2026-07-03 10:04:14 [INFO] __main__: Janela minimizada para tray
+2026-07-03 10:04:27 [INFO] __main__: Encerrando aplicação...
+2026-07-03 10:04:27 [INFO] apscheduler.scheduler: Scheduler has been shut down
+2026-07-03 10:04:27 [INFO] core.scheduler: Scheduler parado
+2026-07-03 10:04:27 [INFO] __main__: Janela minimizada para tray
+2026-07-03 10:04:51 [INFO] __main__: ================================================================================
+2026-07-03 10:04:51 [INFO] __main__: OrionTax Sync - Iniciando Sistema
+2026-07-03 10:04:51 [INFO] __main__: ================================================================================
+2026-07-03 10:04:51 [INFO] __main__: Conectando ao banco de dados...
+2026-07-03 10:04:51 [INFO] __main__: ✓ Banco de dados conectado
+2026-07-03 10:04:51 [INFO] __main__: Iniciando agendador de tarefas...
+2026-07-03 10:04:51 [INFO] apscheduler.scheduler: Scheduler started
+2026-07-03 10:04:51 [INFO] core.scheduler: Scheduler iniciado
+2026-07-03 10:04:51 [INFO] apscheduler.scheduler: Added job "ENVIAR" to job store "default"
+2026-07-03 10:04:51 [INFO] core.scheduler: Job adicionado: 1 - ENVIAR
+2026-07-03 10:04:51 [INFO] apscheduler.scheduler: Added job "ENVIAR" to job store "default"
+2026-07-03 10:04:51 [INFO] core.scheduler: Job adicionado: 2 - ENVIAR
+2026-07-03 10:04:51 [INFO] apscheduler.scheduler: Added job "ENVIAR" to job store "default"
+2026-07-03 10:04:51 [INFO] core.scheduler: Job adicionado: 3 - ENVIAR
+2026-07-03 10:04:51 [INFO] apscheduler.scheduler: Added job "BUSCAR" to job store "default"
+2026-07-03 10:04:51 [INFO] core.scheduler: Job adicionado: 4 - BUSCAR
+2026-07-03 10:04:51 [INFO] apscheduler.scheduler: Added job "BUSCAR" to job store "default"
+2026-07-03 10:04:51 [INFO] core.scheduler: Job adicionado: 5 - BUSCAR
+2026-07-03 10:04:51 [INFO] apscheduler.scheduler: Added job "BUSCAR" to job store "default"
+2026-07-03 10:04:51 [INFO] core.scheduler: Job adicionado: 6 - BUSCAR
+2026-07-03 10:04:51 [INFO] core.scheduler: 6 agendamentos carregados
+2026-07-03 10:04:51 [INFO] __main__: ✓ Scheduler iniciado
+2026-07-03 10:04:51 [INFO] __main__: 6 job(s) agendado(s)
+2026-07-03 10:04:51 [INFO] apscheduler.scheduler: Added job "Heartbeat" to job store "default"
+2026-07-03 10:04:51 [INFO] core.scheduler: Heartbeat iniciado — intervalo: 30 minuto(s)
+2026-07-03 10:04:51 [INFO] __main__: ✓ Heartbeat iniciado (intervalo: 30 min)
+2026-07-03 10:04:51 [INFO] __main__: ✓ System Tray inicializado
+2026-07-03 10:04:51 [INFO] __main__: Abrindo tela de login...
+2026-07-03 10:05:03 [INFO] __main__: ✓ Login bem-sucedido: admin
+2026-07-03 10:05:03 [INFO] __main__: Criando janela principal...
+2026-07-03 10:05:17 [INFO] core.oriontax_client: ✓ Conectado ao OrionTax: integrador-oriontax.f5sys.com.br
+2026-07-03 10:05:17 [INFO] core.oriontax_client: Lendo tabelas TMP do OrionTax para CNPJ: 54178593000100
+2026-07-03 10:05:17 [INFO] core.oriontax_client: Lendo MXF_TMP_ICMS_ENTRADA...
+2026-07-03 10:05:19 [INFO] core.oriontax_client: ✓ ICMS Entrada: 39181 registros
+2026-07-03 10:05:19 [INFO] core.oriontax_client: Lendo MXF_TMP_ICMS_SAIDA...
+2026-07-03 10:05:19 [INFO] core.oriontax_client: ✓ ICMS Saída: 864 registros
+2026-07-03 10:05:19 [INFO] core.oriontax_client: Lendo MXF_TMP_PIS_COFINS...
+2026-07-03 10:05:19 [INFO] core.oriontax_client: ✓ PIS/COFINS: 864 registros
+2026-07-03 10:05:19 [INFO] core.oriontax_client: Lendo MXF_TMP_CBS_IBS...
+2026-07-03 10:05:19 [INFO] core.oriontax_client: ✓ CBS/IBS: 864 registros
+2026-07-03 10:05:19 [INFO] core.oriontax_client: Desconectado do OrionTax
+2026-07-03 10:05:19 [INFO] core.oracle_client: Tentando conexão em modo thin...
+2026-07-03 10:05:20 [WARNING] core.oracle_client: Erro thin mode: DPY-6005: cannot connect to database (CONNECTION_ID=f3oHtrp/KWhYpTi8ZcwJcQ==).
+DPY-3010: connections to this database server version are not supported by python-oracledb in thin mode
+Help: https://python-oracledb.readthedocs.io/en/latest/user_guide/troubleshooting.html#dpy-3010
+2026-07-03 10:05:20 [WARNING] core.oracle_client: Error code: 0
+2026-07-03 10:05:20 [INFO] core.oracle_client: Modo thin não suportado para esta versão do Oracle
+2026-07-03 10:05:20 [INFO] core.oracle_client: Tentando modo thick...
+2026-07-03 10:05:20 [INFO] core.oracle_client: Inicializando modo thick com: C:/oracle/instantclient-basic-windows.x64-23.26.2.0.0/instantclient_23_0
+2026-07-03 10:05:20 [INFO] core.oracle_client: ✓ Modo thick inicializado: C:/oracle/instantclient-basic-windows.x64-23.26.2.0.0/instantclient_23_0
+2026-07-03 10:05:20 [INFO] core.oracle_client: Conectando em modo thick...
+2026-07-03 10:05:20 [INFO] core.oracle_client: ✓ Conectado ao Oracle (modo thick): 192.168.10.208
+2026-07-03 10:05:20 [INFO] core.oracle_client: Limpando tabelas TMP do Oracle...
+2026-07-03 10:05:21 [INFO] core.oracle_client: ✓ Tabelas TMP limpas
+2026-07-03 10:05:21 [INFO] core.oracle_client: Inserindo 39181 registros em MXF_TMP_ICMS_ENTRADA...
+2026-07-03 10:05:22 [INFO] core.oracle_client: MXF_TMP_ICMS_ENTRADA | Colunas finais para insert: ['CODIGO_PRODUTO', 'EAN', 'EI_CST', 'EI_ALQ', 'EI_ALQST', 'EI_RBC', 'EI_RBCST', 'ED_CST', 'ED_ALQ', 'ED_ALQST', 'ED_RBC', 'ED_RBCST', 'ES_CST', 'ES_ALQ', 'ES_ALQST', 'ES_RBC', 'ES_RBCST', 'NFI_CST', 'NFD_CST', 'NFS_CSOSN', 'NF_ALQ', 'FUNDAMENTO_LEGAL', 'NCM']
+2026-07-03 10:05:36 [INFO] core.oracle_client: MXF_TMP_ICMS_ENTRADA | Inseridos 39181 registros com sucesso
+2026-07-03 10:05:36 [INFO] core.oracle_client: ✓ 39181 registros inseridos em MXF_TMP_ICMS_ENTRADA
+2026-07-03 10:05:36 [INFO] core.oracle_client: Inserindo 864 registros em MXF_TMP_ICMS_SAIDA...
+2026-07-03 10:05:36 [INFO] core.oracle_client: MXF_TMP_ICMS_SAIDA | Colunas finais para insert: ['CODIGO_PRODUTO', 'EAN', 'NCM', 'FUNDAMENTO_LEGAL', 'CEST', 'FECP', 'SSS_CSOSN', 'SNC_CST', 'SNC_ALQ', 'SNC_ALQST', 'SNC_RBC', 'SNC_RBCST', 'SNC_CBENEF', 'SNC_ALQ_BENEF', 'SAC_CST', 'SAC_ALQ', 'SAC_ALQST', 'SAC_RBC', 'SAC_RBCST', 'SAC_CBENEF', 'SAC_ALQ_BENEF', 'SVC_CST', 'SVC_ALQ', 'SVC_ALQST', 'SVC_RBC', 'SVC_RBCST']

@@ -2,6 +2,28 @@
 
 ---
 
+## [1.0.4] — 2026-07-03
+
+### Adicionado
+
+#### Log de progresso durante inserções travadas no banco de destino
+- Novo helper `_executemany_with_heartbeat()` em `core/oracle_client.py` (reaproveitado em `core/firebird_client.py`): durante um `INSERT` em lote, se a chamada ficar mais de 15s sem retornar (ex.: trigger lento ou lock no banco), é emitida periodicamente uma mensagem informando a tabela e o tempo decorrido.
+- Nas operações manuais (botão da tela principal), essas mensagens aparecem no console da interface. Nas execuções agendadas, são gravadas no log de arquivo com o nome do cliente.
+- Objetivo: eliminar o cenário de operação travada silenciosamente, sem qualquer indicação do que está acontecendo — motivado por um caso real em que o `INSERT` em `MXF_TMP_ICMS_SAIDA` ficava preso por um trigger lento no Oracle sem nenhuma mensagem de erro.
+
+#### Botão "Cancelar Execução"
+- Novo botão na tela principal (`gui/main_window.py`), habilitado apenas durante uma operação manual em andamento.
+- Ao acionar (com confirmação), interrompe a conexão ativa no momento: `connection.cancel()` no Oracle e no OrionTax (PostgreSQL), ou fechamento forçado da conexão no Firebird (driver sem suporte nativo a cancelamento de statement).
+- Novo método `cancel()` adicionado a `OracleClient`, `FirebirdClient` e `OrionTaxClient`.
+
+### Corrigido
+
+#### Log das últimas 12h ausente no Heartbeat
+- `HeartbeatService._read_log_file()` (`core/heartbeat.py`) localizava a pasta `logs/` usando `Path(__file__).parent.parent`, caminho não confiável dentro do executável PyInstaller (onedir) — resultando em `logs_ultimas_24h` sempre vazio em produção, mesmo com o heartbeat rodando normalmente.
+- Corrigido para usar o mesmo padrão já adotado em `main.py`/`gui/main_window.py`: `sys.executable` quando `sys.frozen` é `True`, em vez de depender de `__file__`.
+
+---
+
 ## [1.0.3] — 2026-06-24
 
 ### Adicionado

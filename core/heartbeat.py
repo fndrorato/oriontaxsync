@@ -8,6 +8,7 @@ import logging
 import os
 import platform
 import socket
+import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -206,7 +207,15 @@ class HeartbeatService:
         das últimas 12h como string, independente do nome do arquivo.
         """
         try:
-            log_dir = Path(__file__).parent.parent / 'logs'
+            # Usa o mesmo base_dir que main.py/main_window.py: dentro do
+            # executável PyInstaller, Path(__file__) não é confiável para
+            # localizar arquivos ao lado do .exe — precisa de sys.executable.
+            if getattr(sys, 'frozen', False):
+                base_dir = Path(sys.executable).parent
+            else:
+                base_dir = Path(__file__).parent.parent
+
+            log_dir = base_dir / 'logs'
             if not log_dir.exists():
                 return ''
 

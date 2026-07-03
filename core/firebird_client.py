@@ -7,9 +7,14 @@ do sistema possa usar os dois bancos de forma transparente.
 import math
 import pandas as pd
 import logging
-from typing import Dict, Tuple
+from typing import Callable, Dict, Optional, Tuple
 
-from .oracle_client import TABLE_COLUMNS, TABLE_NUMBER_COLUMNS, TABLE_ZFILL_COLUMNS
+from .oracle_client import (
+    TABLE_COLUMNS,
+    TABLE_NUMBER_COLUMNS,
+    TABLE_ZFILL_COLUMNS,
+    _executemany_with_heartbeat,
+)
 
 
 class FirebirdClient:
@@ -80,6 +85,25 @@ class FirebirdClient:
                 self.logger.info("Desconectado do Firebird")
             except Exception as e:
                 self.logger.error(f"Erro ao desconectar do Firebird: {e}")
+            finally:
+                self.connection = None
+
+    def cancel(self):
+        """
+        Interrompe a operação em andamento nesta conexão.
+
+        O driver firebirdsql não expõe uma API de cancelamento de
+        statement em andamento (diferente do oracledb), então o melhor
+        esforço aqui é fechar a conexão à força — isso libera a thread
+        que está bloqueada esperando resposta do Firebird, fazendo a
+        chamada bloqueada levantar uma exceção.
+        """
+        if self.connection:
+            try:
+                self.connection.close()
+                self.logger.warning("Cancelamento solicitado: conexão Firebird fechada à força")
+            except Exception as e:
+                self.logger.error(f"Erro ao solicitar cancelamento: {e}")
             finally:
                 self.connection = None
 
@@ -183,6 +207,7 @@ class FirebirdClient:
         table_name: str,
         cursor,
         batch_size: int = 1000,
+        progress_callback: Optional[Callable[[str], None]] = None,
     ) -> int:
         """
         Insere um DataFrame no Firebird usando executemany.
@@ -343,7 +368,9 @@ class FirebirdClient:
 
             if len(batch) >= batch_size:
                 try:
-                    cursor.executemany(insert_sql, batch)
+                    _executemany_with_heartbeat(
+                        cursor, insert_sql, batch, table_name, logger, progress_callback
+                    )
                     inserted_rows += len(batch)
                     batch.clear()
                 except Exception as e:
@@ -353,7 +380,9 @@ class FirebirdClient:
 
         if batch:
             try:
-                cursor.executemany(insert_sql, batch)
+                _executemany_with_heartbeat(
+                    cursor, insert_sql, batch, table_name, logger, progress_callback
+                )
                 inserted_rows += len(batch)
             except Exception as e:
                 logger.critical(f"Falha no executemany para {table_name}: {e}")
@@ -366,6 +395,7 @@ class FirebirdClient:
     def write_dataframes_to_tmp_tables(
         self,
         dataframes: Dict[str, pd.DataFrame],
+        progress_callback: Optional[Callable[[str], None]] = None,
     ) -> Tuple[bool, str]:
         """
         Grava DataFrames nas tabelas TMP do Firebird (dados vindos da OrionTax).
@@ -406,6 +436,7 @@ class FirebirdClient:
                     table_name=table_name,
                     cursor=cursor,
                     batch_size=5000,
+                    progress_callback=progress_callback,
                 )
                 total_inserted += inserted
                 self.logger.info(f"✓ {inserted} registros inseridos em {table_name}")

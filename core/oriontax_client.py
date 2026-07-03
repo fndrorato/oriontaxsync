@@ -69,7 +69,21 @@ class OrionTaxClient:
                 self.logger.error(f"Erro ao desconectar: {e}")
             finally:
                 self.connection = None
-    
+
+    def cancel(self):
+        """
+        Interrompe a operação em andamento nesta conexão (ex.: uma leitura
+        travada no PostgreSQL). psycopg2 permite chamar connection.cancel()
+        de outra thread enquanto a conexão está bloqueada em execute(),
+        fazendo a chamada bloqueada levantar QueryCanceledError.
+        """
+        if self.connection:
+            try:
+                self.connection.cancel()
+                self.logger.warning("Cancelamento solicitado para a conexão OrionTax")
+            except Exception as e:
+                self.logger.error(f"Erro ao solicitar cancelamento: {e}")
+
     def test_connection(self) -> Tuple[bool, str]:
         """
         Testa a conexão
