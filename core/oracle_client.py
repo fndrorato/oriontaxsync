@@ -781,8 +781,42 @@ class OracleClient:
             if self.connection:
                 self.connection.rollback()
             raise
-    
-    
+
+    def clear_tmp_tables(self, table_names: list) -> Tuple[bool, str]:
+        """
+        Executa DELETE FROM nas tabelas TMP informadas, no BD Intersolid (Oracle).
+
+        Abre/fecha sua própria conexão, para uso independente de uma
+        operação ENVIAR/BUSCAR (ex.: botão manual de limpeza na tela principal).
+        """
+        own_connection = self.connection is None
+        try:
+            if own_connection:
+                self.connect()
+
+            cursor = self.connection.cursor()
+
+            for table_name in table_names:
+                self.logger.info(f"Limpando tabela {table_name}...")
+                cursor.execute(f"DELETE FROM {table_name}")
+
+            self.connection.commit()
+            cursor.close()
+
+            message = f"✓ Tabela(s) limpa(s): {', '.join(table_names)}"
+            self.logger.info(message)
+            return True, message
+
+        except Exception as e:
+            self.logger.error(f"Erro ao limpar tabelas TMP {table_names}", exc_info=True)
+            if self.connection:
+                self.connection.rollback()
+            return False, f"Erro: {str(e)}"
+        finally:
+            if own_connection:
+                self.disconnect()
+
+
     def write_dataframes_to_tmp_tables_old_version(self, dataframes: Dict[str, pd.DataFrame]) -> Tuple[bool, str]:
         """
         Grava DataFrames nas tabelas TMP do Oracle (dados vindos da OrionTax)

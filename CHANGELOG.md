@@ -2,6 +2,20 @@
 
 ---
 
+## [1.0.4.1] — 2026-08-03
+
+### Adicionado
+
+#### Botões de limpeza manual das tabelas temporárias
+- Novo `QGroupBox` "Tabelas Temporárias (BD Intersolid)" na aba Operações (`gui/main_window.py`), com 3 botões:
+  - "Limpar Tabela Temporária de ICMS" → `DELETE FROM MXF_TMP_ICMS_ENTRADA` e `MXF_TMP_ICMS_SAIDA`
+  - "Limpar Tabela Temporária do PIS/COFINS" → `DELETE FROM MXF_TMP_PIS_COFINS`
+  - "Limpar Tabela Temporária do IBS/CBS" → `DELETE FROM MXF_TMP_CBS_IBS`
+- Cada botão pede confirmação antes de executar e usa a conexão BD Intersolid configurada (Oracle ou Firebird, via `create_db_client`).
+- Novo método `clear_tmp_tables()` adicionado a `OracleClient` e `FirebirdClient`.
+
+---
+
 ## [1.0.4] — 2026-07-03
 
 ### Adicionado
