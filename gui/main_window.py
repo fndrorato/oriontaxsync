@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer
 from PyQt5.QtGui import QIcon, QFont, QColor
 from datetime import datetime, timezone
+import threading
 import traceback
 import logging
 
@@ -20,17 +21,37 @@ from gui.schedule import ScheduleDialog
 
 class WorkerThread(QThread):
     """Thread para executar operações em background"""
-    
+
     finished = pyqtSignal(bool, str, dict)  # success, message, stats
     progress = pyqtSignal(str)  # message
-    
+
     def __init__(self, operation_type: str, oracle_config: dict, oriontax_config: dict, cnpj: str, parent=None):
         super().__init__(parent)
         self.operation_type = operation_type  # 'ENVIAR' ou 'BUSCAR'
         self.oracle_config = oracle_config
         self.oriontax_config = oriontax_config
         self.cnpj = cnpj
-    
+        self._active_client = None  # cliente (Oracle/Firebird/OrionTax) conectado no momento
+        self._client_lock = threading.Lock()
+        self._cancel_requested = False
+
+    def _set_active_client(self, client):
+        """Registra qual cliente está com uma conexão aberta agora, para permitir cancelamento."""
+        with self._client_lock:
+            self._active_client = client
+
+    def request_cancel(self):
+        """
+        Solicita o cancelamento da operação em andamento.
+        Chamado pela thread da GUI enquanto esta thread pode estar bloqueada
+        dentro de uma chamada de rede/banco (ex.: INSERT travado no Oracle).
+        """
+        self._cancel_requested = True
+        with self._client_lock:
+            client = self._active_client
+        if client is not None:
+            client.cancel()
+
     def run(self):
         """Executa a operação"""
         from datetime import datetime
@@ -45,6 +66,7 @@ class WorkerThread(QThread):
 
                 self.progress.emit('Conectando ao BD Intersolid...')
                 oracle_client = create_db_client(self.oracle_config)
+                self._set_active_client(oracle_client)
                 oracle_client.connect()
 
                 self.progress.emit(f'Lendo VIEWs do BD Intersolid (CNPJ: {self.cnpj})...')
@@ -54,58 +76,72 @@ class WorkerThread(QThread):
                 self.progress.emit(f'✓ {total_records} registros lidos do BD Intersolid')
 
                 oracle_client.disconnect()
-                
+                self._set_active_client(None)
+
                 self.progress.emit('Conectando ao OrionTax...')
                 oriontax_client = OrionTaxClient(self.oriontax_config)
+                self._set_active_client(oriontax_client)
                 oriontax_client.connect()
-                
+
                 self.progress.emit('Enviando dados para OrionTax...')
                 success, message = oriontax_client.write_dataframes_to_views(self.cnpj, dataframes)
-                
+
                 oriontax_client.disconnect()
-                
+                self._set_active_client(None)
+
                 stats = {
                     'registros': total_records,
                     'tempo': (datetime.now() - start_time).total_seconds()
                 }
-                
+
                 self.finished.emit(True, f'✓ Dados enviados com sucesso!\n{message}', stats)
-                
+
             elif self.operation_type == 'BUSCAR':
                 # BUSCAR: PostgreSQL TMPs → Oracle TMPs
-                
+
                 self.progress.emit('Conectando ao OrionTax...')
                 oriontax_client = OrionTaxClient(self.oriontax_config)
+                self._set_active_client(oriontax_client)
                 oriontax_client.connect()
-                
+
                 self.progress.emit(f'Lendo tabelas TMP do OrionTax (CNPJ: {self.cnpj})...')
                 dataframes = oriontax_client.read_tmp_tables_to_dataframes(self.cnpj)
-                
+
                 total_records = sum(len(df) for df in dataframes.values())
                 self.progress.emit(f'✓ {total_records} registros lidos do OrionTax')
-                
+
                 oriontax_client.disconnect()
-                
+                self._set_active_client(None)
+
                 self.progress.emit('Conectando ao BD Intersolid...')
                 oracle_client = create_db_client(self.oracle_config)
+                self._set_active_client(oracle_client)
                 oracle_client.connect()
 
                 self.progress.emit('Gravando dados no BD Intersolid...')
-                success, message = oracle_client.write_dataframes_to_tmp_tables(dataframes)
-                
+                success, message = oracle_client.write_dataframes_to_tmp_tables(
+                    dataframes, progress_callback=self.progress.emit
+                )
+
                 oracle_client.disconnect()
-                
+                self._set_active_client(None)
+
                 stats = {
                     'registros': total_records,
                     'tempo': (datetime.now() - start_time).total_seconds()
                 }
-                
+
                 self.finished.emit(True, f'✓ Dados recebidos com sucesso!\n{message}', stats)
-        
+
         except Exception as e:
             import traceback
-            error_msg = f'Erro: {str(e)}\n\n{traceback.format_exc()}'
+            if self._cancel_requested:
+                error_msg = 'Operação cancelada pelo usuário.'
+            else:
+                error_msg = f'Erro: {str(e)}\n\n{traceback.format_exc()}'
             self.finished.emit(False, error_msg, {})
+        finally:
+            self._set_active_client(None)
 
 
 class MainWindow(QMainWindow):
@@ -299,7 +335,19 @@ class MainWindow(QMainWindow):
         self.receive_button.setCursor(Qt.PointingHandCursor)
         self.receive_button.clicked.connect(lambda: self.execute_operation('BUSCAR'))
         operations_layout.addWidget(self.receive_button)
-        
+
+        self.cancel_button = QPushButton('🛑 Cancelar Execução')
+        self.cancel_button.setMinimumHeight(60)
+        self.cancel_button.setCursor(Qt.PointingHandCursor)
+        self.cancel_button.setEnabled(False)
+        self.cancel_button.setStyleSheet("""
+            QPushButton { background-color: #e74c3c; color: white; font-weight: bold; border-radius: 5px; }
+            QPushButton:hover:enabled { background-color: #c0392b; }
+            QPushButton:disabled { background-color: #bdc3c7; }
+        """)
+        self.cancel_button.clicked.connect(self.cancel_current_operation)
+        operations_layout.addWidget(self.cancel_button)
+
         operations_group.setLayout(operations_layout)
         layout.addWidget(operations_group)
         
@@ -1103,30 +1151,52 @@ class MainWindow(QMainWindow):
         # Desabilitar botões
         self.send_button.setEnabled(False)
         self.receive_button.setEnabled(False)
-        
+        self.cancel_button.setEnabled(True)
+
         # Mostrar progress bar
         self.progress_bar.setVisible(True)
         self.progress_bar.setRange(0, 0)  # Indeterminate
-        
+
         # Log
         self.log_message(f'Iniciando operação: {operation_type} (CNPJ: {cnpj_formatado})', 'INFO')
-        
+
         # Criar e iniciar thread
         self.worker_thread = WorkerThread(operation_type, oracle_config, oriontax_config, cnpj)
         self.worker_thread.progress.connect(self.on_worker_progress)
         self.worker_thread.finished.connect(self.on_worker_finished)
         self.worker_thread.start()
-    
+
     def on_worker_progress(self, message: str):
         """Callback de progresso da thread"""
-        self.log_message(message, 'INFO')
-    
+        level = 'WARNING' if message.startswith('⏳') else 'INFO'
+        self.log_message(message, level)
+
+    def cancel_current_operation(self):
+        """Solicita o cancelamento da operação manual em andamento"""
+        if not self.worker_thread or not self.worker_thread.isRunning():
+            return
+
+        reply = QMessageBox.question(
+            self,
+            'Cancelar Execução',
+            'Deseja realmente cancelar a operação em andamento?\n\n'
+            'A conexão atual será interrompida e a operação não será concluída.',
+            QMessageBox.Yes | QMessageBox.No
+        )
+        if reply == QMessageBox.No:
+            return
+
+        self.log_message('Cancelamento solicitado pelo usuário...', 'WARNING')
+        self.cancel_button.setEnabled(False)
+        self.worker_thread.request_cancel()
+
     def on_worker_finished(self, success: bool, message: str, stats: dict):
         """Callback de conclusão da thread"""
         # Reabilitar botões
         self.send_button.setEnabled(True)
         self.receive_button.setEnabled(True)
-        
+        self.cancel_button.setEnabled(False)
+
         # Esconder progress bar
         self.progress_bar.setVisible(False)
         

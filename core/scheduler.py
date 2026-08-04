@@ -345,7 +345,10 @@ class Scheduler:
                 oracle_client.connect()
 
                 self.logger.info(f'[{nome_cliente}] Gravando dados no BD Intersolid...')
-                success, message = oracle_client.write_dataframes_to_tmp_tables(dataframes)
+                success, message = oracle_client.write_dataframes_to_tmp_tables(
+                    dataframes,
+                    progress_callback=lambda msg: self.logger.info(f'[{nome_cliente}] {msg}')
+                )
                 
                 oracle_client.disconnect()
                 

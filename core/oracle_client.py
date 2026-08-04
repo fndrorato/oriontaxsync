@@ -2,10 +2,12 @@
 Cliente Oracle - Gerencia conexão e operações com Oracle
 """
 import math
+import threading
+import time
 import oracledb
 import pandas as pd
 import logging
-from typing import Dict, Tuple
+from typing import Callable, Dict, Optional, Tuple
 
 # ============================================
 # MAPEAMENTO DE COLUNAS POR TABELA (ORACLE)
@@ -34,6 +36,15 @@ TABLE_COLUMNS = {
         "ALQ_IBS_MUN", "RBC_IBS_MUN",
         "ALQ_IS", "ALQ_IS_ESPEC", "CST_IS", "CCLASSTRIB_IS",
         "FUNDAMENTO_LEGAL"
+    ],
+
+    "MXF_TMP_ICMS_ENTRADA": [
+        "CODIGO_PRODUTO", "EAN",
+        "EI_CST", "EI_ALQ", "EI_ALQST", "EI_RBC", "EI_RBCST",
+        "ED_CST", "ED_ALQ", "ED_ALQST", "ED_RBC", "ED_RBCST",
+        "ES_CST", "ES_ALQ", "ES_ALQST", "ES_RBC", "ES_RBCST",
+        "NFI_CST", "NFD_CST", "NFS_CSOSN", "NF_ALQ",
+        "FUNDAMENTO_LEGAL", "NCM"
     ]
 }
 
@@ -63,8 +74,58 @@ TABLE_NUMBER_COLUMNS = {
         "ALQ_CBS", "RBC_CBS", "ALQ_IBS", "RBC_IBS",
         "ALQ_IBS_MUN", "RBC_IBS_MUN",
         "ALQ_IS", "ALQ_IS_ESPEC"
+    },
+
+    "MXF_TMP_ICMS_ENTRADA": {
+        "EI_ALQ", "EI_ALQST", "EI_RBC", "EI_RBCST",
+        "ED_ALQ", "ED_ALQST", "ED_RBC", "ED_RBCST",
+        "ES_ALQ", "ES_ALQST", "ES_RBC", "ES_RBCST",
+        "NF_ALQ"
     }
 }
+
+def _executemany_with_heartbeat(
+    cursor,
+    insert_sql,
+    batch,
+    table_name: str,
+    logger: logging.Logger,
+    progress_callback: Optional[Callable[[str], None]] = None,
+    interval: float = 15.0,
+):
+    """
+    Executa cursor.executemany() reportando periodicamente (a cada `interval`
+    segundos) que a operação ainda está em andamento, enquanto a chamada
+    permanece bloqueada aguardando o Oracle (ex.: trigger lento, I/O pesado).
+
+    Sem isso, uma trava do lado do banco fica muda na tela/log até terminar
+    (ou nunca terminar), sem nenhuma indicação do que está acontecendo.
+    """
+    stop_event = threading.Event()
+    start = time.monotonic()
+
+    def _heartbeat():
+        while not stop_event.wait(interval):
+            elapsed = time.monotonic() - start
+            msg = (
+                f"{table_name} | Ainda aguardando resposta do Oracle... "
+                f"{elapsed:.0f}s decorridos ({len(batch)} registros neste lote)"
+            )
+            logger.warning(msg)
+            if progress_callback:
+                try:
+                    progress_callback(f"⏳ {msg}")
+                except Exception:
+                    pass
+
+    hb_thread = threading.Thread(target=_heartbeat, daemon=True)
+    hb_thread.start()
+    try:
+        cursor.executemany(insert_sql, batch)
+    finally:
+        stop_event.set()
+        hb_thread.join()
+
 
 def _execute_batch_one_by_one(cursor, insert_sql, batch, table_name, columns):
     """
@@ -211,7 +272,25 @@ class OracleClient:
                 self.logger.error(f"Erro ao desconectar: {e}")
             finally:
                 self.connection = None
-    
+
+    def cancel(self):
+        """
+        Interrompe a operação em andamento nesta conexão (ex.: um INSERT
+        travado esperando um trigger/lock no Oracle).
+
+        Pode ser chamado de outra thread enquanto esta conexão está
+        bloqueada dentro de cursor.execute()/executemany(); o Oracle
+        recebe um pedido de "break" e a chamada bloqueada levanta uma
+        exceção (ORA-01013), permitindo que o fluxo normal de
+        erro/rollback trate o cancelamento.
+        """
+        if self.connection:
+            try:
+                self.connection.cancel()
+                self.logger.warning("Cancelamento solicitado para a conexão Oracle")
+            except Exception as e:
+                self.logger.error(f"Erro ao solicitar cancelamento: {e}")
+
     def test_connection(self) -> Tuple[bool, str]:
         """
         Testa a conexão
@@ -312,7 +391,8 @@ class OracleClient:
         df,
         table_name: str,
         cursor,
-        batch_size: int = 1000
+        batch_size: int = 1000,
+        progress_callback: Optional[Callable[[str], None]] = None,
     ) -> int:
         """
         Insere um DataFrame no Oracle usando executemany,
@@ -397,6 +477,28 @@ class OracleClient:
                 )
             """
             expected_cols = 15
+
+        elif table_name == "MXF_TMP_ICMS_ENTRADA":
+            insert_sql = """
+                INSERT INTO MXF_TMP_ICMS_ENTRADA (
+                    CODIGO_PRODUTO, EAN,
+                    EI_CST, EI_ALQ, EI_ALQST, EI_RBC, EI_RBCST,
+                    ED_CST, ED_ALQ, ED_ALQST, ED_RBC, ED_RBCST,
+                    ES_CST, ES_ALQ, ES_ALQST, ES_RBC, ES_RBCST,
+                    NFI_CST, NFD_CST, NFS_CSOSN, NF_ALQ,
+                    FUNDAMENTO_LEGAL, NCM,
+                    DTA_ALTERACAO, DTA_CADASTRO
+                ) VALUES (
+                    :1, :2,
+                    :3, :4, :5, :6, :7,
+                    :8, :9, :10, :11, :12,
+                    :13, :14, :15, :16, :17,
+                    :18, :19, :20, :21,
+                    :22, :23,
+                    SYSDATE, SYSDATE
+                )
+            """
+            expected_cols = 23
 
         else:
             raise ValueError(f"Tabela não suportada: {table_name}")
@@ -484,7 +586,9 @@ class OracleClient:
             # ==========================
             if len(batch) >= batch_size:
                 try:
-                    cursor.executemany(insert_sql, batch)
+                    _executemany_with_heartbeat(
+                        cursor, insert_sql, batch, table_name, logger, progress_callback
+                    )
                     inserted_rows += len(batch)
                     batch.clear()
                 except Exception as e:
@@ -497,7 +601,9 @@ class OracleClient:
         # ==========================
         if batch:
             try:
-                cursor.executemany(insert_sql, batch)
+                _executemany_with_heartbeat(
+                    cursor, insert_sql, batch, table_name, logger, progress_callback
+                )
                 inserted_rows += len(batch)
             except Exception as e:
                 _execute_batch_one_by_one(cursor, insert_sql, batch, table_name, columns)
@@ -541,7 +647,7 @@ class OracleClient:
             # 3. PIS/COFINS
             self.logger.info("Lendo MXF_VW_PIS_COFINS...")
             df_pis_cofins = pd.read_sql("""
-                SELECT * FROM MXF_VW_PIS_COFINS
+                SELECT * FROM MXF_VW_PIS_COFINS WHERE STATUS = 'ATIVO'
             """, self.connection)
             self.logger.info(f"✓ PIS/COFINS: {len(df_pis_cofins)} registros")
             
@@ -551,12 +657,20 @@ class OracleClient:
                 SELECT * FROM MXF_VW_CBS_IBS
             """, self.connection)
             self.logger.info(f"✓ CBS/IBS: {len(df_cbs_ibs)} registros")
-            
+
+            # 5. CÓDIGO DE BARRAS
+            self.logger.info("Lendo TAB_CODIGO_BARRA...")
+            df_codigo_barra = pd.read_sql("""
+                SELECT * FROM TAB_CODIGO_BARRA
+            """, self.connection)
+            self.logger.info(f"✓ Código de Barras: {len(df_codigo_barra)} registros")
+
             return {
                 'icms_entrada': df_icms_entrada,
                 'icms_saida': df_icms_saida,
                 'pis_cofins': df_pis_cofins,
-                'cbs_ibs': df_cbs_ibs
+                'cbs_ibs': df_cbs_ibs,
+                'codigo_barra': df_codigo_barra,
             }
             
         except Exception as e:
@@ -565,7 +679,8 @@ class OracleClient:
     
     def write_dataframes_to_tmp_tables(
         self,
-        dataframes: Dict[str, pd.DataFrame]
+        dataframes: Dict[str, pd.DataFrame],
+        progress_callback: Optional[Callable[[str], None]] = None,
     ) -> Tuple[bool, str]:
         """
         Grava DataFrames nas tabelas TMP do Oracle (dados vindos da OrionTax)
@@ -581,6 +696,9 @@ class OracleClient:
                 - icms_saida
                 - pis_cofins
                 - cbs_ibs
+            progress_callback: callback opcional(mensagem: str) chamado
+                periodicamente enquanto um INSERT demorado está em andamento
+                (ex.: trigger lento no banco), além dos avisos no logger.
 
         Returns:
             Tuple (sucesso, mensagem)
@@ -637,7 +755,8 @@ class OracleClient:
                     df=df,
                     table_name=table_name,
                     cursor=cursor,
-                    batch_size=5000
+                    batch_size=5000,
+                    progress_callback=progress_callback,
                 )
 
                 total_inserted += inserted

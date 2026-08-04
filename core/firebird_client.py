@@ -7,9 +7,14 @@ do sistema possa usar os dois bancos de forma transparente.
 import math
 import pandas as pd
 import logging
-from typing import Dict, Tuple
+from typing import Callable, Dict, Optional, Tuple
 
-from .oracle_client import TABLE_COLUMNS, TABLE_NUMBER_COLUMNS, TABLE_ZFILL_COLUMNS
+from .oracle_client import (
+    TABLE_COLUMNS,
+    TABLE_NUMBER_COLUMNS,
+    TABLE_ZFILL_COLUMNS,
+    _executemany_with_heartbeat,
+)
 
 
 class FirebirdClient:
@@ -83,6 +88,25 @@ class FirebirdClient:
             finally:
                 self.connection = None
 
+    def cancel(self):
+        """
+        Interrompe a operação em andamento nesta conexão.
+
+        O driver firebirdsql não expõe uma API de cancelamento de
+        statement em andamento (diferente do oracledb), então o melhor
+        esforço aqui é fechar a conexão à força — isso libera a thread
+        que está bloqueada esperando resposta do Firebird, fazendo a
+        chamada bloqueada levantar uma exceção.
+        """
+        if self.connection:
+            try:
+                self.connection.close()
+                self.logger.warning("Cancelamento solicitado: conexão Firebird fechada à força")
+            except Exception as e:
+                self.logger.error(f"Erro ao solicitar cancelamento: {e}")
+            finally:
+                self.connection = None
+
     def test_connection(self) -> Tuple[bool, str]:
         """Testa a conexão com o Firebird."""
         try:
@@ -109,11 +133,14 @@ class FirebirdClient:
             return value.decode(self._python_codec, errors='replace')
         return value
 
-    def _read_view(self, view_name: str) -> pd.DataFrame:
+    def _read_view(self, view_name: str, where_clause: str = None) -> pd.DataFrame:
         """Lê uma VIEW e retorna um DataFrame."""
         codec = getattr(self, '_python_codec', 'cp1252')
         cursor = self.connection.cursor()
-        cursor.execute(f"SELECT * FROM {view_name}")
+        sql = f"SELECT * FROM {view_name}"
+        if where_clause:
+            sql += f" WHERE {where_clause}"
+        cursor.execute(sql)
         columns = [
             (desc[0].decode(codec, errors='replace') if isinstance(desc[0], bytes) else desc[0]).strip()
             for desc in cursor.description
@@ -147,18 +174,23 @@ class FirebirdClient:
             self.logger.info(f"✓ ICMS Saída: {len(df_icms_saida)} registros")
 
             self.logger.info("Lendo MXF_VW_PIS_COFINS...")
-            df_pis_cofins = self._read_view("MXF_VW_PIS_COFINS")
+            df_pis_cofins = self._read_view("MXF_VW_PIS_COFINS", "STATUS = 'ATIVO'")
             self.logger.info(f"✓ PIS/COFINS: {len(df_pis_cofins)} registros")
 
             self.logger.info("Lendo MXF_VW_CBS_IBS...")
             df_cbs_ibs = self._read_view("MXF_VW_CBS_IBS")
             self.logger.info(f"✓ CBS/IBS: {len(df_cbs_ibs)} registros")
 
+            self.logger.info("Lendo TAB_CODIGO_BARRA...")
+            df_codigo_barra = self._read_view("TAB_CODIGO_BARRA")
+            self.logger.info(f"✓ Código de Barras: {len(df_codigo_barra)} registros")
+
             return {
                 'icms_entrada': df_icms_entrada,
                 'icms_saida': df_icms_saida,
                 'pis_cofins': df_pis_cofins,
                 'cbs_ibs': df_cbs_ibs,
+                'codigo_barra': df_codigo_barra,
             }
 
         except Exception as e:
@@ -175,6 +207,7 @@ class FirebirdClient:
         table_name: str,
         cursor,
         batch_size: int = 1000,
+        progress_callback: Optional[Callable[[str], None]] = None,
     ) -> int:
         """
         Insere um DataFrame no Firebird usando executemany.
@@ -245,6 +278,28 @@ class FirebirdClient:
             """
             expected_cols = 15
 
+        elif table_name == "MXF_TMP_ICMS_ENTRADA":
+            insert_sql = """
+                INSERT INTO MXF_TMP_ICMS_ENTRADA (
+                    CODIGO_PRODUTO, EAN,
+                    EI_CST, EI_ALQ, EI_ALQST, EI_RBC, EI_RBCST,
+                    ED_CST, ED_ALQ, ED_ALQST, ED_RBC, ED_RBCST,
+                    ES_CST, ES_ALQ, ES_ALQST, ES_RBC, ES_RBCST,
+                    NFI_CST, NFD_CST, NFS_CSOSN, NF_ALQ,
+                    FUNDAMENTO_LEGAL, NCM,
+                    DTA_ALTERACAO, DTA_CADASTRO
+                ) VALUES (
+                    ?, ?,
+                    ?, ?, ?, ?, ?,
+                    ?, ?, ?, ?, ?,
+                    ?, ?, ?, ?, ?,
+                    ?, ?, ?, ?,
+                    ?, ?,
+                    CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+                )
+            """
+            expected_cols = 23
+
         else:
             raise ValueError(f"Tabela não suportada: {table_name}")
 
@@ -313,7 +368,9 @@ class FirebirdClient:
 
             if len(batch) >= batch_size:
                 try:
-                    cursor.executemany(insert_sql, batch)
+                    _executemany_with_heartbeat(
+                        cursor, insert_sql, batch, table_name, logger, progress_callback
+                    )
                     inserted_rows += len(batch)
                     batch.clear()
                 except Exception as e:
@@ -323,7 +380,9 @@ class FirebirdClient:
 
         if batch:
             try:
-                cursor.executemany(insert_sql, batch)
+                _executemany_with_heartbeat(
+                    cursor, insert_sql, batch, table_name, logger, progress_callback
+                )
                 inserted_rows += len(batch)
             except Exception as e:
                 logger.critical(f"Falha no executemany para {table_name}: {e}")
@@ -336,6 +395,7 @@ class FirebirdClient:
     def write_dataframes_to_tmp_tables(
         self,
         dataframes: Dict[str, pd.DataFrame],
+        progress_callback: Optional[Callable[[str], None]] = None,
     ) -> Tuple[bool, str]:
         """
         Grava DataFrames nas tabelas TMP do Firebird (dados vindos da OrionTax).
@@ -376,6 +436,7 @@ class FirebirdClient:
                     table_name=table_name,
                     cursor=cursor,
                     batch_size=5000,
+                    progress_callback=progress_callback,
                 )
                 total_inserted += inserted
                 self.logger.info(f"✓ {inserted} registros inseridos em {table_name}")

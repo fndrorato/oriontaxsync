@@ -69,7 +69,21 @@ class OrionTaxClient:
                 self.logger.error(f"Erro ao desconectar: {e}")
             finally:
                 self.connection = None
-    
+
+    def cancel(self):
+        """
+        Interrompe a operação em andamento nesta conexão (ex.: uma leitura
+        travada no PostgreSQL). psycopg2 permite chamar connection.cancel()
+        de outra thread enquanto a conexão está bloqueada em execute(),
+        fazendo a chamada bloqueada levantar QueryCanceledError.
+        """
+        if self.connection:
+            try:
+                self.connection.cancel()
+                self.logger.warning("Cancelamento solicitado para a conexão OrionTax")
+            except Exception as e:
+                self.logger.error(f"Erro ao solicitar cancelamento: {e}")
+
     def test_connection(self) -> Tuple[bool, str]:
         """
         Testa a conexão
@@ -222,6 +236,60 @@ class OrionTaxClient:
         
         return df_filtered            
     
+    def delete_and_insert_dataframe(
+        self,
+        table_name: str,
+        df: pd.DataFrame,
+        cnpj: str,
+    ) -> int:
+        """
+        Deleta os registros do CNPJ na tabela e insere os novos dados.
+
+        Args:
+            table_name: Nome da tabela PostgreSQL
+            df: DataFrame com os dados a inserir
+            cnpj: CNPJ do cliente (usado no DELETE)
+
+        Returns:
+            Número de registros inseridos
+        """
+        if df.empty:
+            self.logger.info(f"DataFrame vazio para {table_name}, pulando...")
+            return 0
+
+        try:
+            df_clean = self._clean_dataframe_for_insert(df)
+
+            cols = list(df_clean.columns)
+            values = [tuple(row) for row in df_clean.to_numpy()]
+
+            cols_sql = ', '.join(cols)
+            insert_sql = f"INSERT INTO {table_name} ({cols_sql}) VALUES %s"
+
+            chunk_size = 1000
+            total_inserted = 0
+
+            with self.connection.cursor() as cursor:
+                cursor.execute(f"DELETE FROM {table_name} WHERE cnpj = %s", (cnpj,))
+                self.logger.info(f"  Deletados registros existentes de {table_name} para CNPJ {cnpj}")
+
+                for i in range(0, len(values), chunk_size):
+                    chunk = values[i:i + chunk_size]
+                    execute_values(cursor, insert_sql, chunk, page_size=chunk_size)
+                    total_inserted += len(chunk)
+
+                    if (i // chunk_size + 1) % 10 == 0:
+                        self.logger.info(f"  Inseridos {total_inserted}/{len(values)} registros...")
+
+            self.logger.info(f"✓ {total_inserted} registros inseridos em {table_name}")
+            return total_inserted
+
+        except Exception as e:
+            self.logger.error(f"Erro ao inserir em {table_name}: {e}")
+            import traceback
+            self.logger.error(traceback.format_exc())
+            raise
+
     def upsert_dataframe_psycopg2(
         self,
         table_name: str,
@@ -231,73 +299,73 @@ class OrionTaxClient:
     ) -> int:
         """
         Faz UPSERT (INSERT ... ON CONFLICT DO UPDATE) no PostgreSQL
-        
+
         Args:
             table_name: Nome da tabela
             df: DataFrame com dados
             conflict_cols: Colunas da chave única (ex: ['cnpj', 'codigo_produto'])
             update_cols: Colunas a atualizar em caso de conflito
-            
+
         Returns:
             Número de registros processados
         """
         if df.empty:
             self.logger.info(f"DataFrame vazio para {table_name}, pulando...")
             return 0
-        
+
         try:
             # Limpar DataFrame
             df_clean = self._clean_dataframe_for_insert(df)
-            
+
             # Garantir que constraint existe
             self._ensure_constraint_exists(table_name, conflict_cols)
-            
+
             # Preparar colunas e valores
             cols = list(df_clean.columns)
             values = [tuple(row) for row in df_clean.to_numpy()]
-            
+
             # Construir SQL de UPSERT
             cols_sql = ', '.join(cols)
-            
+
             # Placeholder para VALUES: (%s, %s, %s, ...)
             placeholders = ', '.join(['%s'] * len(cols))
-            
+
             # Cláusula UPDATE SET
             update_set = ', '.join([f"{col} = EXCLUDED.{col}" for col in update_cols])
-            
+
             insert_sql = f"""
                 INSERT INTO {table_name} ({cols_sql})
                 VALUES %s
                 ON CONFLICT ({', '.join(conflict_cols)})
                 DO UPDATE SET {update_set}
             """
-            
+
             self.logger.info(f"Executando UPSERT em {table_name}: {len(values)} registros")
-            
+
             # Executar em chunks para performance
             chunk_size = 1000
             total_inserted = 0
-            
+
             with self.connection.cursor() as cursor:
                 for i in range(0, len(values), chunk_size):
                     chunk = values[i:i + chunk_size]
-                    
+
                     execute_values(
                         cursor,
                         insert_sql,
                         chunk,
                         page_size=chunk_size
                     )
-                    
+
                     total_inserted += len(chunk)
-                    
+
                     if (i // chunk_size + 1) % 10 == 0:  # Log a cada 10 chunks
                         self.logger.info(f"  Processados {total_inserted}/{len(values)} registros...")
-            
+
             self.logger.info(f"✓ {total_inserted} registros processados em {table_name}")
-            
+
             return total_inserted
-            
+
         except Exception as e:
             self.logger.error(f"Erro no UPSERT de {table_name}: {e}")
             import traceback
@@ -433,93 +501,88 @@ class OrionTaxClient:
             
             total_processed = 0
             
-            # Mapeamento de chaves para nomes de tabelas
-            mapping = {
-                'icms_entrada': 'mxf_vw_icms_entrada',
-                'icms_saida': 'mxf_vw_icms',
-                'pis_cofins': 'mxf_vw_pis_cofins',
-                'cbs_ibs': 'mxf_vw_cbs_ibs'
-            }
-            
-            for key, table_name in mapping.items():
+            # Mapeamento de chaves para nomes de tabelas e colunas de dedup (PK)
+            # icms_entrada é gravado em duas tabelas: vw (leitura) e tmp (devolução para Intersolid)
+            table_pairs = [
+                ('icms_entrada', 'mxf_vw_icms_entrada', ['cnpj', 'codigo_produto']),
+                ('icms_entrada', 'mxf_tmp_icms_entrada', ['cnpj', 'codigo_produto']),
+                ('icms_saida',   'mxf_vw_icms',          ['cnpj', 'codigo_produto']),
+                ('pis_cofins',   'mxf_vw_pis_cofins',    ['cnpj', 'codigo_produto']),
+                ('cbs_ibs',      'mxf_vw_cbs_ibs',       ['cnpj', 'codigo_produto']),
+                ('codigo_barra', 'mxf_tab_codigo_barra',  ['cnpj', 'cod_produto', 'cod_ean']),
+            ]
+
+            for key, table_name, dedup_cols in table_pairs:
                 if key not in dataframes:
                     self.logger.info(f"DataFrame '{key}' não encontrado, pulando...")
                     continue
-                
+
                 df = dataframes[key]
-                
+
                 if df.empty:
                     self.logger.info(f"DataFrame '{key}' está vazio, pulando...")
                     continue
-                
+
                 # Fazer cópia para não modificar original
                 df = df.copy()
-                
+
                 # Converter nomes de colunas para lowercase (padrão PostgreSQL)
                 df.columns = [c.lower() for c in df.columns]
-                
+
                 # Adicionar/substituir CNPJ
                 df['cnpj'] = cnpj
-                
-                # Garantir que codigo_produto não seja None
-                if 'codigo_produto' not in df.columns:
-                    raise ValueError(f"Coluna 'codigo_produto' não encontrada no DataFrame '{key}'")
-                
-                # Remover linhas onde codigo_produto é None
+
+                # Coluna principal da PK (primeiro campo não-cnpj de dedup_cols)
+                pk_col = dedup_cols[1]
+
+                if pk_col not in df.columns:
+                    raise ValueError(f"Coluna '{pk_col}' não encontrada no DataFrame '{key}'")
+
+                # Remover linhas onde a coluna PK principal é None
                 original_count = len(df)
-                df = df[df['codigo_produto'].notna()]
+                df = df[df[pk_col].notna()]
                 removed_count = original_count - len(df)
-                
+
                 if removed_count > 0:
-                    self.logger.warning(f"  Removidas {removed_count} linhas sem codigo_produto")
-                
+                    self.logger.warning(f"  Removidas {removed_count} linhas sem {pk_col}")
+
                 if df.empty:
-                    self.logger.warning(f"DataFrame '{key}' ficou vazio após filtrar codigo_produto nulos")
+                    self.logger.warning(f"DataFrame '{key}' ficou vazio após filtrar {pk_col} nulos")
                     continue
-                
+
                 self.logger.info(f"\n{'='*60}")
                 self.logger.info(f"Processando {table_name}")
                 self.logger.info(f"Registros: {len(df)}")
                 self.logger.info(f"Colunas originais: {len(df.columns)}")
-                
+
                 # ✅ FILTRAR COLUNAS - Manter apenas as que existem na tabela
                 df = self._filter_dataframe_columns(df, table_name)
-                
+
                 if df.empty:
                     self.logger.warning(f"DataFrame '{key}' ficou vazio após filtrar colunas")
                     continue
-                
+
                 # Verificar se temos as colunas obrigatórias
-                if 'cnpj' not in df.columns or 'codigo_produto' not in df.columns:
-                    self.logger.error(f"Colunas obrigatórias (cnpj, codigo_produto) não encontradas após filtro")
+                missing = [c for c in dedup_cols if c not in df.columns]
+                if missing:
+                    self.logger.error(f"Colunas obrigatórias ausentes após filtro: {missing}")
                     continue
-                
-                # Colunas de conflito (chave única)
-                conflict_cols = ['cnpj', 'codigo_produto']
-                
-                # ✅ REMOVER DUPLICATAS baseado na chave única
-                df = self._remove_duplicates(df, conflict_cols)
-                
+
+                # ✅ REMOVER DUPLICATAS baseado na chave única da tabela
+                df = self._remove_duplicates(df, dedup_cols)
+
                 if df.empty:
                     self.logger.warning(f"DataFrame '{key}' ficou vazio após remover duplicatas")
                     continue
-                
+
                 # ✅ TRUNCAR COLUNAS DE TEXTO que excedem o limite
                 df = self._truncate_string_columns(df, table_name)
-                
-                # Colunas para atualizar (todas exceto as de conflito)
-                update_cols = [c for c in df.columns if c not in conflict_cols]
-                
-                if not update_cols:
-                    self.logger.warning(f"Nenhuma coluna para atualizar em {table_name}")
-                    continue
-                
-                # Executar UPSERT
-                count = self.upsert_dataframe_psycopg2(
+
+                # Executar DELETE + INSERT
+                count = self.delete_and_insert_dataframe(
                     table_name=table_name,
                     df=df,
-                    conflict_cols=conflict_cols,
-                    update_cols=update_cols
+                    cnpj=cnpj,
                 )
                 
                 total_processed += count

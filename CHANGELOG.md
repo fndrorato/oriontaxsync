@@ -2,6 +2,74 @@
 
 ---
 
+## [1.0.4] — 2026-07-03
+
+### Adicionado
+
+#### Log de progresso durante inserções travadas no banco de destino
+- Novo helper `_executemany_with_heartbeat()` em `core/oracle_client.py` (reaproveitado em `core/firebird_client.py`): durante um `INSERT` em lote, se a chamada ficar mais de 15s sem retornar (ex.: trigger lento ou lock no banco), é emitida periodicamente uma mensagem informando a tabela e o tempo decorrido.
+- Nas operações manuais (botão da tela principal), essas mensagens aparecem no console da interface. Nas execuções agendadas, são gravadas no log de arquivo com o nome do cliente.
+- Objetivo: eliminar o cenário de operação travada silenciosamente, sem qualquer indicação do que está acontecendo — motivado por um caso real em que o `INSERT` em `MXF_TMP_ICMS_SAIDA` ficava preso por um trigger lento no Oracle sem nenhuma mensagem de erro.
+
+#### Botão "Cancelar Execução"
+- Novo botão na tela principal (`gui/main_window.py`), habilitado apenas durante uma operação manual em andamento.
+- Ao acionar (com confirmação), interrompe a conexão ativa no momento: `connection.cancel()` no Oracle e no OrionTax (PostgreSQL), ou fechamento forçado da conexão no Firebird (driver sem suporte nativo a cancelamento de statement).
+- Novo método `cancel()` adicionado a `OracleClient`, `FirebirdClient` e `OrionTaxClient`.
+
+### Corrigido
+
+#### Log das últimas 12h ausente no Heartbeat
+- `HeartbeatService._read_log_file()` (`core/heartbeat.py`) localizava a pasta `logs/` usando `Path(__file__).parent.parent`, caminho não confiável dentro do executável PyInstaller (onedir) — resultando em `logs_ultimas_24h` sempre vazio em produção, mesmo com o heartbeat rodando normalmente.
+- Corrigido para usar o mesmo padrão já adotado em `main.py`/`gui/main_window.py`: `sys.executable` quando `sys.frozen` é `True`, em vez de depender de `__file__`.
+
+---
+
+## [1.0.3] — 2026-06-24
+
+### Adicionado
+
+#### Sincronização da tabela TAB_CODIGO_BARRA na operação ENVIAR
+- A operação **ENVIAR** (Oracle/Firebird → PostgreSQL) passou a incluir a tabela `TAB_CODIGO_BARRA`.
+- Os dados são lidos do banco de origem (`TAB_CODIGO_BARRA`) e gravados na tabela `mxf_tab_codigo_barra` do PostgreSQL, com o CNPJ do cliente injetado automaticamente.
+- A chave de deduplicação e de DELETE é composta por `cnpj + cod_produto + cod_ean`, refletindo a PK original da tabela no Oracle/Firebird.
+- A operação **BUSCAR** não foi alterada — `mxf_tab_codigo_barra` é somente gravação.
+- Internamente, `table_pairs` em `oriontax_client.py` passou de 2-tupla para 3-tupla `(key, table_name, dedup_cols)`, permitindo que cada tabela defina sua própria chave de dedup sem impactar as demais.
+
+---
+
+## [1.0.2.5] — 2026-05-11
+
+### Alterado
+
+#### Substituição de UPSERT por DELETE + INSERT no envio para OrionTax
+- Na operação **ENVIAR** (Oracle/Firebird → PostgreSQL), o mecanismo de `INSERT ON CONFLICT DO UPDATE` foi substituído por `DELETE WHERE cnpj = X` seguido de `INSERT` simples.
+- Novo método `delete_and_insert_dataframe` em `oriontax_client.py` responsável pela operação.
+- DELETE e INSERTs ocorrem na mesma transação: em caso de falha, o rollback desfaz tudo.
+- A operação **BUSCAR** (PostgreSQL → Oracle/Firebird) não foi alterada.
+
+---
+
+## [1.0.2.4] — 2026-05-06
+
+### Corrigido
+
+#### Filtro de produtos ativos em PIS/COFINS
+- A leitura da view `MXF_VW_PIS_COFINS` passou a aplicar o filtro `STATUS = 'ATIVO'`, tanto no cliente Firebird (`firebird_client.py`) quanto no Oracle (`oracle_client.py`).
+- Antes, todos os produtos eram retornados independentemente do status, podendo incluir itens inativos no envio à OrionTax.
+- No Firebird, o método `_read_view` ganhou o parâmetro opcional `where_clause` para suportar filtros sem duplicar código.
+
+---
+
+## [1.0.2.3] — 2026-04-30
+
+### Corrigido
+
+#### Gravação dos dados de ICMS Entrada na operação ENVIAR
+- Na operação **ENVIAR** (Intersolid → OrionTax), os dados lidos da view `MXF_VW_ICMS_ENTRADA` passaram a ser gravados também na tabela `mxf_tmp_icms_entrada` do PostgreSQL, além da `mxf_vw_icms_entrada`.
+- Isso garante que a operação **BUSCAR** subsequente encontre os dados corretamente em `mxf_tmp_icms_entrada` e os devolva para a tabela `MXF_TMP_ICMS_ENTRADA` do Oracle/Firebird.
+
+---
+
 ## [1.0.2] — 2026-04-09
 
 ### Adicionado
