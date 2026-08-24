@@ -2,6 +2,16 @@
 
 ---
 
+## [1.0.5] — 2026-08-24
+
+### Corrigido
+
+#### ORA-01722 (invalid number) ao gravar EAN não numérico nas tabelas temporárias
+- A coluna `EAN` é `NUMBER(14)` nas tabelas `MXF_TMP_ICMS_SAIDA`, `MXF_TMP_ICMS_ENTRADA`, `MXF_TMP_PIS_COFINS` e `MXF_TMP_CBS_IBS`. Quando o OrionTax retorna o placeholder textual `'SEM GTIN'` (produto sem código de barras cadastrado), o `INSERT` no BD Intersolid (Oracle/Firebird) quebrava com `ORA-01722: invalid number`, interrompendo a operação **BUSCAR** para o cliente inteiro.
+- `EAN` foi adicionado a `TABLE_NUMBER_COLUMNS` em `core/oracle_client.py` (reaproveitado por `core/firebird_client.py`), passando a tratar valores não numéricos nessa coluna como `NULL` em vez de propagar o erro.
+
+---
+
 ## [1.0.4.1] — 2026-08-03
 
 ### Adicionado

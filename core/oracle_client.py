@@ -59,6 +59,7 @@ TABLE_ZFILL_COLUMNS = {
 
 TABLE_NUMBER_COLUMNS = {
     "MXF_TMP_ICMS_SAIDA": {
+        "EAN",
         "FECP", "SNC_ALQ", "SNC_ALQST", "SNC_RBC", "SNC_RBCST",
         "SNC_ALQ_BENEF",
         "SAC_ALQ", "SAC_ALQST", "SAC_RBC", "SAC_RBCST", "SAC_ALQ_BENEF",
@@ -66,17 +67,20 @@ TABLE_NUMBER_COLUMNS = {
     },
 
     "MXF_TMP_PIS_COFINS": {
+        "EAN",
         "PIS_ALQ_E", "PIS_ALQ_S",
         "COFINS_ALQ_E", "COFINS_ALQ_S"
     },
 
     "MXF_TMP_CBS_IBS": {
+        "EAN",
         "ALQ_CBS", "RBC_CBS", "ALQ_IBS", "RBC_IBS",
         "ALQ_IBS_MUN", "RBC_IBS_MUN",
         "ALQ_IS", "ALQ_IS_ESPEC"
     },
 
     "MXF_TMP_ICMS_ENTRADA": {
+        "EAN",
         "EI_ALQ", "EI_ALQST", "EI_RBC", "EI_RBCST",
         "ED_ALQ", "ED_ALQST", "ED_RBC", "ED_RBCST",
         "ES_ALQ", "ES_ALQST", "ES_RBC", "ES_RBCST",
@@ -529,9 +533,16 @@ class OracleClient:
                         try:
                             return float(v.replace(",", "."))
                         except ValueError:
-                            logger.error(
-                                f"{table_name} | {col_name} | Valor numérico inválido: '{value}'"
-                            )
+                            if col_name == "EAN":
+                                # Placeholder textual vindo do OrionTax (ex.: "SEM GTIN")
+                                # para produto sem código de barras cadastrado.
+                                logger.info(
+                                    f"{table_name} | EAN | Produto sem GTIN numérico ('{value}'), gravando NULL"
+                                )
+                            else:
+                                logger.error(
+                                    f"{table_name} | {col_name} | Valor numérico inválido: '{value}'"
+                                )
                             return None
                     zfill_width = TABLE_ZFILL_COLUMNS.get(table_name, {}).get(col_name)
                     if zfill_width and v.isdigit():
