@@ -307,7 +307,29 @@ class MainWindow(QMainWindow):
         
         client_group.setLayout(client_layout)
         layout.addWidget(client_group)
-        
+
+        # Limpeza de Tabelas Temporárias (BD Intersolid)
+        clear_tmp_group = QGroupBox('Tabelas Temporárias (BD Intersolid)')
+        clear_tmp_layout = QHBoxLayout()
+
+        clear_icms_button = QPushButton('Limpar Tabela Temporária de ICMS')
+        clear_icms_button.setCursor(Qt.PointingHandCursor)
+        clear_icms_button.clicked.connect(lambda: self.clear_tmp_table('icms'))
+        clear_tmp_layout.addWidget(clear_icms_button)
+
+        clear_pis_cofins_button = QPushButton('Limpar Tabela Temporária do PIS/COFINS')
+        clear_pis_cofins_button.setCursor(Qt.PointingHandCursor)
+        clear_pis_cofins_button.clicked.connect(lambda: self.clear_tmp_table('pis_cofins'))
+        clear_tmp_layout.addWidget(clear_pis_cofins_button)
+
+        clear_ibs_cbs_button = QPushButton('Limpar Tabela Temporária do IBS/CBS')
+        clear_ibs_cbs_button.setCursor(Qt.PointingHandCursor)
+        clear_ibs_cbs_button.clicked.connect(lambda: self.clear_tmp_table('ibs_cbs'))
+        clear_tmp_layout.addWidget(clear_ibs_cbs_button)
+
+        clear_tmp_group.setLayout(clear_tmp_layout)
+        layout.addWidget(clear_tmp_group)
+
         # Status das Conexões
         status_group = QGroupBox('Status das Conexões')
         status_layout = QVBoxLayout()
@@ -898,6 +920,50 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, 'Erro', f'Erro ao testar conexão:\n\n{str(e)}')
             self.log_message(f'✗ Erro: {str(e)}', 'ERROR')
     
+    def clear_tmp_table(self, kind: str):
+        """Limpa (DELETE) a(s) tabela(s) temporária(s) do BD Intersolid (Oracle/Firebird)."""
+        tables_by_kind = {
+            'icms': ('ICMS', ['MXF_TMP_ICMS_ENTRADA', 'MXF_TMP_ICMS_SAIDA']),
+            'pis_cofins': ('PIS/COFINS', ['MXF_TMP_PIS_COFINS']),
+            'ibs_cbs': ('IBS/CBS', ['MXF_TMP_CBS_IBS']),
+        }
+        label, table_names = tables_by_kind[kind]
+
+        oracle_config = self.db_manager.get_oracle_config()
+        if not oracle_config:
+            QMessageBox.warning(self, 'Atenção', 'Configure a conexão BD Intersolid primeiro.')
+            return
+
+        reply = QMessageBox.question(
+            self,
+            'Confirmar Limpeza',
+            f'Deseja limpar a tabela temporária de {label} no BD Intersolid?\n\n'
+            f'Isso vai executar DELETE FROM em: {", ".join(table_names)}\n\n'
+            'Esta ação não pode ser desfeita.',
+            QMessageBox.Yes | QMessageBox.No
+        )
+        if reply == QMessageBox.No:
+            return
+
+        try:
+            from core.oracle_client import create_db_client
+
+            self.log_message(f'Limpando tabela(s) temporária(s) de {label}...', 'INFO')
+
+            db_client = create_db_client(oracle_config)
+            success, message = db_client.clear_tmp_tables(table_names)
+
+            if success:
+                QMessageBox.information(self, 'Sucesso', f'✓ Tabela temporária de {label} limpa com sucesso!')
+                self.log_message(message, 'SUCCESS')
+            else:
+                QMessageBox.critical(self, 'Erro', f'Falha ao limpar tabela temporária de {label}:\n\n{message}')
+                self.log_message(f'✗ Erro ao limpar {label}: {message}', 'ERROR')
+
+        except Exception as e:
+            QMessageBox.critical(self, 'Erro', f'Erro ao limpar tabela temporária de {label}:\n\n{str(e)}')
+            self.log_message(f'✗ Erro: {str(e)}', 'ERROR')
+
     def test_oriontax_connection(self):
         """Testa conexão OrionTax"""
         oriontax_config = self.db_manager.get_oriontax_config()  # ✅ Adicionar self.
