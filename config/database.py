@@ -286,6 +286,8 @@ class DatabaseManager:
     def save_oriontax_api_config(self, base_url: str, token: str,
                                   timeout_seconds: int = 60, max_retries: int = 3,
                                   batch_size: int = 500, page_size: int = 500) -> bool:
+        from core.api.oriontax_api_client import OrionTaxApiClient
+        base_url = OrionTaxApiClient.normalize_base_url(base_url)
         encrypted = encryption_manager.encrypt(token)
         cursor = self.conn.cursor()
         cursor.execute("""

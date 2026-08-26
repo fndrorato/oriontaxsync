@@ -6,6 +6,7 @@ import time
 from typing import Dict, Iterable, List, Optional
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
+from urllib.parse import urlsplit, urlunsplit
 from urllib.request import Request, urlopen
 
 
@@ -18,13 +19,24 @@ class OrionTaxApiError(RuntimeError):
 
 class OrionTaxApiClient:
     def __init__(self, config: Dict):
-        self.base_url = config["base_url"].rstrip("/")
+        self.base_url = self.normalize_base_url(config["base_url"])
         self.token = config["token"]
         self.timeout = int(config.get("timeout_seconds", 60))
         self.max_retries = int(config.get("max_retries", 3))
         self.batch_size = max(1, int(config.get("batch_size", 500)))
         self.page_size = min(500, max(1, int(config.get("page_size", 500))))
         self.logger = logging.getLogger(__name__)
+
+    @staticmethod
+    def normalize_base_url(url: str) -> str:
+        """Aceita tanto a raiz do site quanto uma URL terminada em /api/v1|v2."""
+        parts = urlsplit(str(url).strip().rstrip("/"))
+        path = parts.path.rstrip("/")
+        for suffix in ("/api/v2", "/api/v1", "/api"):
+            if path.lower().endswith(suffix):
+                path = path[:-len(suffix)]
+                break
+        return urlunsplit((parts.scheme, parts.netloc, path, "", "")).rstrip("/")
 
     def _request(self, method: str, path: str, body=None, query=None):
         url = f"{self.base_url}/{path.lstrip('/')}"

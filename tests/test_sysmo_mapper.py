@@ -21,6 +21,26 @@ class SysmoMapperTests(unittest.TestCase):
         self.assertEqual(30.0, payload["percentual_redbcde"])
         self.assertIs(payload["inf_ad_fisco"], False)
 
+    def test_uses_cofins_cst_as_pis_fallback_and_zero_pads(self):
+        row = self.valid_row()
+        row["nr_cst_pis"] = None
+        row["nr_cst_cofins"] = 1
+        payload = sysmo_row_to_api(row)
+        self.assertEqual("01", payload["pis_cst"])
+
+    def test_normalizes_float_like_cfop(self):
+        row = self.valid_row(); row["nr_cfop"] = 5102.0
+        self.assertEqual("5102", sysmo_row_to_api(row)["cfop"])
+
+    def test_allows_null_cfop_and_pis_cst_as_accepted_by_api(self):
+        row = self.valid_row()
+        row["nr_cfop"] = None
+        row["nr_cst_pis"] = None
+        row["nr_cst_cofins"] = None
+        payload = sysmo_row_to_api(row)
+        self.assertIsNone(payload["cfop"])
+        self.assertIsNone(payload["pis_cst"])
+
     def test_rejects_missing_required_field(self):
         row = self.valid_row(); row["tx_descricaoproduto"] = None
         with self.assertRaisesRegex(ValueError, "descricao"):

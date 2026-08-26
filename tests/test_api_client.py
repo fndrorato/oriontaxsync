@@ -13,6 +13,12 @@ class FakeApi(OrionTaxApiClient):
 
 
 class ApiClientTests(unittest.TestCase):
+    def test_normalizes_api_prefix_from_configured_url(self):
+        self.assertEqual(
+            "https://oriontax.f5sys.com.br",
+            OrionTaxApiClient.normalize_base_url("https://oriontax.f5sys.com.br/api/v2/"),
+        )
+
     def test_send_requires_job_id(self):
         api = FakeApi([(201, {"job_id": "job-1"})])
         self.assertEqual("job-1", api.send_products([{"codigo": "1"}]))

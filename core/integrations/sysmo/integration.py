@@ -26,7 +26,28 @@ class SysmoIntegration(IntegrationAdapter):
                 self._progress(progress_callback, "Conectando ao PostgreSQL da Sysmo...")
                 rows = self.repository.read_products()
                 self._progress(progress_callback, f"{len(rows)} produto(s) lido(s) da Sysmo.")
-                products = [sysmo_row_to_api(row) for row in rows]
+                products = []
+                rejected = []
+                for row in rows:
+                    try:
+                        products.append(sysmo_row_to_api(row))
+                    except ValueError as exc:
+                        rejected.append(str(exc))
+                if rejected:
+                    self._progress(
+                        progress_callback,
+                        f"⚠ {len(rejected)} produto(s) rejeitado(s) localmente; "
+                        f"{len(products)} produto(s) válido(s) continuarão."
+                    )
+                    for error in rejected[:20]:
+                        self._progress(progress_callback, f"⚠ {error}")
+                    if len(rejected) > 20:
+                        self._progress(progress_callback, f"⚠ ... e mais {len(rejected) - 20} rejeição(ões).")
+                if not products:
+                    return SyncResult(
+                        False, "Nenhum produto válido para envio.", 0,
+                        details={"rejected_count": len(rejected), "rejected": rejected[:100]},
+                    )
                 batch_size = self.api.batch_size
                 jobs = []
                 for offset in range(0, len(products), batch_size):
@@ -35,7 +56,13 @@ class SysmoIntegration(IntegrationAdapter):
                     total = (len(products) + batch_size - 1) // batch_size
                     self._progress(progress_callback, f"Enviando lote {number}/{total} ({len(batch)} produtos)...")
                     jobs.append(self.api.send_products(batch))
-                return SyncResult(True, f"{len(products)} produto(s) aceito(s) pela API em {len(jobs)} lote(s).", len(products), jobs)
+                message = f"{len(products)} produto(s) aceito(s) pela API em {len(jobs)} lote(s)."
+                if rejected:
+                    message += f" {len(rejected)} produto(s) não enviado(s) por dados obrigatórios ausentes."
+                return SyncResult(
+                    True, message, len(products), jobs,
+                    details={"rejected_count": len(rejected), "rejected": rejected[:100]},
+                )
             finally:
                 self.repository.close()
 
