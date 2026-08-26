@@ -14,7 +14,29 @@ import traceback
 import logging
 
 # from config.database import db_manager
-from gui.settings import OracleConfigDialog, OrionTaxConfigDialog, HeartbeatConfigDialog
+from gui.settings import (OracleConfigDialog, OrionTaxConfigDialog, HeartbeatConfigDialog,
+                          SysmoConfigDialog, OrionTaxApiConfigDialog)
+from gui.settings import UpdateConfigDialog
+from core.integrations.profiles import get_erp_profile
+from version import APP_VERSION
+
+
+class UpdateCheckThread(QThread):
+    finished = pyqtSignal(bool, object)
+
+    def __init__(self, manifest_url, download=False, parent=None):
+        super().__init__(parent)
+        self.manifest_url = manifest_url
+        self.download = download
+
+    def run(self):
+        try:
+            from core.updater import UpdateChecker
+            checker = UpdateChecker(self.manifest_url, APP_VERSION)
+            info = checker.check()
+            self.finished.emit(True, (info, checker.download(info) if info and self.download else None))
+        except Exception as exc:
+            self.finished.emit(False, str(exc))
 from gui.client_dialog import ClientDialog
 from gui.schedule import ScheduleDialog
 
@@ -25,12 +47,15 @@ class WorkerThread(QThread):
     finished = pyqtSignal(bool, str, dict)  # success, message, stats
     progress = pyqtSignal(str)  # message
 
-    def __init__(self, operation_type: str, oracle_config: dict, oriontax_config: dict, cnpj: str, parent=None):
+    def __init__(self, operation_type: str, oracle_config: dict, oriontax_config: dict,
+                 cnpj: str, parent=None, db_manager=None, erp_type='intersolid'):
         super().__init__(parent)
         self.operation_type = operation_type  # 'ENVIAR' ou 'BUSCAR'
         self.oracle_config = oracle_config
         self.oriontax_config = oriontax_config
         self.cnpj = cnpj
+        self.db_manager = db_manager
+        self.erp_type = erp_type
         self._active_client = None  # cliente (Oracle/Firebird/OrionTax) conectado no momento
         self._client_lock = threading.Lock()
         self._cancel_requested = False
@@ -60,6 +85,19 @@ class WorkerThread(QThread):
 
         try:
             start_time = datetime.now()
+
+            if self.erp_type == 'sysmo':
+                from core.integrations import create_integration
+                integration = create_integration(self.db_manager, 'sysmo')
+                self._set_active_client(integration)
+                result = (integration.send if self.operation_type == 'ENVIAR' else integration.receive)(
+                    self.cnpj, self.progress.emit
+                )
+                stats = {'registros': result.records,
+                         'tempo': (datetime.now() - start_time).total_seconds(),
+                         'jobs': result.accepted_jobs}
+                self.finished.emit(result.success, result.message, stats)
+                return
 
             if self.operation_type == 'ENVIAR':
                 # ENVIAR: BD Intersolid VIEWs → PostgreSQL VIEWs
@@ -163,6 +201,8 @@ class MainWindow(QMainWindow):
         self.app_instance = app_instance  # ✅ Armazenar app_instance
         self.logger = logging.getLogger(__name__)
         self.worker_thread = None
+        self.erp_type = self.db_manager.get_installation()['erp_type']
+        self.erp_profile = get_erp_profile(self.erp_type)
         
         # ✅ Buscar dados do usuário logado (opcional, se precisar)
         self.user_data = {'username': 'admin', 'nome_completo': 'Administrador'}
@@ -170,10 +210,11 @@ class MainWindow(QMainWindow):
         self.init_ui()
         self.load_initial_data()
         self.setup_status_timer()
+        self.setup_update_timer()
     
     def init_ui(self):
         """Inicializa a interface"""
-        self.setWindowTitle('OrionTax Sync - Sistema de Sincronização Fiscal')
+        self.setWindowTitle(f'OrionTax Sync 2.0 - {self.erp_profile["name"]}')
         self.setGeometry(100, 100, 1200, 700)
         
         # Menu Bar
@@ -226,6 +267,14 @@ class MainWindow(QMainWindow):
         exit_action.setShortcut('Ctrl+Q')
         exit_action.triggered.connect(self.close)
         file_menu.addAction(exit_action)
+
+        erp_menu = menubar.addMenu('ERP')
+        intersolid_action = QAction('Usar Intersolid', self)
+        intersolid_action.triggered.connect(lambda: self.change_erp_profile('intersolid'))
+        erp_menu.addAction(intersolid_action)
+        sysmo_action = QAction('Usar Sysmo', self)
+        sysmo_action.triggered.connect(lambda: self.change_erp_profile('sysmo'))
+        erp_menu.addAction(sysmo_action)
         
         # Menu Ajuda
         help_menu = menubar.addMenu('Ajuda')
@@ -233,13 +282,103 @@ class MainWindow(QMainWindow):
         about_action = QAction('Sobre', self)
         about_action.triggered.connect(self.show_about)
         help_menu.addAction(about_action)
+        update_action = QAction('Verificar atualizações', self)
+        update_action.triggered.connect(self.check_for_updates)
+        help_menu.addAction(update_action)
+        update_config_action = QAction('Configurar canal de atualização', self)
+        update_config_action.triggered.connect(lambda: UpdateConfigDialog(self).exec_())
+        help_menu.addAction(update_config_action)
+
+    def change_erp_profile(self, erp_type: str):
+        """Altera explicitamente o perfil desta instalação e solicita reinício."""
+        if erp_type == self.erp_type:
+            QMessageBox.information(self, 'Perfil ERP', 'Este perfil já está ativo.')
+            return
+        if self.worker_thread and self.worker_thread.isRunning():
+            QMessageBox.warning(self, 'Operação em andamento', 'Cancele ou conclua a sincronização antes de trocar o ERP.')
+            return
+        name = get_erp_profile(erp_type)['name']
+        reply = QMessageBox.question(
+            self, 'Alterar perfil ERP',
+            f'Alterar esta instalação para {name}?\n\nOs agendamentos serão preservados, mas revise-os antes de reativar a operação.',
+            QMessageBox.Yes | QMessageBox.No,
+        )
+        if reply == QMessageBox.Yes:
+            self.db_manager.set_erp_type(erp_type)
+            QMessageBox.information(self, 'Perfil alterado', 'Perfil salvo. Reinicie o OrionTax Sync para aplicar a nova interface.')
+
+    def setup_update_timer(self):
+        """Verifica releases sem bloquear a abertura e repete a cada 12 horas."""
+        self.update_timer = QTimer(self)
+        self.update_timer.timeout.connect(lambda: self.check_for_updates(silent=True))
+        self.update_timer.start(12 * 60 * 60 * 1000)
+        QTimer.singleShot(5000, lambda: self.check_for_updates(silent=True))
+
+    def check_for_updates(self, silent=False):
+        manifest_url = self.db_manager.get_configuracao('update_manifest_url', '')
+        if not manifest_url:
+            if not silent:
+                QMessageBox.information(
+                    self, 'Atualizações',
+                    'O canal de atualização ainda não foi configurado.\n\n'
+                    'Defina update_manifest_url nas configurações da instalação.'
+                )
+            return
+        if getattr(self, 'update_thread', None) and self.update_thread.isRunning():
+            return
+        self._update_check_silent = bool(silent)
+        if not silent:
+            self.status_label.setText('Verificando atualizações...')
+        self.update_thread = UpdateCheckThread(manifest_url, parent=self)
+        self.update_thread.finished.connect(self.on_update_checked)
+        self.update_thread.start()
+
+    def on_update_checked(self, success, result):
+        if not success:
+            self.logger.warning(f'Falha ao verificar atualização: {result}')
+            if not getattr(self, '_update_check_silent', False):
+                QMessageBox.warning(self, 'Atualizações', f'Não foi possível verificar atualizações:\n\n{result}')
+            return
+        info, _ = result
+        if info is None:
+            if not getattr(self, '_update_check_silent', False):
+                QMessageBox.information(self, 'Atualizações', f'Você já utiliza a versão mais recente ({APP_VERSION}).')
+            return
+        reply = QMessageBox.question(
+            self, 'Atualização disponível',
+            f'Versão {info.version} disponível.\n\n{info.release_notes}\n\nBaixar e instalar agora?',
+            QMessageBox.Yes | QMessageBox.No,
+        )
+        if reply == QMessageBox.Yes:
+            from core.integrations.lock import SyncLockRegistry
+            if SyncLockRegistry.is_active() or (self.worker_thread and self.worker_thread.isRunning()):
+                QMessageBox.warning(self, 'Atualização', 'Aguarde a sincronização em andamento terminar.')
+                return
+            self.status_label.setText('Baixando atualização...')
+            self.update_thread = UpdateCheckThread(
+                self.db_manager.get_configuracao('update_manifest_url', ''), download=True, parent=self
+            )
+            self.update_thread.finished.connect(self.on_update_downloaded)
+            self.update_thread.start()
+
+    def on_update_downloaded(self, success, result):
+        if not success:
+            QMessageBox.critical(self, 'Atualização', f'Falha ao baixar atualização:\n\n{result}')
+            return
+        info, installer = result
+        try:
+            from core.updater.launcher import launch_installer
+            launch_installer(installer)
+            self.app_instance.quit_application()
+        except Exception as exc:
+            QMessageBox.critical(self, 'Atualização', f'Não foi possível iniciar o instalador:\n\n{exc}')
     
     def create_header(self) -> QHBoxLayout:
         """Cria cabeçalho"""
         layout = QHBoxLayout()
         
         # Título
-        title = QLabel('OrionTax Sync')
+        title = QLabel(f'OrionTax Sync 2.0 — {self.erp_profile["name"]}')
         title_font = QFont('Arial', 18, QFont.Bold)
         title.setFont(title_font)
         # title.setStyleSheet('color: #2c3e50;')
@@ -328,14 +467,15 @@ class MainWindow(QMainWindow):
         clear_tmp_layout.addWidget(clear_ibs_cbs_button)
 
         clear_tmp_group.setLayout(clear_tmp_layout)
+        clear_tmp_group.setVisible(self.erp_profile['show_tmp_cleanup'])
         layout.addWidget(clear_tmp_group)
 
         # Status das Conexões
         status_group = QGroupBox('Status das Conexões')
         status_layout = QVBoxLayout()
         
-        self.oracle_status_label = QLabel('BD Intersolid: Não configurado')
-        self.oriontax_status_label = QLabel('OrionTax: Não configurado')
+        self.oracle_status_label = QLabel(f'{self.erp_profile["erp_connection"]}: Não configurado')
+        self.oriontax_status_label = QLabel(f'{self.erp_profile["oriontax_connection"]}: Não configurado')
         
         status_layout.addWidget(self.oracle_status_label)
         status_layout.addWidget(self.oriontax_status_label)
@@ -346,13 +486,13 @@ class MainWindow(QMainWindow):
         operations_group = QGroupBox('Operações Manuais')
         operations_layout = QHBoxLayout()
         
-        self.send_button = QPushButton('📤 Enviar Dados para OrionTax')
+        self.send_button = QPushButton(self.erp_profile['send_label'])
         self.send_button.setMinimumHeight(60)
         self.send_button.setCursor(Qt.PointingHandCursor)
         self.send_button.clicked.connect(lambda: self.execute_operation('ENVIAR'))
         operations_layout.addWidget(self.send_button)
         
-        self.receive_button = QPushButton('📥 Buscar Dados da OrionTax')
+        self.receive_button = QPushButton(self.erp_profile['receive_label'])
         self.receive_button.setMinimumHeight(60)
         self.receive_button.setCursor(Qt.PointingHandCursor)
         self.receive_button.clicked.connect(lambda: self.execute_operation('BUSCAR'))
@@ -436,6 +576,7 @@ class MainWindow(QMainWindow):
         oracle_layout.addLayout(oracle_buttons)
         oracle_group.setLayout(oracle_layout)
         layout.addWidget(oracle_group)
+        oracle_group.setVisible(self.erp_type == 'intersolid')
         
         # ========================================
         # CONFIGURAÇÃO ORIONTAX
@@ -464,6 +605,17 @@ class MainWindow(QMainWindow):
         oriontax_layout.addLayout(oriontax_buttons)
         oriontax_group.setLayout(oriontax_layout)
         layout.addWidget(oriontax_group)
+        oriontax_group.setVisible(self.erp_type == 'intersolid')
+
+        if self.erp_type == 'sysmo':
+            sysmo_group = QGroupBox('Configuração Sysmo e API OrionTax')
+            sysmo_layout = QHBoxLayout()
+            sysmo_button = QPushButton('⚙️ Configurar PostgreSQL Sysmo')
+            sysmo_button.clicked.connect(self.open_sysmo_config)
+            api_button = QPushButton('⚙️ Configurar API OrionTax')
+            api_button.clicked.connect(self.open_oriontax_api_config)
+            sysmo_layout.addWidget(sysmo_button); sysmo_layout.addWidget(api_button)
+            sysmo_group.setLayout(sysmo_layout); layout.addWidget(sysmo_group)
 
         # ========================================
         # HEARTBEAT
@@ -779,6 +931,25 @@ class MainWindow(QMainWindow):
     
     def check_connection_status(self):
         """Verifica status das conexões"""
+        if self.erp_type == 'sysmo':
+            sysmo_config = self.db_manager.get_sysmo_config()
+            api_config = self.db_manager.get_oriontax_api_config()
+            if sysmo_config:
+                self.oracle_status_label.setText(
+                    f"✓ Banco Sysmo: {sysmo_config['host']}:{sysmo_config['port']} / {sysmo_config['database_name']}"
+                )
+                self.oracle_status_label.setStyleSheet('color: #27ae60; font-weight: bold;')
+            else:
+                self.oracle_status_label.setText('✗ Banco Sysmo: Não configurado')
+                self.oracle_status_label.setStyleSheet('color: #e74c3c; font-weight: bold;')
+            if api_config:
+                self.oriontax_status_label.setText(f"✓ API OrionTax: {api_config['base_url']}")
+                self.oriontax_status_label.setStyleSheet('color: #27ae60; font-weight: bold;')
+            else:
+                self.oriontax_status_label.setText('✗ API OrionTax: Não configurada')
+                self.oriontax_status_label.setStyleSheet('color: #e74c3c; font-weight: bold;')
+            return
+
         # ✅ Oracle
         oracle_config = self.db_manager.get_oracle_config()  # ✅ Adicionar self.
         if oracle_config:
@@ -1167,14 +1338,18 @@ class MainWindow(QMainWindow):
     def execute_operation(self, operation_type: str):
         """Executa operação (enviar ou buscar)"""
         # Validar configurações
-        oracle_config = self.db_manager.get_oracle_config()
-        oriontax_config = self.db_manager.get_oriontax_config() 
+        if self.erp_type == 'sysmo':
+            oracle_config = self.db_manager.get_sysmo_config()
+            oriontax_config = self.db_manager.get_oriontax_api_config()
+        else:
+            oracle_config = self.db_manager.get_oracle_config()
+            oriontax_config = self.db_manager.get_oriontax_config()
         
         if not oracle_config:
             QMessageBox.warning(
                 self,
                 'Configuração Pendente',
-                'Configure a conexão BD Intersolid antes de continuar.'
+                f'Configure a conexão {self.erp_profile["erp_connection"]} antes de continuar.'
             )
             return
         
@@ -1227,7 +1402,8 @@ class MainWindow(QMainWindow):
         self.log_message(f'Iniciando operação: {operation_type} (CNPJ: {cnpj_formatado})', 'INFO')
 
         # Criar e iniciar thread
-        self.worker_thread = WorkerThread(operation_type, oracle_config, oriontax_config, cnpj)
+        self.worker_thread = WorkerThread(operation_type, oracle_config, oriontax_config, cnpj,
+                                          db_manager=self.db_manager, erp_type=self.erp_type)
         self.worker_thread.progress.connect(self.on_worker_progress)
         self.worker_thread.finished.connect(self.on_worker_finished)
         self.worker_thread.start()
@@ -1301,6 +1477,18 @@ class MainWindow(QMainWindow):
             self.check_connection_status()
             self.log_message('Configuração OrionTax atualizada', 'SUCCESS')
 
+    def open_sysmo_config(self):
+        dialog = SysmoConfigDialog(self)
+        if dialog.exec_():
+            self.check_connection_status()
+            self.log_message('Configuração Sysmo atualizada', 'SUCCESS')
+
+    def open_oriontax_api_config(self):
+        dialog = OrionTaxApiConfigDialog(self)
+        if dialog.exec_():
+            self.check_connection_status()
+            self.log_message('Configuração API OrionTax atualizada', 'SUCCESS')
+
     def open_heartbeat_config(self):
         """Abre diálogo de configuração do Heartbeat"""
         dialog = HeartbeatConfigDialog(self, scheduler=self.scheduler)
@@ -1358,4 +1546,3 @@ class MainWindow(QMainWindow):
             '<p>© 2025 OrionTax. Todos os direitos reservados.</p>'
         )
     
-

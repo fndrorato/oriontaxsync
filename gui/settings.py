@@ -403,6 +403,135 @@ class DatabaseConfigDialog(QDialog):
 # Alias para compatibilidade com código existente
 OracleConfigDialog = DatabaseConfigDialog
 
+
+class SysmoConfigDialog(QDialog):
+    """Configuração do PostgreSQL de integração da Sysmo."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle('Configuração Sysmo')
+        self.setMinimumWidth(520)
+        layout = QVBoxLayout(self)
+        form = QFormLayout()
+        self.host_input = QLineEdit()
+        self.port_input = QSpinBox(); self.port_input.setRange(1, 65535); self.port_input.setValue(5432)
+        self.database_input = QLineEdit()
+        self.username_input = QLineEdit()
+        self.password_input = QLineEdit(); self.password_input.setEchoMode(QLineEdit.Password)
+        self.sslmode_input = QComboBox(); self.sslmode_input.addItems(['prefer', 'require', 'disable'])
+        self.timeout_input = QSpinBox(); self.timeout_input.setRange(1, 120); self.timeout_input.setValue(15)
+        form.addRow('Host:', self.host_input); form.addRow('Porta:', self.port_input)
+        form.addRow('Banco:', self.database_input); form.addRow('Usuário:', self.username_input)
+        form.addRow('Senha:', self.password_input); form.addRow('SSL mode:', self.sslmode_input)
+        form.addRow('Timeout (s):', self.timeout_input)
+        layout.addLayout(form)
+        buttons = QHBoxLayout(); buttons.addStretch()
+        test = QPushButton('Testar'); test.clicked.connect(self.test_connection); buttons.addWidget(test)
+        save = QPushButton('Salvar'); save.clicked.connect(self.save_config); buttons.addWidget(save)
+        cancel = QPushButton('Cancelar'); cancel.clicked.connect(self.reject); buttons.addWidget(cancel)
+        layout.addLayout(buttons)
+        self.load_config()
+
+    def _values(self):
+        return dict(host=self.host_input.text().strip(), port=self.port_input.value(),
+                    database_name=self.database_input.text().strip(), username=self.username_input.text().strip(),
+                    password=self.password_input.text(), sslmode=self.sslmode_input.currentText(),
+                    timeout_seconds=self.timeout_input.value())
+
+    def _valid(self):
+        values = self._values()
+        if not all(values[key] for key in ('host', 'database_name', 'username', 'password')):
+            QMessageBox.warning(self, 'Atenção', 'Preencha host, banco, usuário e senha.')
+            return False
+        return True
+
+    def load_config(self):
+        config = db_manager.get_sysmo_config()
+        if config:
+            self.host_input.setText(config['host']); self.port_input.setValue(config['port'])
+            self.database_input.setText(config['database_name']); self.username_input.setText(config['username'])
+            self.sslmode_input.setCurrentText(config.get('sslmode', 'prefer'))
+            self.timeout_input.setValue(config.get('timeout_seconds', 15))
+
+    def test_connection(self):
+        if not self._valid(): return
+        from core.integrations.sysmo.repository import SysmoRepository
+        success, message = SysmoRepository(self._values()).test_connection()
+        (QMessageBox.information if success else QMessageBox.critical)(self, 'Teste Sysmo', message)
+
+    def save_config(self):
+        if self._valid() and db_manager.save_sysmo_config(**self._values()):
+            self.accept()
+
+
+class OrionTaxApiConfigDialog(QDialog):
+    """Configuração do contrato HTTP OrionTax V2."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle('Configuração API OrionTax')
+        self.setMinimumWidth(540)
+        layout = QVBoxLayout(self); form = QFormLayout()
+        self.url_input = QLineEdit(); self.url_input.setPlaceholderText('https://oriontax.exemplo.com')
+        self.token_input = QLineEdit(); self.token_input.setEchoMode(QLineEdit.Password)
+        self.timeout_input = QSpinBox(); self.timeout_input.setRange(5, 300); self.timeout_input.setValue(60)
+        self.retry_input = QSpinBox(); self.retry_input.setRange(0, 10); self.retry_input.setValue(3)
+        self.batch_input = QSpinBox(); self.batch_input.setRange(1, 10000); self.batch_input.setValue(500)
+        self.page_input = QSpinBox(); self.page_input.setRange(1, 500); self.page_input.setValue(500)
+        form.addRow('URL base:', self.url_input); form.addRow('Token Bearer:', self.token_input)
+        form.addRow('Timeout (s):', self.timeout_input); form.addRow('Retentativas GET:', self.retry_input)
+        form.addRow('Produtos por lote:', self.batch_input); form.addRow('Itens por página:', self.page_input)
+        layout.addLayout(form)
+        warning = QLabel('O teste de autenticação requer um endpoint de saúde sem efeitos colaterais;\n'
+                         'o endpoint de recebimento não será usado como teste.')
+        warning.setWordWrap(True); layout.addWidget(warning)
+        buttons = QHBoxLayout(); buttons.addStretch()
+        save = QPushButton('Salvar'); save.clicked.connect(self.save_config); buttons.addWidget(save)
+        cancel = QPushButton('Cancelar'); cancel.clicked.connect(self.reject); buttons.addWidget(cancel)
+        layout.addLayout(buttons); self.load_config()
+
+    def load_config(self):
+        config = db_manager.get_oriontax_api_config()
+        if config:
+            self.url_input.setText(config['base_url']); self.timeout_input.setValue(config['timeout_seconds'])
+            self.retry_input.setValue(config['max_retries']); self.batch_input.setValue(config['batch_size'])
+            self.page_input.setValue(config['page_size'])
+
+    def save_config(self):
+        url, token = self.url_input.text().strip(), self.token_input.text()
+        if not url.startswith('https://') or not token:
+            QMessageBox.warning(self, 'Atenção', 'Informe uma URL HTTPS e o token Bearer.')
+            return
+        db_manager.save_oriontax_api_config(url, token, self.timeout_input.value(),
+                                             self.retry_input.value(), self.batch_input.value(),
+                                             self.page_input.value())
+        self.accept()
+
+
+class UpdateConfigDialog(QDialog):
+    """Configura o canal HTTPS de atualização."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle('Atualizações automáticas')
+        self.setMinimumWidth(600)
+        layout = QVBoxLayout(self); form = QFormLayout()
+        self.url_input = QLineEdit(db_manager.get_configuracao('update_manifest_url', ''))
+        self.url_input.setPlaceholderText('https://.../update-manifest.json')
+        form.addRow('URL do manifesto:', self.url_input); layout.addLayout(form)
+        buttons = QHBoxLayout(); buttons.addStretch()
+        save = QPushButton('Salvar'); save.clicked.connect(self.save); buttons.addWidget(save)
+        cancel = QPushButton('Cancelar'); cancel.clicked.connect(self.reject); buttons.addWidget(cancel)
+        layout.addLayout(buttons)
+
+    def save(self):
+        url = self.url_input.text().strip()
+        if url and not url.startswith('https://'):
+            QMessageBox.warning(self, 'Atenção', 'O canal de atualização deve usar HTTPS.')
+            return
+        db_manager.set_configuracao('update_manifest_url', url)
+        self.accept()
+
 class OrionTaxConfigDialog(QDialog):
     """Diálogo de Configuração OrionTax (PostgreSQL)"""
     

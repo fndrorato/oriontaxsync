@@ -4,6 +4,7 @@ Gerenciador de Banco de Dados SQLite
 import sqlite3
 import os
 import logging
+import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, Dict, List
@@ -145,6 +146,71 @@ class DatabaseManager:
                 valor TEXT NOT NULL
             )
         """)
+        cursor.execute("""
+            INSERT OR IGNORE INTO configuracoes (chave, valor)
+            VALUES ('update_manifest_url',
+                    'https://github.com/fndrorato/oriontaxsync/releases/latest/download/update-manifest.json')
+        """)
+
+        # Versão 2.0: perfil da instalação. Instalações já existentes são
+        # Intersolid por compatibilidade; novas podem trocar pelo assistente.
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS app_installation (
+                id INTEGER PRIMARY KEY CHECK (id = 1),
+                installation_id TEXT NOT NULL UNIQUE,
+                erp_type TEXT NOT NULL CHECK(erp_type IN ('intersolid', 'sysmo')),
+                configured_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        cursor.execute("SELECT id FROM app_installation WHERE id = 1")
+        if cursor.fetchone() is None:
+            cursor.execute(
+                "INSERT INTO app_installation (id, installation_id, erp_type) VALUES (1, ?, 'intersolid')",
+                (str(uuid.uuid4()),),
+            )
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS config_sysmo (
+                id INTEGER PRIMARY KEY CHECK (id = 1),
+                host TEXT NOT NULL,
+                port INTEGER NOT NULL DEFAULT 5432,
+                database_name TEXT NOT NULL,
+                username TEXT NOT NULL,
+                password_encrypted TEXT NOT NULL,
+                sslmode TEXT NOT NULL DEFAULT 'prefer',
+                timeout_seconds INTEGER NOT NULL DEFAULT 15,
+                is_active INTEGER NOT NULL DEFAULT 1,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS config_oriontax_api (
+                id INTEGER PRIMARY KEY CHECK (id = 1),
+                base_url TEXT NOT NULL,
+                token_encrypted TEXT NOT NULL,
+                timeout_seconds INTEGER NOT NULL DEFAULT 60,
+                max_retries INTEGER NOT NULL DEFAULT 3,
+                batch_size INTEGER NOT NULL DEFAULT 500,
+                page_size INTEGER NOT NULL DEFAULT 500,
+                is_active INTEGER NOT NULL DEFAULT 1,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS sync_jobs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                execution_id TEXT NOT NULL,
+                erp_type TEXT NOT NULL,
+                operation_type TEXT NOT NULL,
+                remote_job_id TEXT,
+                status TEXT NOT NULL,
+                records INTEGER NOT NULL DEFAULT 0,
+                details TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
 
         # Migração: adicionar colunas de Firebird na config_oracle
         migration_columns = [
@@ -162,6 +228,91 @@ class DatabaseManager:
 
         # Criar usuário padrão se não existir
         self._create_default_user()
+
+    # ================================================================
+    # PERFIL ERP E CONFIGURAÇÕES DA VERSÃO 2.0
+    # ================================================================
+
+    def get_installation(self) -> Dict:
+        conn = self._get_thread_safe_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM app_installation WHERE id = 1")
+            return dict(cursor.fetchone())
+        finally:
+            conn.close()
+
+    def set_erp_type(self, erp_type: str) -> bool:
+        if erp_type not in ("intersolid", "sysmo"):
+            raise ValueError("ERP inválido. Use 'intersolid' ou 'sysmo'.")
+        cursor = self.conn.cursor()
+        cursor.execute(
+            "UPDATE app_installation SET erp_type = ?, updated_at = ? WHERE id = 1",
+            (erp_type, datetime.now()),
+        )
+        self.conn.commit()
+        return True
+
+    def save_sysmo_config(self, host: str, port: int, database_name: str,
+                          username: str, password: str, sslmode: str = "prefer",
+                          timeout_seconds: int = 15) -> bool:
+        encrypted = encryption_manager.encrypt(password)
+        cursor = self.conn.cursor()
+        cursor.execute("""
+            INSERT INTO config_sysmo
+                (id, host, port, database_name, username, password_encrypted, sslmode, timeout_seconds)
+            VALUES (1, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                host=excluded.host, port=excluded.port, database_name=excluded.database_name,
+                username=excluded.username, password_encrypted=excluded.password_encrypted,
+                sslmode=excluded.sslmode, timeout_seconds=excluded.timeout_seconds,
+                is_active=1, updated_at=CURRENT_TIMESTAMP
+        """, (host, int(port), database_name, username, encrypted, sslmode, int(timeout_seconds)))
+        self.conn.commit()
+        return True
+
+    def get_sysmo_config(self) -> Optional[Dict]:
+        conn = self._get_thread_safe_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM config_sysmo WHERE id = 1 AND is_active = 1")
+        row = cursor.fetchone()
+        conn.close()
+        if not row:
+            return None
+        result = dict(row)
+        result["password"] = encryption_manager.decrypt(result.pop("password_encrypted"))
+        return result if result["password"] else None
+
+    def save_oriontax_api_config(self, base_url: str, token: str,
+                                  timeout_seconds: int = 60, max_retries: int = 3,
+                                  batch_size: int = 500, page_size: int = 500) -> bool:
+        encrypted = encryption_manager.encrypt(token)
+        cursor = self.conn.cursor()
+        cursor.execute("""
+            INSERT INTO config_oriontax_api
+                (id, base_url, token_encrypted, timeout_seconds, max_retries, batch_size, page_size)
+            VALUES (1, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                base_url=excluded.base_url, token_encrypted=excluded.token_encrypted,
+                timeout_seconds=excluded.timeout_seconds, max_retries=excluded.max_retries,
+                batch_size=excluded.batch_size, page_size=excluded.page_size,
+                is_active=1, updated_at=CURRENT_TIMESTAMP
+        """, (base_url.rstrip('/'), encrypted, int(timeout_seconds), int(max_retries),
+              int(batch_size), min(500, max(1, int(page_size)))))
+        self.conn.commit()
+        return True
+
+    def get_oriontax_api_config(self) -> Optional[Dict]:
+        conn = self._get_thread_safe_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM config_oriontax_api WHERE id = 1 AND is_active = 1")
+        row = cursor.fetchone()
+        conn.close()
+        if not row:
+            return None
+        result = dict(row)
+        result["token"] = encryption_manager.decrypt(result.pop("token_encrypted"))
+        return result if result["token"] else None
     
     def _create_default_user(self):
         """Cria usuário admin padrão"""

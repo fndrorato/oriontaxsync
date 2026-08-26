@@ -1,0 +1,23 @@
+2026-04-22 15:56:39 [INFO] __main__: ================================================================================
+2026-04-22 15:56:39 [INFO] __main__: OrionTax Sync - Iniciando Sistema
+2026-04-22 15:56:39 [INFO] __main__: ================================================================================
+2026-04-22 15:56:39 [INFO] __main__: Conectando ao banco de dados...
+2026-04-22 15:56:39 [INFO] __main__: ✓ Banco de dados conectado
+2026-04-22 15:56:39 [INFO] __main__: Iniciando agendador de tarefas...
+2026-04-22 15:56:39 [INFO] apscheduler.scheduler: Scheduler started
+2026-04-22 15:56:39 [INFO] core.scheduler: Scheduler iniciado
+2026-04-22 15:56:39 [INFO] apscheduler.scheduler: Added job "ENVIAR" to job store "default"
+2026-04-22 15:56:39 [INFO] core.scheduler: Job adicionado: 1 - ENVIAR
+2026-04-22 15:56:39 [INFO] apscheduler.scheduler: Added job "BUSCAR" to job store "default"
+2026-04-22 15:56:39 [INFO] core.scheduler: Job adicionado: 2 - BUSCAR
+2026-04-22 15:56:39 [INFO] core.scheduler: 2 agendamentos carregados
+2026-04-22 15:56:39 [INFO] __main__: ✓ Scheduler iniciado
+2026-04-22 15:56:39 [INFO] __main__: 2 job(s) agendado(s)
+2026-04-22 15:56:39 [INFO] apscheduler.scheduler: Added job "Heartbeat" to job store "default"
+2026-04-22 15:56:39 [INFO] core.scheduler: Heartbeat iniciado — intervalo: 1440 minuto(s)
+2026-04-22 15:56:39 [INFO] __main__: ✓ Heartbeat iniciado (intervalo: 1440 min)
+2026-04-22 15:56:39 [INFO] __main__: ✓ System Tray inicializado
+2026-04-22 15:56:39 [INFO] __main__: Abrindo tela de login...
+2026-04-22 15:56:43 [INFO] __main__: ✓ Login bem-sucedido: admin
+2026-04-22 15:56:43 [INFO] __main__: Criando janela principal...
+2026-04-22 15:56:50 [INFO] __main__: Janela minimizada para tray

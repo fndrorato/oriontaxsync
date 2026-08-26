@@ -150,3 +150,23 @@
 - Gerenciamento de múltiplos clientes por CNPJ.
 - Criptografia de senhas com Fernet.
 - Logs de execução com histórico.
+# [2.0.0] — 2026-08-26
+
+### Adicionado
+
+- Perfil explícito de instalação para Intersolid ou Sysmo, com compatibilidade automática para bases existentes.
+- Integração Sysmo PostgreSQL → API OrionTax V2 com validação e envio em lotes.
+- Recebimento paginado da API V2 e gravação transacional em `tb_sysmointegradorrecebimento`.
+- Configurações criptografadas independentes para Sysmo e token da API.
+- Interface dinâmica por ERP e troca administrativa de perfil.
+- Bloqueio de sincronizações Sysmo concorrentes e cancelamento da conexão.
+- Verificador de atualizações HTTPS com validação de versão, tamanho e SHA-256.
+- Workflow isolado `release-installer.yml` para gerar instalador Inno Setup sem alterar o build existente.
+- Suíte automatizada e plano de homologação da versão 2.0.
+
+### Segurança e compatibilidade
+
+- O POST da API não é repetido automaticamente enquanto não houver idempotência no servidor.
+- Fotografia vazia da API não apaga a tabela de recebimento Sysmo.
+- Dados e logs deixaram de ser removidos automaticamente pelo script de desinstalação.
+- A versão da aplicação e do instalador foi alinhada em `2.0.0`.
