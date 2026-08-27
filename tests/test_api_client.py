@@ -1,4 +1,7 @@
 import unittest
+import json
+from datetime import date
+from decimal import Decimal
 
 from core.api.oriontax_api_client import OrionTaxApiClient, OrionTaxApiError
 
@@ -13,6 +16,18 @@ class FakeApi(OrionTaxApiClient):
 
 
 class ApiClientTests(unittest.TestCase):
+    def test_serializes_database_decimal_values(self):
+        payload = {"cst": Decimal("61"), "aliquota": Decimal("1.65"), "data": date(2026, 8, 27)}
+        encoded = json.dumps(payload, default=OrionTaxApiClient._json_default)
+        decoded = json.loads(encoded)
+        self.assertEqual(61, decoded["cst"])
+        self.assertEqual(1.65, decoded["aliquota"])
+        self.assertEqual("2026-08-27", decoded["data"])
+
+    def test_rejects_non_finite_decimal(self):
+        with self.assertRaises(ValueError):
+            json.dumps({"value": Decimal("NaN")}, default=OrionTaxApiClient._json_default)
+
     def test_normalizes_api_prefix_from_configured_url(self):
         self.assertEqual(
             "https://oriontax.f5sys.com.br",

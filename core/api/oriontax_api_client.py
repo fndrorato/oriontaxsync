@@ -3,6 +3,8 @@ import json
 import logging
 import socket
 import time
+from datetime import date, datetime
+from decimal import Decimal
 from typing import Dict, Iterable, List, Optional
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
@@ -38,11 +40,25 @@ class OrionTaxApiClient:
                 break
         return urlunsplit((parts.scheme, parts.netloc, path, "", "")).rstrip("/")
 
+    @staticmethod
+    def _json_default(value):
+        """Converte tipos nativos de drivers de banco para tipos JSON."""
+        if isinstance(value, Decimal):
+            if not value.is_finite():
+                raise ValueError(f"Decimal não finito não pode ser enviado em JSON: {value}")
+            return int(value) if value == value.to_integral_value() else float(value)
+        if isinstance(value, (datetime, date)):
+            return value.isoformat()
+        raise TypeError(f"Object of type {type(value).__name__} is not JSON serializable")
+
     def _request(self, method: str, path: str, body=None, query=None):
         url = f"{self.base_url}/{path.lstrip('/')}"
         if query:
             url = f"{url}?{urlencode(query)}"
-        encoded = json.dumps(body, ensure_ascii=False).encode("utf-8") if body is not None else None
+        encoded = (
+            json.dumps(body, ensure_ascii=False, default=self._json_default).encode("utf-8")
+            if body is not None else None
+        )
         headers = {"Authorization": f"Bearer {self.token}", "Accept": "application/json"}
         if encoded is not None:
             headers["Content-Type"] = "application/json"
