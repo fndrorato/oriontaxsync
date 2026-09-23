@@ -1,0 +1,26 @@
+[
+  {
+    "codigo": "98087",
+    "codigo_barras": "7898313930380",
+    "descricao": "GAS GERAL BUTANO",
+    "ncm": "27111910",
+    "cest": "0601000",
+    "cfop": null,
+    "icms_cst": 61,
+    "icms_aliquota": 0.0,
+    "percentual_redbcde": 0.0,
+    "cbenef": "GO890004",
+    "protege": 0.0,
+    "pis_cst": null,
+    "pis_aliquota": 0.0,
+    "cofins_aliquota": 0.0,
+    "natureza_receita": 0,
+    "cst_ibs_cbs": null,
+    "c_class_trib": null,
+    "aliquota_ibs": null,
+    "aliquota_cbs": null,
+    "p_red_aliq_ibs": null,
+    "p_red_aliq_cbs": null,
+    "inf_ad_fisco": false
+  }
+]

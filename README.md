@@ -1,8 +1,10 @@
-🚀 OrionTax Sync
+🚀 OrionTax Sync 2.0
 OrionTax Sync é uma ferramenta de integração robusta desenvolvida para automatizar a sincronização de dados entre clientes locais e a plataforma OneTax. O sistema realiza a ponte entre bancos de dados Oracle e PostgreSQL (OrionTax), garantindo integridade e segurança através de criptografia.
 
 🛠️ Funcionalidades principais
-Sincronização Multi-Banco: Conexão com Oracle (Origem) e PostgreSQL (Destino).
+Integração Multi-ERP: Intersolid via Oracle/Firebird e Sysmo via PostgreSQL + API OrionTax V2.
+
+Atualização: releases Windows podem ser distribuídas por instalador Inno Setup com verificação HTTPS e SHA-256.
 
 Agendamento: Tarefas automatizadas via scheduler.py.
 

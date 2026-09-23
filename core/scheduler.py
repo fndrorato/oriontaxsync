@@ -214,8 +214,14 @@ class Scheduler:
             self.logger.info(f"========================================")
             
             # ✅ Buscar configurações (THREAD-SAFE)
-            oracle_config = self.db_manager.get_oracle_config_threadsafe()
-            oriontax_config = self.db_manager.get_oriontax_config_threadsafe()
+            installation = self.db_manager.get_installation()
+            erp_type = installation['erp_type']
+            if erp_type == 'sysmo':
+                oracle_config = self.db_manager.get_sysmo_config()
+                oriontax_config = self.db_manager.get_oriontax_api_config()
+            else:
+                oracle_config = self.db_manager.get_oracle_config_threadsafe()
+                oriontax_config = self.db_manager.get_oriontax_config_threadsafe()
             
             if not oracle_config:
                 self.logger.error("Configuração Oracle não encontrada")
@@ -231,6 +237,15 @@ class Scheduler:
             if not clientes:
                 self.logger.warning("Nenhum cliente cadastrado")
                 return
+
+            # Uma configuração Sysmo contém um único banco e um único token
+            # Bearer (o próprio token define o cliente na API). Evita enviar a
+            # mesma fotografia repetidamente caso existam cadastros legados.
+            if erp_type == 'sysmo' and len(clientes) > 1:
+                self.logger.warning(
+                    "Perfil Sysmo possui mais de um cliente ativo; o agendamento usará somente o primeiro."
+                )
+                clientes = clientes[:1]
             
             # ✅ Executar para CADA cliente
             for cliente in clientes:
@@ -242,7 +257,7 @@ class Scheduler:
                 # Executar em thread separada para não bloquear
                 thread = threading.Thread(
                     target=self._execute_sync_for_client,
-                    args=(operation_type, oracle_config, oriontax_config, cnpj, nome)
+                    args=(operation_type, oracle_config, oriontax_config, cnpj, nome, erp_type)
                 )
                 thread.daemon = True
                 thread.start()
@@ -258,7 +273,8 @@ class Scheduler:
             self.logger.error(traceback.format_exc())
     
     def _execute_sync_for_client(self, operation_type: str, oracle_config: dict, 
-                                 oriontax_config: dict, cnpj: str, nome_cliente: str):
+                                 oriontax_config: dict, cnpj: str, nome_cliente: str,
+                                 erp_type: str = 'intersolid'):
         """
         Executa sincronização para um cliente específico
         ✅ MESMA LÓGICA DA WorkerThread
@@ -276,6 +292,22 @@ class Scheduler:
 
         try:
             start_time = datetime.now()
+
+            if erp_type == 'sysmo':
+                from core.integrations import create_integration
+                integration = create_integration(self.db_manager, 'sysmo')
+                result = (integration.send if operation_type == 'ENVIAR' else integration.receive)(
+                    cnpj, lambda msg: self.logger.info(f'[{nome_cliente}] {msg}')
+                )
+                tempo = (datetime.now() - start_time).total_seconds()
+                self.db_manager.add_log_threadsafe(
+                    tipo_operacao=operation_type,
+                    status='SUCESSO' if result.success else 'ERRO',
+                    mensagem=f'Cliente: {nome_cliente} - {result.message}',
+                    registros=result.records,
+                    tempo=tempo,
+                )
+                return
 
             if operation_type == 'ENVIAR':
                 # ✅ ENVIAR: BD Intersolid VIEWs → PostgreSQL (OrionTax)

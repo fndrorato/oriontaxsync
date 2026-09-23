@@ -2,10 +2,11 @@
 ; Script Inno Setup
 
 #define MyAppName "OrionTax Sync"
-#define MyAppVersion "1.0.1"
+#ifndef MyAppVersion
+  #define MyAppVersion "2.0.0"
+#endif
 #define MyAppPublisher "OrionTax"
 #define MyAppExeName "OrionTaxSync.exe"
-#define MyAppIconName "icone.ico"
 
 [Setup]
 ; Informações do aplicativo
@@ -19,8 +20,7 @@ DefaultDirName={autopf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 OutputDir=installer_output
-OutputBaseFilename=OrionTaxSync_Setup
-SetupIconFile=resources\{#MyAppIconName}
+OutputBaseFilename=OrionTaxSync_Setup_{#MyAppVersion}
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=classic
@@ -43,35 +43,24 @@ Name: "startup"; Description: "Iniciar automaticamente com o Windows"; GroupDesc
 [Files]
 ; Aplicativo principal
 Source: "dist\OrionTaxSync\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-; Ícone
-Source: "resources\{#MyAppIconName}"; DestDir: "{app}\resources"; Flags: ignoreversion
-; Visual C++ 2015-2022 Redistributable (necessário em Windows 8/8.1 e Server 2012)
-; Baixe em: https://aka.ms/vs/17/release/vc_redist.x64.exe e coloque em resources\
-Source: "resources\vc_redist.x64.exe"; DestDir: "{tmp}"; Flags: ignoreversion; Check: IsWin64
-Source: "resources\vc_redist.x86.exe"; DestDir: "{tmp}"; Flags: ignoreversion; Check: not IsWin64
 
 [Icons]
 ; Menu Iniciar
-Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\resources\{#MyAppIconName}"
+Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
 Name: "{group}\Desinstalar {#MyAppName}"; Filename: "{uninstallexe}"
 
 ; Área de Trabalho
-Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\resources\{#MyAppIconName}"; Tasks: desktopicon
+Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 ; Startup (Inicialização automática)
-Name: "{userstartup}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\resources\{#MyAppIconName}"; Tasks: startup
+Name: "{userstartup}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: startup
 
 [Run]
-; Instalar VC++ runtime silenciosamente se necessário
-Filename: "{tmp}\vc_redist.x64.exe"; Parameters: "/install /quiet /norestart"; StatusMsg: "Instalando dependências do sistema..."; Flags: waituntilterminated skipifsilent; Check: IsWin64
-Filename: "{tmp}\vc_redist.x86.exe"; Parameters: "/install /quiet /norestart"; StatusMsg: "Instalando dependências do sistema..."; Flags: waituntilterminated skipifsilent; Check: not IsWin64
 ; Executar após instalação (opcional)
-Filename: "{app}\{#MyAppExeName}"; Description: "Iniciar {#MyAppName} agora"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#MyAppExeName}"; Description: "Iniciar {#MyAppName} agora"; Flags: nowait postinstall
 
-[UninstallDelete]
-; Limpar dados ao desinstalar (opcional - comente se quiser manter configurações)
-Type: filesandordirs; Name: "{app}\data"
-Type: filesandordirs; Name: "{app}\logs"
+; Dados e logs são preservados entre atualizações e desinstalações. Uma futura
+; tela de remoção de dados poderá apagá-los mediante confirmação explícita.
 
 [Code]
 // Verificar se o aplicativo já está rodando
