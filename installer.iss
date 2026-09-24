@@ -3,7 +3,7 @@
 
 #define MyAppName "OrionTax Sync"
 #ifndef MyAppVersion
-  #define MyAppVersion "2.0.0"
+  #define MyAppVersion "2.0.0.1"
 #endif
 #define MyAppPublisher "OrionTax"
 #define MyAppExeName "OrionTaxSync.exe"

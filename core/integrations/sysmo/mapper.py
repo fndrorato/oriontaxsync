@@ -38,6 +38,7 @@ def sysmo_row_to_api(row: dict) -> dict:
         # Sysmo preenchem somente nr_cst_cofins.
         pis_cst = _code(row.get("nr_cst_cofins"), 2)
     payload = {
+        "sequencial": row.get("cd_sequencial"),
         "codigo": str(row.get("cd_produto", "")).strip(),
         "codigo_barras": str(row.get("tx_codigobarras") or "").strip(),
         "descricao": str(row.get("tx_descricaoproduto") or "").strip(),
@@ -53,6 +54,8 @@ def sysmo_row_to_api(row: dict) -> dict:
         "pis_aliquota": _number(row.get("vl_aliquota_pis")),
         "cofins_aliquota": _number(row.get("vl_aliquota_cofins")),
         "natureza_receita": row.get("nr_naturezareceita") or 0,
+        "estado_origem": str(row.get("tx_estadoorigem") or "").strip(),
+        "estado_destino": str(row.get("tx_estadodestino") or "").strip(),
         "cst_ibs_cbs": row.get("cst_ibs_cbs"),
         "c_class_trib": row.get("c_class_trib"),
         "aliquota_ibs": row.get("aliquota_ibs"),

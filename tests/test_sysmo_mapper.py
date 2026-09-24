@@ -6,18 +6,23 @@ from core.integrations.sysmo.mapper import api_product_to_sysmo, sysmo_row_to_ap
 class SysmoMapperTests(unittest.TestCase):
     def valid_row(self):
         return {
-            "cd_produto": " 001 ", "tx_codigobarras": "0789", "tx_descricaoproduto": " Produto ",
+            "cd_sequencial": 123, "cd_produto": " 001 ", "tx_codigobarras": "0789",
+            "tx_descricaoproduto": " Produto ",
             "tx_ncm": "01012100", "tx_cest": None, "nr_cfop": 5102, "nr_cst_icms": 0,
             "vl_aliquota_integral_icms": 18, "vl_aliquota_final_icms": 12.6,
             "vl_aliquota_fcp": 2, "tx_cbenef": None, "nr_cst_pis": "01",
             "vl_aliquota_pis": 1.65, "vl_aliquota_cofins": 7.6, "nr_naturezareceita": 101,
+            "tx_estadoorigem": " SC ", "tx_estadodestino": " PR ",
         }
 
     def test_maps_and_preserves_text_codes(self):
         payload = sysmo_row_to_api(self.valid_row())
+        self.assertEqual(123, payload["sequencial"])
         self.assertEqual("001", payload["codigo"])
         self.assertEqual("0789", payload["codigo_barras"])
         self.assertEqual("01012100", payload["ncm"])
+        self.assertEqual("SC", payload["estado_origem"])
+        self.assertEqual("PR", payload["estado_destino"])
         self.assertEqual(30.0, payload["percentual_redbcde"])
         self.assertIs(payload["inf_ad_fisco"], False)
 

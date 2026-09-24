@@ -2,6 +2,17 @@
 
 ---
 
+## [2.0.0.1] — 2026-09-24
+
+### Alterado
+
+#### Envio de identificação sequencial e estados dos produtos Sysmo
+- O payload enviado pela integração Sysmo para a API OrionTax V2 passou a incluir `sequencial`, originado de `cd_sequencial`, como valor numérico.
+- Os campos `estado_origem` e `estado_destino` passaram a ser enviados a partir de `tx_estadoorigem` e `tx_estadodestino`, respectivamente, como texto sem espaços nas extremidades.
+- A versão da aplicação e do instalador foi atualizada para `2.0.0.1`.
+
+---
+
 ## [1.0.5] — 2026-08-24
 
 ### Corrigido
