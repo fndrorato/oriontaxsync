@@ -19,6 +19,7 @@ _ICMS_KEYS = ("cst", "csosn", "percentual", "percentualReducao", "percentualDife
               "percentualFCP", "aplicaReducaoFCP", "cBenef")
 _ICMS_MATCH_CODES = ("cst", "csosn")
 _ICMS_MATCH_NUMBERS = ("percentual", "percentualReducao", "percentualDiferimento", "percentualFCP")
+_ICMS_IMPOSED_NUMBERS = ("aliquotaIcmsMonofasico", "percentualDesonerado", "percentualIcmsConsumidor")
 _PAUTA_KEYS = ("mva", "mvaAjustada", "percentualProdepe", "recolheIcmsAntecipadamente")
 _TOL = 0.001
 OBSERVACAO = "OrionTax Sync"
@@ -91,13 +92,19 @@ def _icms_matches(values: dict, catalog: List[dict]) -> List[dict]:
     return found
 
 
+def _same_imposed(a: dict, b: dict) -> bool:
+    """Campos fiscais que o cadastro impõe ao produto via idAliquota (nome, mensagem e status não contam)."""
+    return (bool(a.get("aplicaReducaoFCP")) == bool(b.get("aplicaReducaoFCP"))
+            and all(_same_num(a.get(k), b.get(k)) for k in _ICMS_IMPOSED_NUMBERS)
+            and str(a.get("motivoDesoneracao") or "").strip() == str(b.get("motivoDesoneracao") or "").strip())
+
+
 def _resolve_icms(values: dict, catalog: List[dict]) -> Tuple[Optional[dict], bool]:
-    """(cadastro, ambíguo). Vários candidatos só valem se forem iguais fora o `codigo`."""
+    """(cadastro, ambíguo). Vários candidatos: ambíguo se diferem num campo fiscal que o cadastro impõe."""
     found = _icms_matches(values, catalog)
     if not found:
         return None, False
-    strip = lambda c: {k: v for k, v in c.items() if k != "codigo"}
-    if any(strip(c) != strip(found[0]) for c in found[1:]):
+    if any(not _same_imposed(c, found[0]) for c in found[1:]):
         return None, True
     return found[0], False
 

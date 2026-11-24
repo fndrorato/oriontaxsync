@@ -202,6 +202,21 @@ class BuildCorrectionTests(unittest.TestCase):
         self.assertIsNone(resolve_icms_id(base, ambiguous.icms))
         identical = replace(CATALOGS, icms=[{**base, "codigo": 30}, {**base, "codigo": 31}])
         self.assertEqual(30, resolve_icms_id(base, identical.icms))
+        none_vs_zero = [{**base, "codigo": 30, "percentualDesonerado": None},
+                        {**base, "codigo": 31, "percentualDesonerado": 0.0004}]
+        self.assertEqual(30, resolve_icms_id(base, none_vs_zero))
+        motivo = [{**base, "codigo": 30, "motivoDesoneracao": ""},
+                  {**base, "codigo": 31, "motivoDesoneracao": "Outros"}]
+        self.assertIsNone(resolve_icms_id(base, motivo))
+
+    def test_duplicated_icms_cadastros_with_other_names_use_first(self):
+        base = {"cst": "00", "csosn": "", "percentual": 19, "percentualReducao": 0,
+                "percentualDiferimento": 0, "percentualFCP": 2}
+        catalogs = replace(CATALOGS, icms=[{**base, "codigo": 40, "descricao": "19% FCP", "mensagem": "a"},
+                                           {**base, "codigo": 41, "descricao": "ICMS 19 GO", "status": "ATIVO"}])
+        target = vr_product_to_api(vr_product(), CTX, TODAY) | {"icms_cst": 0, "percentual_redbcde": 0}
+        cf = build_correction(vr_product(), target, CTX, catalogs)["aliquotas"]["icmsConsumidorFinal"]
+        self.assertEqual(40, cf["idAliquota"])
 
 
 class HelperTests(unittest.TestCase):
