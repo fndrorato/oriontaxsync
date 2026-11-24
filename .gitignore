@@ -25,3 +25,7 @@ tables_oracle.txt
 /docker_oracle/*
 
 *.pyc
+# Arquivos locais
+logs/
+.vscode/
+__pycache__/
