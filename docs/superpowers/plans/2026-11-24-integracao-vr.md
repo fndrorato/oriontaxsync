@@ -688,8 +688,11 @@ git commit -m "feat: liga o perfil VR na interface e no agendador"
 
 Não é task de código: é o roteiro para fechar os pontos da seção 15 da spec VR antes de liberar o `receive` sem dry-run.
 
+A gravação na VR nasce travada: enquanto "Permitir gravação na VR (somente após homologação)" estiver desmarcado em Configurar API VR, o `BUSCAR` sem dry-run para antes de chamar a OrionTax (a fotografia não é consumida). Cada `BUSCAR` que chega à OrionTax salva a fotografia recebida em `<pasta do banco>/vr_snapshots/receive-<data-hora>-<cnpj>.json`.
+
 1. `ENVIAR` normal; conferir na OrionTax 5 produtos contra a tela de tributação do VRMaster (UF da loja, cenário consumidor final, PIS/COFINS do grupo).
-2. `ORIONTAX_DRY_RUN=1` + `BUSCAR`; revisar os JSON registrados.
-3. Gravar um único produto de teste (lote de 1) e responder: campos omitidos são mantidos? sem `idPauta` a pauta é preservada? `status` real de `integracaoFiscal[]`? o PIS/COFINS gravado foi no regime do grupo?
-4. Reenviar o mesmo payload (idempotência) e testar um produto CST 61.
+2. `ORIONTAX_DRY_RUN=1` + `BUSCAR`; revisar os JSON registrados. Atenção: o dry-run consome a fotografia da OrionTax (o GET muda o estado dos itens no servidor); ela fica salva em `vr_snapshots`, mas é preciso pedir à OrionTax o reenvio antes da gravação real.
+3. Teste de um único produto: marcar "Permitir gravação na VR" e rodar o `BUSCAR` com `ORIONTAX_VR_ONLY=<código de teste>` (lista separada por vírgula); só esse produto vira PATCH/vínculo, os demais são contados como fora da lista e não são gravados. Responder: campos omitidos são mantidos? sem `idPauta` a pauta é preservada? `status` real de `integracaoFiscal[]`? o PIS/COFINS gravado foi no regime do grupo?
+4. Reenviar o mesmo payload (idempotência) e testar um produto CST 61, ainda com `ORIONTAX_VR_ONLY`.
 5. Registrar as respostas na seção 15 da spec VR e ajustar `correction.py` se alguma hipótese cair.
+6. Remover `ORIONTAX_VR_ONLY` (e pedir novo reenvio à OrionTax, se a fotografia já tiver sido consumida) para liberar a gravação completa.

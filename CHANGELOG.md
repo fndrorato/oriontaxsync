@@ -10,6 +10,7 @@
 - Novo perfil ERP "VR" (menu ERP, aba Configurações e agendador), com diálogo de configuração da API VR (URL, token VRMaster, timeout, itens por página e produtos por PATCH) e botão de teste.
 - O cadastro de clientes passou a ter a UF da loja, obrigatória no perfil VR.
 - O menu ERP agora mostra Intersolid, VR e Sysmo com o perfil ativo marcado.
+- Trava de gravação na VR: o recebimento só grava (e só consome a fotografia da OrionTax) depois de marcar "Permitir gravação na VR (somente após homologação)" em Configurar API VR; `ORIONTAX_DRY_RUN=1` continua simulando com a trava desligada, `ORIONTAX_VR_ONLY=<códigos>` restringe a gravação a uma lista de produtos e cada fotografia recebida é salva em `vr_snapshots`, ao lado do banco local.
 
 ---
 
