@@ -1,5 +1,7 @@
 """Acesso ao PostgreSQL de integração da Sysmo."""
+import json
 import logging
+import os
 from typing import Dict, List
 
 from .mapper import api_product_to_sysmo
@@ -27,6 +29,16 @@ class SysmoRepository:
         self.config = config
         self.connection = None
         self.logger = logging.getLogger(__name__)
+        # Depuração: ORIONTAX_DRY_RUN=1 desfaz a gravação no fim (ROLLBACK) e
+        # ORIONTAX_DEBUG_CODE=<cd_produto> registra no log o fluxo desse produto.
+        self.dry_run = os.environ.get("ORIONTAX_DRY_RUN") == "1"
+        self.debug_code = os.environ.get("ORIONTAX_DEBUG_CODE", "").strip()
+
+    def _debug(self, stage: str, data):
+        self.logger.warning(
+            "[DEBUG %s] %s: %s", self.debug_code, stage,
+            json.dumps(data, ensure_ascii=False, default=str),
+        )
 
     def connect(self):
         import psycopg2
@@ -91,6 +103,9 @@ class SysmoRepository:
         missing_sequences = []
         for product in products:
             code = str(product.get("codigo", "")).strip()
+            if self.debug_code and code == self.debug_code:
+                self._debug("API bruto", product)
+                self._debug("sequencial em tb_sysmointegradorenvio", sequence_by_code.get(code))
             if product.get("sequencial") in (None, 0, ""):
                 product["sequencial"] = sequence_by_code.get(code)
             if product.get("sequencial") in (None, ""):
@@ -99,6 +114,9 @@ class SysmoRepository:
             sample = ", ".join(missing_sequences[:10])
             raise ValueError(f"Produtos sem sequencial Sysmo ({len(missing_sequences)}): {sample}")
         rows = [api_product_to_sysmo(item) for item in products]
+        if self.debug_code:
+            matches = [dict(zip(TARGET_COLUMNS, row)) for row in rows if row[1] == self.debug_code]
+            self._debug("linha para tb_sysmointegradorrecebimento", matches or "código ausente na API")
         placeholders = ", ".join(TARGET_COLUMNS)
         try:
             with self.connection.cursor() as cursor:
@@ -109,7 +127,11 @@ class SysmoRepository:
                     rows,
                     page_size=1000,
                 )
-            self.connection.commit()
+            if self.dry_run:
+                self.connection.rollback()
+                self.logger.warning("ORIONTAX_DRY_RUN=1: gravação desfeita (ROLLBACK), tabela inalterada.")
+            else:
+                self.connection.commit()
             return len(rows)
         except Exception:
             self.connection.rollback()

@@ -73,6 +73,8 @@ class SysmoIntegration(IntegrationAdapter):
                 products = self.api.receive_products()
                 self._progress(progress_callback, f"{len(products)} produto(s) recebidos; validando destino Sysmo...")
                 count = self.repository.replace_received_products(products)
+                if self.repository.dry_run:
+                    return SyncResult(True, f"[DRY-RUN] {count} produto(s) validado(s); nada foi gravado na Sysmo.", count)
                 return SyncResult(True, f"{count} produto(s) gravado(s) na Sysmo.", count)
             finally:
                 self.repository.close()
