@@ -10,6 +10,11 @@ from pathlib import Path
 from typing import Optional, Dict, List
 from .encryption import encryption_manager, password_hasher
 
+UFS = (
+    "AC", "AL", "AM", "AP", "BA", "CE", "DF", "ES", "GO", "MA", "MG", "MS", "MT", "PA",
+    "PB", "PE", "PI", "PR", "RJ", "RN", "RO", "RR", "RS", "SC", "SE", "SP", "TO",
+)
+
 
 class DatabaseManager:
     """Gerencia o banco SQLite local"""
@@ -71,7 +76,8 @@ class DatabaseManager:
                 cnpj TEXT UNIQUE NOT NULL,
                 is_active INTEGER DEFAULT 1,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                uf TEXT
             )
         """)        
         
@@ -158,11 +164,29 @@ class DatabaseManager:
             CREATE TABLE IF NOT EXISTS app_installation (
                 id INTEGER PRIMARY KEY CHECK (id = 1),
                 installation_id TEXT NOT NULL UNIQUE,
-                erp_type TEXT NOT NULL CHECK(erp_type IN ('intersolid', 'sysmo')),
+                erp_type TEXT NOT NULL CHECK(erp_type IN ('intersolid', 'sysmo', 'vr')),
                 configured_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
+        # Migração: bancos da 2.0.0.x têm CHECK sem 'vr'; recria a tabela preservando a linha.
+        cursor.execute("SELECT sql FROM sqlite_master WHERE name = 'app_installation'")
+        if "'vr'" not in (cursor.fetchone()[0] or ""):
+            cursor.execute("""
+                CREATE TABLE app_installation_new (
+                    id INTEGER PRIMARY KEY CHECK (id = 1),
+                    installation_id TEXT NOT NULL UNIQUE,
+                    erp_type TEXT NOT NULL CHECK(erp_type IN ('intersolid', 'sysmo', 'vr')),
+                    configured_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            cursor.execute("""
+                INSERT INTO app_installation_new (id, installation_id, erp_type, configured_at, updated_at)
+                SELECT id, installation_id, erp_type, configured_at, updated_at FROM app_installation
+            """)
+            cursor.execute("DROP TABLE app_installation")
+            cursor.execute("ALTER TABLE app_installation_new RENAME TO app_installation")
         cursor.execute("SELECT id FROM app_installation WHERE id = 1")
         if cursor.fetchone() is None:
             cursor.execute(
@@ -180,6 +204,18 @@ class DatabaseManager:
                 password_encrypted TEXT NOT NULL,
                 sslmode TEXT NOT NULL DEFAULT 'prefer',
                 timeout_seconds INTEGER NOT NULL DEFAULT 15,
+                is_active INTEGER NOT NULL DEFAULT 1,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS config_vr (
+                id INTEGER PRIMARY KEY CHECK (id = 1),
+                base_url TEXT NOT NULL,
+                token_encrypted TEXT NOT NULL,
+                timeout_seconds INTEGER NOT NULL DEFAULT 60,
+                page_size INTEGER NOT NULL DEFAULT 500,
+                patch_batch_size INTEGER NOT NULL DEFAULT 50,
                 is_active INTEGER NOT NULL DEFAULT 1,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
@@ -224,6 +260,12 @@ class DatabaseManager:
             except sqlite3.OperationalError:
                 pass  # Coluna já existe
 
+        # Migração: UF da loja (usada pelo perfil VR)
+        try:
+            cursor.execute("ALTER TABLE clientes ADD COLUMN uf TEXT")
+        except sqlite3.OperationalError:
+            pass  # Coluna já existe
+
         self.conn.commit()
 
         # Criar usuário padrão se não existir
@@ -243,8 +285,8 @@ class DatabaseManager:
             conn.close()
 
     def set_erp_type(self, erp_type: str) -> bool:
-        if erp_type not in ("intersolid", "sysmo"):
-            raise ValueError("ERP inválido. Use 'intersolid' ou 'sysmo'.")
+        if erp_type not in ("intersolid", "sysmo", "vr"):
+            raise ValueError("ERP inválido. Use 'intersolid', 'sysmo' ou 'vr'.")
         cursor = self.conn.cursor()
         cursor.execute(
             "UPDATE app_installation SET erp_type = ?, updated_at = ? WHERE id = 1",
@@ -282,6 +324,36 @@ class DatabaseManager:
         result = dict(row)
         result["password"] = encryption_manager.decrypt(result.pop("password_encrypted"))
         return result if result["password"] else None
+
+    def save_vr_config(self, base_url: str, token: str, timeout_seconds: int = 60,
+                       page_size: int = 500, patch_batch_size: int = 50) -> bool:
+        encrypted = encryption_manager.encrypt(token)
+        cursor = self.conn.cursor()
+        cursor.execute("""
+            INSERT INTO config_vr
+                (id, base_url, token_encrypted, timeout_seconds, page_size, patch_batch_size)
+            VALUES (1, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                base_url=excluded.base_url, token_encrypted=excluded.token_encrypted,
+                timeout_seconds=excluded.timeout_seconds, page_size=excluded.page_size,
+                patch_batch_size=excluded.patch_batch_size,
+                is_active=1, updated_at=CURRENT_TIMESTAMP
+        """, (base_url.strip().rstrip('/'), encrypted, int(timeout_seconds),
+              int(page_size), int(patch_batch_size)))
+        self.conn.commit()
+        return True
+
+    def get_vr_config(self) -> Optional[Dict]:
+        conn = self._get_thread_safe_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM config_vr WHERE id = 1 AND is_active = 1")
+        row = cursor.fetchone()
+        conn.close()
+        if not row:
+            return None
+        result = dict(row)
+        result["token"] = encryption_manager.decrypt(result.pop("token_encrypted"))
+        return result if result["token"] else None
 
     def save_oriontax_api_config(self, base_url: str, token: str,
                                   timeout_seconds: int = 60, max_retries: int = 3,
@@ -382,7 +454,15 @@ class DatabaseManager:
     # MÉTODOS DE CLIENTES
     # ================================================================
     
-    def create_cliente(self, nome: str, cnpj: str) -> bool:
+    @staticmethod
+    def _normalize_uf(uf: Optional[str]):
+        """Retorna (valido, uf): vazio vira None; fora das 27 siglas é inválido."""
+        uf = (uf or "").strip().upper()
+        if not uf:
+            return True, None
+        return (uf in UFS), uf
+
+    def create_cliente(self, nome: str, cnpj: str, uf: Optional[str] = None) -> bool:
         """
         Cria novo cliente
         
@@ -399,12 +479,15 @@ class DatabaseManager:
             
             if len(cnpj_limpo) != 14:
                 return False
+            uf_valida, uf = self._normalize_uf(uf)
+            if not uf_valida:
+                return False
             
             cursor = self.conn.cursor()
             cursor.execute("""
-                INSERT INTO clientes (nome, cnpj)
-                VALUES (?, ?)
-            """, (nome, cnpj_limpo))
+                INSERT INTO clientes (nome, cnpj, uf)
+                VALUES (?, ?, ?)
+            """, (nome, cnpj_limpo, uf))
             self.conn.commit()
             return True
         except sqlite3.IntegrityError:
@@ -413,7 +496,7 @@ class DatabaseManager:
             print(f"Erro ao criar cliente: {e}")
             return False
     
-    def update_cliente(self, cliente_id: int, nome: str, cnpj: str) -> bool:
+    def update_cliente(self, cliente_id: int, nome: str, cnpj: str, uf: Optional[str] = None) -> bool:
         """
         Atualiza cliente
         
@@ -431,13 +514,16 @@ class DatabaseManager:
             
             if len(cnpj_limpo) != 14:
                 return False
+            uf_valida, uf = self._normalize_uf(uf)
+            if not uf_valida:
+                return False
             
             cursor = self.conn.cursor()
             cursor.execute("""
                 UPDATE clientes 
-                SET nome = ?, cnpj = ?, updated_at = ?
+                SET nome = ?, cnpj = ?, uf = ?, updated_at = ?
                 WHERE id = ?
-            """, (nome, cnpj_limpo, datetime.now(), cliente_id))
+            """, (nome, cnpj_limpo, uf, datetime.now(), cliente_id))
             self.conn.commit()
             return True
         except Exception as e:
@@ -1007,6 +1093,23 @@ class DatabaseManager:
             cursor.close()
             conn.close()
     
+    def get_cliente_by_cnpj_threadsafe(self, cnpj: str) -> Optional[Dict]:
+        """Obtém cliente ativo pelo CNPJ, com ou sem máscara (thread-safe)"""
+        cnpj_limpo = ''.join(filter(str.isdigit, cnpj or ""))
+        conn = self._get_thread_safe_connection()
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute(
+                "SELECT * FROM clientes WHERE cnpj = ? AND is_active = 1", (cnpj_limpo,)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+        finally:
+            cursor.close()
+            conn.close()
+
     def add_log_threadsafe(self, tipo_operacao: str, status: str, mensagem: str = None,
                           registros: int = 0, tempo: float = 0, error_details: str = None):
         """Adiciona log de execução (thread-safe)"""
