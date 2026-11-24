@@ -17,6 +17,14 @@ ERP_PROFILES = {
         "receive_label": "📥 Receber Produtos Tributados",
         "show_tmp_cleanup": False,
     },
+    "vr": {
+        "name": "VR",
+        "erp_connection": "API VR Integração Fiscal",
+        "oriontax_connection": "API OrionTax",
+        "send_label": "📤 Enviar Produtos para Análise",
+        "receive_label": "📥 Receber Produtos Tributados",
+        "show_tmp_cleanup": False,
+    },
 }
 
 
