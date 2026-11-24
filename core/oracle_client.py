@@ -133,8 +133,8 @@ def _executemany_with_heartbeat(
 
 def _execute_batch_one_by_one(cursor, insert_sql, batch, table_name, columns):
     """
-    Fallback: executa linha a linha para identificar o valor exato que causa ORA-01722.
-    Re-levanta com mensagem detalhada mostrando coluna e valor.
+    Fallback: executa linha a linha para identificar a linha/valor que causa o erro.
+    Re-levanta com o erro Oracle real e a linha detalhada (coluna e valor).
     """
     for row_idx, row_tuple in enumerate(batch):
         try:
@@ -144,8 +144,9 @@ def _execute_batch_one_by_one(cursor, insert_sql, batch, table_name, columns):
                 f"{col}={repr(val)}({type(val).__name__})"
                 for col, val in zip(columns, row_tuple)
             )
+            erro_oracle = str(row_err).splitlines()[0] if str(row_err) else type(row_err).__name__
             raise Exception(
-                f"ORA-01722 em {table_name} linha {row_idx}: {detalhes}"
+                f"{erro_oracle} | Tabela {table_name} linha {row_idx}: {detalhes}"
             ) from row_err
 
 
