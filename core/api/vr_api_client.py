@@ -1,7 +1,7 @@
 """Cliente HTTP da VR Integração Fiscal API, sem dependências HTTP externas."""
+import http.client
 import json
 import logging
-import socket
 import time
 from typing import Callable, Dict, List, Optional, Tuple
 from urllib.error import HTTPError, URLError
@@ -46,12 +46,14 @@ class VrApiClient:
         )
         request = Request(url, data=encoded, headers=headers, method=method)
         try:
-            with urlopen(request, timeout=self.timeout) as response:
-                raw = response.read()
-                return response.status, self._decode(raw)
-        except HTTPError as exc:
-            return exc.code, self._decode(exc.read())
-        except (URLError, socket.timeout, TimeoutError) as exc:
+            try:
+                with urlopen(request, timeout=self.timeout) as response:
+                    raw = response.read()
+                    return response.status, self._decode(raw)
+            except HTTPError as exc:
+                return exc.code, self._decode(exc.read())
+        except (OSError, http.client.HTTPException) as exc:
+            # URLError, timeout, reset, IncompleteRead, RemoteDisconnected etc.
             raise _NetworkError(f"Falha de comunicação com a API VR: {exc}") from exc
 
     @staticmethod
@@ -150,6 +152,7 @@ class VrApiClient:
         products: List[dict] = []
         seen = set()
         page = 1
+        previous = None
         while True:
             if cancel_check and cancel_check():
                 raise VrApiError("Operação cancelada.")
@@ -158,18 +161,27 @@ class VrApiClient:
                 "numeroPagina": page, "itensPorPagina": self.page_size,
             })
             items = self._data(payload, "produtos")
+            fresh = []
             new_codes = 0
+            codeless = 0
             for item in items:
                 code = item.get("codigo") if isinstance(item, dict) else None
                 if code is None:
-                    products.append(item)
+                    fresh.append(item)
+                    codeless += 1
                 elif code not in seen:
                     seen.add(code)
-                    products.append(item)
+                    fresh.append(item)
                     new_codes += 1
-            # Fim: página vazia, curta, ou servidor que ignora a paginação (nada novo).
-            if len(items) < self.page_size or new_codes == 0:
+            fingerprint = json.dumps(items, sort_keys=True, default=str)
+            # Continua com algum código inédito, ou com itens sem código em página
+            # diferente da anterior. Página curta não encerra: o limite de
+            # itensPorPagina do servidor é desconhecido. Páginas repetidas
+            # (servidor que ignora a paginação) sempre encerram.
+            if new_codes == 0 and not (codeless and fingerprint != previous):
                 return products
+            products.extend(fresh)
+            previous = fingerprint
             page += 1
 
     def list_grupos_economicos(self) -> List[dict]:
