@@ -58,6 +58,19 @@ class VrMapperTests(unittest.TestCase):
         self.assertEqual(("01234567000195", "GO", 7, "LUCRO REAL"),
                          (ctx.cnpj, ctx.uf, ctx.grupo_codigo, ctx.regime))
 
+    def test_store_context_counts_stores_in_group(self):
+        grupos = [{"codigo": 7, "nome": "G", "regimeTributario": "Lucro Presumido",
+                   "lojas": [{"cnpj": 1234567000195}, {"cnpj": 22881305000192}]}]
+        self.assertEqual(2, build_store_context("01234567000195", "GO", grupos).lojas_no_grupo)
+
+    def test_store_context_rejects_unsupported_regime(self):
+        grupos = [{"codigo": 7, "nome": "Lojas Serve Bem", "regimeTributario": "SIMPLES NACIONAL",
+                   "lojas": [{"cnpj": 1234567000195}]}]
+        with self.assertRaises(ValueError) as cm:
+            build_store_context("01234567000195", "GO", grupos)
+        self.assertEqual("Regime tributário 'SIMPLES NACIONAL' do grupo Lojas Serve Bem não suportado pela "
+                         "integração VR (esperado LUCRO REAL ou LUCRO PRESUMIDO).", str(cm.exception))
+
     def test_store_context_rejects_unknown_cnpj(self):
         with self.assertRaisesRegex(ValueError, "grupo econômico"):
             build_store_context("11111111000111", "GO", [{"codigo": 1, "nome": "X", "lojas": []}])

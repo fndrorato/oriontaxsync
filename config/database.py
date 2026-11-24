@@ -216,6 +216,7 @@ class DatabaseManager:
                 timeout_seconds INTEGER NOT NULL DEFAULT 60,
                 page_size INTEGER NOT NULL DEFAULT 500,
                 patch_batch_size INTEGER NOT NULL DEFAULT 50,
+                write_enabled INTEGER NOT NULL DEFAULT 0,
                 is_active INTEGER NOT NULL DEFAULT 1,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
@@ -263,6 +264,12 @@ class DatabaseManager:
         # Migração: UF da loja (usada pelo perfil VR)
         try:
             cursor.execute("ALTER TABLE clientes ADD COLUMN uf TEXT")
+        except sqlite3.OperationalError:
+            pass  # Coluna já existe
+
+        # Migração: trava de gravação na VR (desligada até a homologação)
+        try:
+            cursor.execute("ALTER TABLE config_vr ADD COLUMN write_enabled INTEGER NOT NULL DEFAULT 0")
         except sqlite3.OperationalError:
             pass  # Coluna já existe
 
@@ -326,20 +333,21 @@ class DatabaseManager:
         return result if result["password"] else None
 
     def save_vr_config(self, base_url: str, token: str, timeout_seconds: int = 60,
-                       page_size: int = 500, patch_batch_size: int = 50) -> bool:
+                       page_size: int = 500, patch_batch_size: int = 50,
+                       write_enabled: bool = False) -> bool:
         encrypted = encryption_manager.encrypt(token)
         cursor = self.conn.cursor()
         cursor.execute("""
             INSERT INTO config_vr
-                (id, base_url, token_encrypted, timeout_seconds, page_size, patch_batch_size)
-            VALUES (1, ?, ?, ?, ?, ?)
+                (id, base_url, token_encrypted, timeout_seconds, page_size, patch_batch_size, write_enabled)
+            VALUES (1, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(id) DO UPDATE SET
                 base_url=excluded.base_url, token_encrypted=excluded.token_encrypted,
                 timeout_seconds=excluded.timeout_seconds, page_size=excluded.page_size,
-                patch_batch_size=excluded.patch_batch_size,
+                patch_batch_size=excluded.patch_batch_size, write_enabled=excluded.write_enabled,
                 is_active=1, updated_at=CURRENT_TIMESTAMP
         """, (base_url.strip().rstrip('/'), encrypted, int(timeout_seconds),
-              int(page_size), int(patch_batch_size)))
+              int(page_size), int(patch_batch_size), 1 if write_enabled else 0))
         self.conn.commit()
         return True
 
@@ -353,6 +361,7 @@ class DatabaseManager:
             return None
         result = dict(row)
         result["token"] = encryption_manager.decrypt(result.pop("token_encrypted"))
+        result["write_enabled"] = bool(result.get("write_enabled"))
         return result if result["token"] else None
 
     def save_oriontax_api_config(self, base_url: str, token: str,

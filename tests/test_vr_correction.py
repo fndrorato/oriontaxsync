@@ -104,6 +104,19 @@ class BuildCorrectionTests(unittest.TestCase):
         saida = build_correction(vr_product(), target, CTX, CATALOGS)["pisCofins"]["pisCofinsSaida"]
         self.assertEqual((3, 1, 1.65, 7.6), (saida["idPisCofins"], saida["cst"], saida["pis"], saida["cofins"]))
 
+    def test_missing_natureza_receita_keeps_current(self):
+        prod = vr_product()
+        prod["pisCofins"][1]["naturezaReceita"] = 101
+        for empty in (None, ""):
+            target = vr_product_to_api(prod, CTX, TODAY) | {"natureza_receita": empty}
+            self.assertIsNone(build_correction(prod, target, CTX, CATALOGS))
+            changed = target | {"icms_cst": 0, "percentual_redbcde": 0}
+            saida = build_correction(prod, changed, CTX, CATALOGS)["pisCofins"]["pisCofinsSaida"]
+            self.assertEqual(101, saida["naturezaReceita"])
+            new_rates = target | {"pis_cst": "04", "pis_aliquota": 0, "cofins_aliquota": 0}
+            saida = build_correction(prod, new_rates, CTX, CATALOGS)["pisCofins"]["pisCofinsSaida"]
+            self.assertEqual((4, 101), (saida["idPisCofins"], saida["naturezaReceita"]))
+
     def test_null_pis_cst_alone_is_unchanged(self):
         target = vr_product_to_api(vr_product(), CTX, TODAY) | {"pis_cst": None}
         self.assertIsNone(build_correction(vr_product(), target, CTX, CATALOGS))
@@ -269,6 +282,23 @@ class BuildVinculosTests(unittest.TestCase):
     def test_build_vinculos_skips_targets_without_classification(self):
         partial = {"codigo": "86922", "cst_ibs_cbs": "000", "c_class_trib": None}
         self.assertEqual(([], []), build_vinculos([(vr_product(), partial)], CTX, CATALOGS, TODAY))
+
+    def test_build_vinculos_rejects_only_product_with_malformed_date(self):
+        t = lambda code: {"codigo": str(code), "cst_ibs_cbs": "000", "c_class_trib": "1"}
+        bad = {**vr_product(), "codigo": 86923}
+        bad["classificacaoTributaria"] = [{"cst": "200", "cClassTrib": "200003", "dataInicioCst": "2026-01-01"}]
+        bodies, rejected = build_vinculos([(vr_product(), t(86922)), (bad, t(86923))], CTX, CATALOGS, TODAY)
+        self.assertEqual([86922], bodies[0]["codigoProdutos"])
+        self.assertEqual(1, len(rejected))
+        self.assertTrue(rejected[0].startswith("Produto 86923: "), rejected[0])
+
+    def test_build_vinculos_rejects_catalog_classification_without_codigo(self):
+        catalogs = replace(CATALOGS, classificacoes=[{"cst": "000", "cClassTrib": "000001"}])
+        t = {"codigo": "86922", "cst_ibs_cbs": "000", "c_class_trib": "1"}
+        bodies, rejected = build_vinculos([(vr_product(), t)], CTX, catalogs, TODAY)
+        self.assertEqual([], bodies)
+        self.assertEqual(1, len(rejected))
+        self.assertTrue(rejected[0].startswith("Produto 86922: "), rejected[0])
 
 
 if __name__ == "__main__":

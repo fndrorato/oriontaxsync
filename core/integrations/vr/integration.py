@@ -1,8 +1,9 @@
 """Orquestra a integração VR (API HTTP) com a API OrionTax."""
 import json
 import os
-from datetime import date
-from typing import Callable, Dict, List, Optional
+from datetime import date, datetime
+from pathlib import Path
+from typing import Callable, Dict, List, Optional, Set
 
 from core.api import OrionTaxApiClient
 from core.api.vr_api_client import VrApiClient, VrApiError
@@ -14,6 +15,8 @@ from .mapper import ICMS_SCENARIO, build_store_context, digits, find_uf_item, pa
 
 _DETAILS_LIMIT = 100
 _TOL = 0.001
+GATE_OFF_MESSAGE = ("Gravação na VR desabilitada. Homologue com ORIONTAX_DRY_RUN=1 e habilite em "
+                    "Configurar API VR.")
 
 
 def format_cnpj(cnpj: str) -> str:
@@ -25,13 +28,29 @@ class VrIntegration(IntegrationAdapter):
     erp_type = "vr"
 
     def __init__(self, vr_config: dict, api_config: dict, installation_id: str,
-                 store_lookup: Callable[[str], Optional[dict]]):
+                 store_lookup: Callable[[str], Optional[dict]],
+                 snapshot_dir=None, active_ufs: Optional[Callable[[], Set[str]]] = None):
         self.vr = VrApiClient(vr_config)
         self.api = OrionTaxApiClient(api_config)
         self.installation_id = installation_id
         self.store_lookup = store_lookup
+        self.snapshot_dir = snapshot_dir
+        self.active_ufs = active_ufs
+        self.write_enabled = bool(vr_config.get("write_enabled"))
         self.dry_run = os.environ.get("ORIONTAX_DRY_RUN") == "1"
+        self.only_codes = self._parse_allowlist(os.environ.get("ORIONTAX_VR_ONLY"))
         self._cancelled = False
+
+    @staticmethod
+    def _normalize_code(code) -> str:
+        text = str(code if code is not None else "").strip()
+        return str(int(text)) if text.isdigit() else text
+
+    @classmethod
+    def _parse_allowlist(cls, raw) -> Optional[Set[str]]:
+        """Códigos de ORIONTAX_VR_ONLY (separados por vírgula); None quando não definido."""
+        codes = {cls._normalize_code(c) for c in str(raw or "").split(",")} - {""}
+        return codes or None
 
     @staticmethod
     def _progress(callback, message):
@@ -113,6 +132,9 @@ class VrIntegration(IntegrationAdapter):
 
     def receive(self, cnpj: str, progress_callback=None) -> SyncResult:
         with SyncLockRegistry.acquire(self.installation_id):
+            # Sem a trava liberada, nem chega a consumir a fotografia da OrionTax.
+            if not self.write_enabled and not self.dry_run:
+                return SyncResult(False, GATE_OFF_MESSAGE)
             # Tudo o que pode falhar na VR roda antes do GET da OrionTax, que muda o estado dos itens.
             try:
                 uf = self._store_uf(cnpj)
@@ -124,6 +146,7 @@ class VrIntegration(IntegrationAdapter):
                 progress_callback,
                 f"Grupo econômico: {ctx.grupo_nome} (regime {ctx.regime}); UF da loja: {ctx.uf}.",
             )
+            self._warn_multi_uf(progress_callback, ctx.uf)
             self._progress(progress_callback, "Lendo cadastros fiscais e produtos da VR...")
             catalogs = VrCatalogs(
                 icms=self.vr.list_icms(ctx.uf),
@@ -135,32 +158,45 @@ class VrIntegration(IntegrationAdapter):
 
             self._progress(progress_callback, "Recebendo fotografia tributada da API OrionTax...")
             targets = self.api.receive_products()
+            # Daqui em diante a fotografia já foi consumida: nenhum produto ruim pode descartar o lote.
+            self._save_snapshot(targets, ctx.cnpj, progress_callback)
             self._progress(progress_callback, f"{len(targets)} produto(s) recebido(s); montando correções...")
 
             items, pairs, rejected = [], [], []
             unchanged = 0
+            skipped = 0
             for target in targets:
-                code = str(target.get("codigo") if target.get("codigo") is not None else "").strip()
-                current = current_by_code.get(str(int(code)) if code.isdigit() else code)
+                if not isinstance(target, dict):
+                    rejected.append("Produto <sem código>: item inválido na fotografia da OrionTax")
+                    continue
+                code = self._normalize_code(target.get("codigo"))
+                if self.only_codes is not None and code not in self.only_codes:
+                    skipped += 1
+                    continue
+                current = current_by_code.get(code)
                 try:
                     item = build_correction(current, target, ctx, catalogs)
                 except CorrectionRejected as exc:
                     rejected.append(str(exc))
+                    continue
+                except ValueError as exc:
+                    rejected.append(f"Produto {code or '<sem código>'}: {exc}")
                     continue
                 pairs.append((current, target))
                 if item is None:
                     unchanged += 1
                 else:
                     items.append(item)
-            try:
-                vinculos, vinculo_rejected = build_vinculos(pairs, ctx, catalogs, date.today())
-            except ValueError as exc:
-                return SyncResult(False, f"Classificação tributária inválida na VR: {exc}",
-                                  details=self._receive_details(rejected, unchanged))
+            if self.only_codes is not None:
+                self._progress(progress_callback, f"⚠ ORIONTAX_VR_ONLY ativo: {skipped} produto(s) fora da "
+                                                  f"lista não serão gravados.")
+            vinculos, vinculo_rejected = build_vinculos(pairs, ctx, catalogs, date.today())
             rejected.extend(vinculo_rejected)
             self._warn_rejections(progress_callback, rejected, len(pairs))
             self._progress(progress_callback,
-                           f"⚠ A correção vale para todas as lojas da UF {ctx.uf} e do grupo {ctx.grupo_nome}.")
+                           f"⚠ ICMS e PIS/COFINS valem para todas as lojas da UF {ctx.uf} e do grupo "
+                           f"{ctx.grupo_nome} ({ctx.lojas_no_grupo} loja(s) no grupo); "
+                           f"NCM e CEST valem para todas as lojas.")
 
             if self.dry_run:
                 for item in items[:3]:
@@ -172,10 +208,34 @@ class VrIntegration(IntegrationAdapter):
                 return SyncResult(
                     True,
                     f"[DRY-RUN] {len(items)} correção(ões) e {len(vinculos)} vínculo(s) montados; "
-                    f"nada foi gravado na VR.",
-                    len(items), details=self._receive_details(rejected, unchanged),
+                    f"nada foi gravado na VR. Atenção: a fotografia da OrionTax foi consumida; "
+                    f"peça o reenvio antes da gravação real.",
+                    len(items), details=self._receive_details(rejected, unchanged, skipped=skipped),
                 )
-            return self._write_corrections(ctx, items, vinculos, rejected, unchanged, progress_callback)
+            return self._write_corrections(ctx, items, vinculos, rejected, unchanged, progress_callback,
+                                           skipped)
+
+    def _warn_multi_uf(self, callback, uf: str):
+        if self.active_ufs is None:
+            return
+        ufs = sorted({str(u).strip().upper() for u in (self.active_ufs() or []) if u and str(u).strip()})
+        if len(ufs) > 1:
+            self._progress(callback, f"⚠ Há lojas ativas em mais de uma UF ({', '.join(ufs)}); "
+                                     f"apenas a UF {uf} desta loja será corrigida nesta execução.")
+
+    def _save_snapshot(self, targets, cnpj: str, callback):
+        """Guarda a fotografia recebida da OrionTax; falha aqui só gera aviso."""
+        if self.snapshot_dir is None:
+            return
+        stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+        path = Path(self.snapshot_dir) / f"receive-{stamp}-{cnpj}.json"
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps(targets, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
+        except (OSError, TypeError, ValueError) as exc:
+            self._progress(callback, f"⚠ Não foi possível salvar a fotografia OrionTax em {path}: {exc}")
+            return
+        self._progress(callback, f"Fotografia OrionTax salva em {path}")
 
     @staticmethod
     def _index_products(products: List[dict]) -> Dict[str, dict]:
@@ -188,8 +248,9 @@ class VrIntegration(IntegrationAdapter):
 
     @staticmethod
     def _receive_details(rejected, unchanged, patch_status=None, patch_info=None,
-                         vinculos=None, divergences=None) -> dict:
+                         vinculos=None, divergences=None, skipped=0) -> dict:
         return {
+            "skipped_allowlist": skipped,
             "rejected_count": len(rejected),
             "rejected": rejected[:_DETAILS_LIMIT],
             "unchanged": unchanged,
@@ -204,7 +265,8 @@ class VrIntegration(IntegrationAdapter):
         text = str(status or "").strip().upper()
         return "SUCESSO" in text or text == "OK"
 
-    def _write_corrections(self, ctx, items, vinculos, rejected, unchanged, progress_callback) -> SyncResult:
+    def _write_corrections(self, ctx, items, vinculos, rejected, unchanged, progress_callback,
+                           skipped=0) -> SyncResult:
         patch_status: Dict[str, int] = {}
         patch_info: List[dict] = []
         written: List[dict] = []
@@ -215,7 +277,8 @@ class VrIntegration(IntegrationAdapter):
         def partial(message):
             self._warn_patch_failures(progress_callback, patch_info)
             return SyncResult(False, message, len(written),
-                              details=self._receive_details(rejected, unchanged, patch_status, patch_info))
+                              details=self._receive_details(rejected, unchanged, patch_status, patch_info,
+                                                            skipped=skipped))
 
         for offset in range(0, len(items), batch_size):
             batch = items[offset:offset + batch_size]
@@ -227,7 +290,8 @@ class VrIntegration(IntegrationAdapter):
                 response = self.vr.patch_integracao_fiscal(batch)
             except VrApiError as exc:
                 return partial(f"Erro ao gravar o lote {number}/{total} na VR: {exc}; "
-                               f"{done} lote(s) já gravado(s) na VR.")
+                               f"{done} lote(s) já gravado(s) na VR, lote {number} com estado "
+                               f"desconhecido (confira no VRMaster).")
             done += 1
             by_code = {}
             for result in response or []:
@@ -274,7 +338,7 @@ class VrIntegration(IntegrationAdapter):
         return SyncResult(
             failures + len(divergences) == 0 and reread_error is None, message, len(written),
             details=self._receive_details(rejected, unchanged, patch_status, patch_info,
-                                          vinculo_details, divergences),
+                                          vinculo_details, divergences, skipped),
         )
 
     @classmethod

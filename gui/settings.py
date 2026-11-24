@@ -481,6 +481,8 @@ class VrConfigDialog(QDialog):
         form.addRow('Timeout (s):', self.timeout_input); form.addRow('Itens por página:', self.page_input)
         form.addRow('Produtos por PATCH:', self.patch_input)
         layout.addLayout(form)
+        self.write_checkbox = QCheckBox('Permitir gravação na VR (somente após homologação)')
+        layout.addWidget(self.write_checkbox)
         self.token_hint = QLabel('')
         self.token_hint.setWordWrap(True); layout.addWidget(self.token_hint)
         buttons = QHBoxLayout(); buttons.addStretch()
@@ -497,6 +499,7 @@ class VrConfigDialog(QDialog):
             self.timeout_input.setValue(config['timeout_seconds'])
             self.page_input.setValue(config['page_size'])
             self.patch_input.setValue(config['patch_batch_size'])
+            self.write_checkbox.setChecked(bool(config.get('write_enabled')))
             self.token_hint.setText('Token já salvo. Deixe o campo vazio para mantê-lo.')
 
     def _token(self):
@@ -510,7 +513,8 @@ class VrConfigDialog(QDialog):
     def _values(self):
         return dict(base_url=self.url_input.text().strip(), token=self._token(),
                     timeout_seconds=self.timeout_input.value(), page_size=self.page_input.value(),
-                    patch_batch_size=self.patch_input.value())
+                    patch_batch_size=self.patch_input.value(),
+                    write_enabled=self.write_checkbox.isChecked())
 
     def _valid(self):
         values = self._values()

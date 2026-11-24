@@ -92,6 +92,15 @@ class VrApiClientTests(unittest.TestCase):
             api.patch_integracao_fiscal([{"codigoProduto": 1}])
         self.assertEqual(2, len(api.calls))
 
+    def test_json_error_detail_is_truncated(self):
+        detail = {"info": "x" * 5000}
+        api = FakeVr([(200, {"retorno": ["jwt"]}), (400, detail)])
+        with self.assertRaises(VrApiError) as cm:
+            api.patch_integracao_fiscal([{"codigoProduto": 1}])
+        prefix = "API VR retornou HTTP 400: "
+        self.assertTrue(str(cm.exception).startswith(prefix + '{"info": "xxx'))
+        self.assertEqual(len(prefix) + 1000, len(str(cm.exception)))
+
     def test_patch_returns_item_results(self):
         api = FakeVr([(200, {"retorno": ["jwt"]}),
                       (200, {"integracaoFiscal": [{"codigoProduto": 1, "status": "OK", "info": "x"}]})])

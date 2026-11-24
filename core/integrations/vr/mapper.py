@@ -16,6 +16,7 @@ class VrStoreContext:
     grupo_codigo: int
     grupo_nome: str
     regime: str
+    lojas_no_grupo: int = 0
 
 
 def digits(value) -> str:
@@ -27,12 +28,18 @@ def build_store_context(cnpj: str, uf: str, grupos: List[dict]) -> VrStoreContex
     for grupo in grupos or []:
         for loja in grupo.get("lojas") or []:
             if digits(loja.get("cnpj")).zfill(14) == normalized:
+                nome = str(grupo.get("nome") or "").strip()
+                regime = str(grupo.get("regimeTributario") or "").strip()
+                if "REAL" not in regime.upper() and "PRESUMIDO" not in regime.upper():
+                    raise ValueError(f"Regime tributário '{regime}' do grupo {nome} não suportado pela "
+                                     f"integração VR (esperado LUCRO REAL ou LUCRO PRESUMIDO).")
                 return VrStoreContext(
                     cnpj=normalized,
                     uf=str(uf or "").strip().upper(),
                     grupo_codigo=grupo.get("codigo"),
-                    grupo_nome=str(grupo.get("nome") or "").strip(),
-                    regime=str(grupo.get("regimeTributario") or "").strip(),
+                    grupo_nome=nome,
+                    regime=regime,
+                    lojas_no_grupo=len(grupo.get("lojas") or []),
                 )
     raise ValueError(f"CNPJ {normalized} não encontrado em nenhum grupo econômico da VR")
 

@@ -1,4 +1,6 @@
 import copy
+import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -124,22 +126,31 @@ CHANGED = {"icms_cst": 0, "percentual_redbcde": 0}  # CST 20 -> 00, cadastro 8 n
 
 class VrIntegrationTests(unittest.TestCase):
     def setUp(self):
-        self.integration = VrIntegration(
-            {"base_url": "http://x", "token": "t"},
-            {"base_url": "https://api.example.com", "token": "t"},
-            "inst-1",
-            lambda cnpj: {"nome": "Loja", "cnpj": cnpj, "uf": "GO"},
-        )
         self.vr = StubVr()
         self.api = StubApi()
-        self.integration.vr = self.vr
-        self.integration.api = self.api
+        self.integration = self._make()
         products = []
         for code in (1, 2, 3):
             p = copy.deepcopy(vr_product())
             p["codigo"] = code
             products.append(p)
         self.vr.products = products + [product_without_store_uf()]
+
+    def _make(self, write_enabled=True, env=None, **kwargs):
+        with mock.patch.dict(os.environ, env or {}, clear=False):
+            for key in ("ORIONTAX_DRY_RUN", "ORIONTAX_VR_ONLY"):
+                if key not in (env or {}):
+                    os.environ.pop(key, None)
+            integration = VrIntegration(
+                {"base_url": "http://x", "token": "t", "write_enabled": write_enabled},
+                {"base_url": "https://api.example.com", "token": "t"},
+                "inst-1",
+                lambda cnpj: {"nome": "Loja", "cnpj": cnpj, "uf": "GO"},
+                **kwargs,
+            )
+        integration.vr = self.vr
+        integration.api = self.api
+        return integration
 
     def test_send_maps_batches_and_reports_rejections(self):
         progress = []
@@ -195,7 +206,8 @@ class VrIntegrationTests(unittest.TestCase):
         self.assertTrue(result.success)
         self.assertEqual(3, result.records)
         self.assertEqual("3 produto(s) gravado(s) na VR, 1 sem alteração, 1 rejeitado(s).", result.message)
-        self.assertTrue(any("todas as lojas da UF GO" in m and "Lojas Serve Bem" in m for m in progress))
+        self.assertIn("⚠ ICMS e PIS/COFINS valem para todas as lojas da UF GO e do grupo Lojas Serve Bem "
+                      "(1 loja(s) no grupo); NCM e CEST valem para todas as lojas.", progress)
         self.assertTrue(any(m.startswith("⚠ 1 produto(s) rejeitado(s)") for m in progress))
         self.assertTrue(any("Gravando lote 2/2 na VR" in m for m in progress))
         self.assertEqual([("icms", "GO"), ("pautas", "GO")], self.vr.catalog_ufs)
@@ -225,7 +237,8 @@ class VrIntegrationTests(unittest.TestCase):
         self.assertEqual([], self.vr.patch_calls)
         self.assertEqual([], self.vr.vincular_calls)
         self.assertTrue(result.message.startswith("[DRY-RUN]"))
-        self.assertEqual("[DRY-RUN] 3 correção(ões) e 1 vínculo(s) montados; nada foi gravado na VR.",
+        self.assertEqual("[DRY-RUN] 3 correção(ões) e 1 vínculo(s) montados; nada foi gravado na VR. "
+                         "Atenção: a fotografia da OrionTax foi consumida; peça o reenvio antes da gravação real.",
                          result.message)
         self.assertTrue(result.success)
         self.assertTrue(any('"codigoProduto": 1' in m for m in progress))
@@ -371,6 +384,155 @@ class VrIntegrationTests(unittest.TestCase):
         self.assertIn(" 1 falha(s) na gravação.", result.message)
         self.assertIn("⚠ Vínculo 55: HTTP 500", progress)
 
+    # ----- trava de gravação, allowlist, fotografia, multi-UF -----
+
+    GATE_OFF = ("Gravação na VR desabilitada. Homologue com ORIONTAX_DRY_RUN=1 e habilite em "
+                "Configurar API VR.")
+
+    def test_receive_gate_off_does_not_consume_oriontax(self):
+        self._setup_receive()
+        with tempfile.TemporaryDirectory() as temp:
+            integration = self._make(write_enabled=False, snapshot_dir=Path(temp) / "vr_snapshots")
+            result = integration.receive(CNPJ)
+            self.assertFalse(Path(temp, "vr_snapshots").exists())
+        self.assertFalse(result.success)
+        self.assertEqual(self.GATE_OFF, result.message)
+        self.assertEqual(0, self.api.receive_calls)
+        self.assertEqual([], self.vr.patch_calls)
+
+    def test_receive_gate_off_allows_dry_run(self):
+        self._setup_receive()
+        integration = self._make(write_enabled=False, env={"ORIONTAX_DRY_RUN": "1"})
+        result = integration.receive(CNPJ)
+        self.assertTrue(result.success)
+        self.assertTrue(result.message.startswith("[DRY-RUN]"))
+        self.assertEqual(1, self.api.receive_calls)
+        self.assertEqual([], self.vr.patch_calls)
+
+    def test_receive_gate_on_writes(self):
+        self._setup_receive()
+        result = self._make(write_enabled=True).receive(CNPJ)
+        self.assertTrue(result.success)
+        self.assertEqual(1, self.api.receive_calls)
+        self.assertEqual([1, 2, 3], [i["codigoProduto"] for b in self.vr.patch_calls for i in b])
+
+    def test_receive_allowlist_writes_only_listed_codes(self):
+        self._setup_receive()
+        for t in self.api.targets[:3]:
+            t.update(cst_ibs_cbs="000", c_class_trib="000001")
+        integration = self._make(env={"ORIONTAX_VR_ONLY": " 2, 0003 "})
+        progress = []
+        result = integration.receive(CNPJ, progress.append)
+        self.assertEqual([2, 3], [i["codigoProduto"] for b in self.vr.patch_calls for i in b])
+        self.assertEqual([[2, 3]], [c["codigoProdutos"] for c in self.vr.vincular_calls])
+        self.assertEqual(3, result.details["skipped_allowlist"])
+        self.assertIn("⚠ ORIONTAX_VR_ONLY ativo: 3 produto(s) fora da lista não serão gravados.", progress)
+        self.assertEqual(0, result.details["rejected_count"])
+        self.assertTrue(result.success)
+
+    def test_receive_without_allowlist_reports_zero_skipped(self):
+        self._setup_receive()
+        progress = []
+        result = self.integration.receive(CNPJ, progress.append)
+        self.assertEqual(0, result.details["skipped_allowlist"])
+        self.assertFalse(any("ORIONTAX_VR_ONLY" in m for m in progress))
+
+    def test_receive_malformed_classification_date_rejects_only_that_product(self):
+        self._setup_receive()
+        for t in self.api.targets[:3]:
+            t.update(cst_ibs_cbs="000", c_class_trib="000001")
+        self.vr.products[1]["classificacaoTributaria"][0]["dataInicioCst"] = "31/02/2025"
+        result = self.integration.receive(CNPJ)
+        self.assertEqual([[1, 3]], [c["codigoProdutos"] for c in self.vr.vincular_calls])
+        self.assertTrue(any(r.startswith("Produto 2: ") for r in result.details["rejected"]))
+        self.assertIn(1, [i["codigoProduto"] for b in self.vr.patch_calls for i in b])
+        self.assertIn(3, [i["codigoProduto"] for b in self.vr.patch_calls for i in b])
+
+    def test_receive_catalog_classification_without_codigo_is_rejected(self):
+        self._setup_receive()
+        self.api.targets[3].update(cst_ibs_cbs="000", c_class_trib="000001")
+        self.vr.list_classificacoes = lambda cnpj: [{"cst": "000", "cClassTrib": "000001"}]
+        result = self.integration.receive(CNPJ)
+        self.assertEqual([], self.vr.vincular_calls)
+        self.assertTrue(any(r.startswith("Produto 4: ") for r in result.details["rejected"]))
+        self.assertEqual(3, len([i for b in self.vr.patch_calls for i in b]))
+
+    def test_receive_generic_value_error_in_correction_rejects_only_that_product(self):
+        self._setup_receive()
+        from core.integrations.vr import integration as module
+        real = module.build_correction
+
+        def flaky(current, target, ctx, catalogs):
+            if str(target.get("codigo")) == "2":
+                raise ValueError("valor estranho")
+            return real(current, target, ctx, catalogs)
+        with mock.patch.object(module, "build_correction", flaky):
+            result = self.integration.receive(CNPJ)
+        self.assertIn("Produto 2: valor estranho", result.details["rejected"])
+        self.assertEqual([1, 3], [i["codigoProduto"] for b in self.vr.patch_calls for i in b])
+
+    def test_receive_saves_oriontax_snapshot(self):
+        self._setup_receive()
+        with tempfile.TemporaryDirectory() as temp:
+            folder = Path(temp) / "vr_snapshots"
+            integration = self._make(snapshot_dir=folder)
+            progress = []
+            integration.receive(CNPJ, progress.append)
+            files = list(folder.glob(f"receive-*-{CNPJ}.json"))
+            self.assertEqual(1, len(files))
+            self.assertRegex(files[0].name, r"^receive-\d{8}-\d{6}-" + CNPJ + r"\.json$")
+            self.assertEqual(self.api.targets, json.loads(files[0].read_text(encoding="utf-8")))
+            self.assertIn(f"Fotografia OrionTax salva em {files[0]}", progress)
+
+    def test_receive_snapshot_failure_only_warns(self):
+        self._setup_receive()
+        with tempfile.TemporaryDirectory() as temp:
+            blocker = Path(temp) / "arquivo"
+            blocker.write_text("x")
+            integration = self._make(snapshot_dir=blocker / "vr_snapshots")
+            progress = []
+            result = integration.receive(CNPJ, progress.append)
+        self.assertTrue(result.success)
+        self.assertTrue(any(m.startswith("⚠ Não foi possível salvar a fotografia OrionTax") for m in progress))
+        self.assertEqual(3, len([i for b in self.vr.patch_calls for i in b]))
+
+    def test_receive_warns_about_active_stores_in_other_ufs(self):
+        self._setup_receive()
+        integration = self._make(active_ufs=lambda: {"GO", "SP", None, ""})
+        progress = []
+        integration.receive(CNPJ, progress.append)
+        self.assertIn("⚠ Há lojas ativas em mais de uma UF (GO, SP); apenas a UF GO desta loja será "
+                      "corrigida nesta execução.", progress)
+
+    def test_receive_single_uf_has_no_multi_uf_warning(self):
+        self._setup_receive()
+        progress = []
+        self._make(active_ufs=lambda: {"GO"}).receive(CNPJ, progress.append)
+        self.assertFalse(any("mais de uma UF" in m for m in progress))
+
+    def test_receive_patch_error_says_batch_state_unknown(self):
+        self._setup_receive()
+        calls = []
+
+        def boom(items):
+            calls.append(items)
+            if len(calls) == 2:
+                raise VrApiError("HTTP 500")
+            return [{"codigoProduto": i["codigoProduto"], "status": "SUCESSO"} for i in items]
+        self.vr.patch_integracao_fiscal = boom
+        result = self.integration.receive(CNPJ)
+        self.assertFalse(result.success)
+        self.assertEqual("Erro ao gravar o lote 2/2 na VR: HTTP 500; 1 lote(s) já gravado(s) na VR, "
+                         "lote 2 com estado desconhecido (confira no VRMaster).", result.message)
+
+    def test_receive_unsupported_regime_does_not_consume_oriontax(self):
+        self._setup_receive()
+        self.vr.grupos[0]["regimeTributario"] = "SIMPLES NACIONAL"
+        result = self.integration.receive(CNPJ)
+        self.assertFalse(result.success)
+        self.assertIn("não suportado pela integração VR", result.message)
+        self.assertEqual(0, self.api.receive_calls)
+
     def test_cancel_sets_flag(self):
         self.integration.cancel()
         self.assertTrue(self.integration._cancelled)
@@ -387,7 +549,16 @@ class VrIntegrationTests(unittest.TestCase):
                 db.set_erp_type("vr")
                 db.save_vr_config("http://10.0.0.5:9025", "tok")
                 db.save_oriontax_api_config("https://api.example.com", "tok")
-                self.assertIsInstance(create_integration(db, "vr"), VrIntegration)
+                integration = create_integration(db, "vr")
+                self.assertIsInstance(integration, VrIntegration)
+                self.assertFalse(integration.write_enabled)
+                self.assertEqual(Path(temp) / "vr_snapshots", Path(integration.snapshot_dir))
+                db.create_cliente("Loja GO", "01234567000195", "GO")
+                db.create_cliente("Loja SP", "22881305000192", "SP")
+                db.create_cliente("Loja sem UF", "11222333000181")
+                self.assertEqual({"GO", "SP"}, integration.active_ufs())
+                db.save_vr_config("http://10.0.0.5:9025", "tok", write_enabled=True)
+                self.assertTrue(create_integration(db, "vr").write_enabled)
             finally:
                 db.disconnect()
 

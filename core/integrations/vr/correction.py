@@ -209,7 +209,9 @@ def _target_saida(group: dict, target: dict, ctx: VrStoreContext, catalogs: VrCa
         return current
     cst = int(_code(target["pis_cst"]) or 0)
     pis, cofins = _num(target.get("pis_aliquota")), _num(target.get("cofins_aliquota"))
-    natureza = target.get("natureza_receita") or 0
+    natureza = target.get("natureza_receita")
+    if natureza in (None, ""):  # alvo sem natureza: mantém a atual da VR
+        natureza = current["naturezaReceita"]
     if debito.get("codigo") is not None and cst == current["cst"] and \
             _same_num(pis, current["pis"]) and _same_num(cofins, current["cofins"]):
         return {**current, "naturezaReceita": natureza}
@@ -303,6 +305,35 @@ def _build_correction(current, target, ctx, catalogs, label) -> Optional[dict]:
     return item
 
 
+def _vinculo_for(current: dict, target: dict, catalogs: VrCatalogs,
+                 today: date) -> Optional[Tuple[int, int]]:
+    """(código da classificação, código do produto); None se não há o que vincular.
+
+    Levanta CorrectionRejected (mensagem "Produto <codigo>: ...") para rejeitar o produto.
+    """
+    if target.get("cst_ibs_cbs") in (None, "") or target.get("c_class_trib") in (None, ""):
+        return None
+    cst = str(target["cst_ibs_cbs"]).strip().zfill(3)
+    cclass = str(target["c_class_trib"]).strip().zfill(6)
+    atual = pick_classificacao(current.get("classificacaoTributaria") or [], today) or {}
+    if (str(atual.get("cst") or "").strip().zfill(3) == cst
+            and str(atual.get("cClassTrib") or "").strip().zfill(6) == cclass):
+        return None
+    if not digits(current.get("codigo")):
+        raise CorrectionRejected("código não numérico", repr(current.get("codigo")))
+    codigo_produto = int(digits(current.get("codigo")))
+    match = next((c for c in catalogs.classificacoes or []
+                  if str(c.get("cst") or "").strip().zfill(3) == cst
+                  and str(c.get("cClassTrib") or "").strip().zfill(6) == cclass), None)
+    if match is None:
+        raise CorrectionRejected(f"sem classificação tributária CST {cst} / cClassTrib {cclass} no VRMaster "
+                                 f"(a API não cria classificações); crie no VRMaster", codigo_produto)
+    if match.get("codigo") in (None, ""):
+        raise CorrectionRejected(f"classificação tributária CST {cst} / cClassTrib {cclass} sem código "
+                                 f"em /classificacaoTributaria; confira no VRMaster", codigo_produto)
+    return match.get("codigo"), codigo_produto
+
+
 def build_vinculos(pairs: List[Tuple[dict, dict]], ctx: VrStoreContext, catalogs: VrCatalogs,
                    today: date) -> Tuple[List[dict], List[str]]:
     grouped: Dict[int, List[int]] = {}
@@ -310,26 +341,19 @@ def build_vinculos(pairs: List[Tuple[dict, dict]], ctx: VrStoreContext, catalogs
     for current, target in pairs:
         if current is None or not target:
             continue
-        if target.get("cst_ibs_cbs") in (None, "") or target.get("c_class_trib") in (None, ""):
+        try:
+            found = _vinculo_for(current, target, catalogs, today)
+        except CorrectionRejected as exc:
+            rejected.append(str(exc))
             continue
-        cst = str(target["cst_ibs_cbs"]).strip().zfill(3)
-        cclass = str(target["c_class_trib"]).strip().zfill(6)
-        atual = pick_classificacao(current.get("classificacaoTributaria") or [], today) or {}
-        if (str(atual.get("cst") or "").strip().zfill(3) == cst
-                and str(atual.get("cClassTrib") or "").strip().zfill(6) == cclass):
+        except ValueError as exc:  # um produto com dado ruim não derruba os demais
+            label = digits(current.get("codigo")) or current.get("codigo")
+            rejected.append(f"Produto {label}: classificação tributária inválida na VR ({exc})")
             continue
-        if not digits(current.get("codigo")):
-            rejected.append(f"Produto {current.get('codigo')!r}: código não numérico")
+        if found is None:
             continue
-        codigo_produto = int(digits(current.get("codigo")))
-        match = next((c for c in catalogs.classificacoes or []
-                      if str(c.get("cst") or "").strip().zfill(3) == cst
-                      and str(c.get("cClassTrib") or "").strip().zfill(6) == cclass), None)
-        if match is None:
-            rejected.append(f"Produto {codigo_produto}: sem classificação tributária CST {cst} / "
-                            f"cClassTrib {cclass} no VRMaster (a API não cria classificações); crie no VRMaster")
-            continue
-        produtos = grouped.setdefault(match["codigo"], [])
+        codigo_classificacao, codigo_produto = found
+        produtos = grouped.setdefault(codigo_classificacao, [])
         if codigo_produto not in produtos:
             produtos.append(codigo_produto)
     bodies = [{"codigoClassificacaoTributaria": codigo, "codigoProdutos": produtos,

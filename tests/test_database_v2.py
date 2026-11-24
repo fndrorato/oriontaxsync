@@ -42,6 +42,27 @@ class DatabaseV2Tests(unittest.TestCase):
         self.assertEqual("tok", cfg["token"])
         self.assertEqual(200, cfg["page_size"])
         self.assertEqual(50, cfg["patch_batch_size"])
+        self.assertIs(False, cfg["write_enabled"])
+        self.db.save_vr_config("http://10.0.0.5:9025/", "tok", write_enabled=True)
+        self.assertIs(True, self.db.get_vr_config()["write_enabled"])
+        self.db.save_vr_config("http://10.0.0.5:9025/", "tok")
+        self.assertIs(False, self.db.get_vr_config()["write_enabled"])
+
+    def test_adds_write_enabled_column_to_existing_config_vr(self):
+        path = Path(self.temp.name) / "old_vr.db"
+        conn = sqlite3.connect(path)
+        conn.execute("""CREATE TABLE config_vr (
+            id INTEGER PRIMARY KEY CHECK (id = 1), base_url TEXT NOT NULL, token_encrypted TEXT NOT NULL,
+            timeout_seconds INTEGER NOT NULL DEFAULT 60, page_size INTEGER NOT NULL DEFAULT 500,
+            patch_batch_size INTEGER NOT NULL DEFAULT 50, is_active INTEGER NOT NULL DEFAULT 1,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""")
+        conn.commit(); conn.close()
+        db = DatabaseManager(path)
+        try:
+            db.save_vr_config("http://10.0.0.5:9025", "tok")
+            self.assertIs(False, db.get_vr_config()["write_enabled"])
+        finally:
+            db.disconnect()
 
     def test_cliente_stores_optional_uf(self):
         self.assertTrue(self.db.create_cliente("Loja 1", "01.234.567/0001-95", " go "))

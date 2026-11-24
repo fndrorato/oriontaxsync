@@ -109,7 +109,9 @@ class VrApiClient:
                     self._sleep(min(2 ** attempt, 8))
                     attempt += 1
                     continue
-                raise VrApiError(f"API VR retornou HTTP {status}: {payload}", status)
+                detail = payload if isinstance(payload, str) else \
+                    json.dumps(payload, ensure_ascii=False, default=str)[:1000]
+                raise VrApiError(f"API VR retornou HTTP {status}: {detail}", status)
             return status, payload
 
     # ----- helpers -----
