@@ -7,6 +7,7 @@ from config.database import DatabaseManager
 from core.integrations.factory import create_integration
 from core.integrations.profiles import ERP_PROFILES
 from core.integrations.vr import VrIntegration
+from core.api.vr_api_client import VrApiError
 from core.integrations.vr.mapper import vr_product_to_api
 from tests.test_vr_correction import CATALOGS
 from tests.test_vr_mapper import CTX, TODAY, vr_product
@@ -36,6 +37,7 @@ class StubVr:
         self.vincular_calls = []
         self.vincular_detalhes = None
         self.on_patch = None
+        self.reread_error = None
 
     def list_grupos_economicos(self):
         self.calls.append("grupos")
@@ -43,6 +45,8 @@ class StubVr:
 
     def list_products(self, cnpj, cancel_check=None):
         self.calls.append("products")
+        if self.reread_error is not None and "patch" in self.calls:
+            raise self.reread_error
         return copy.deepcopy(self.products)
 
     def list_icms(self, uf):
@@ -309,6 +313,62 @@ class VrIntegrationTests(unittest.TestCase):
         self.assertTrue(result.success)
         self.assertEqual([], self.vr.patch_calls)
         self.assertEqual("0 produto(s) gravado(s) na VR, 1 sem alteração, 0 rejeitado(s).", result.message)
+
+    def test_receive_reread_error_keeps_write_record(self):
+        self._setup_receive()
+        self.vr.reread_error = VrApiError("timeout")
+        result = self.integration.receive(CNPJ)
+        self.assertFalse(result.success)
+        self.assertEqual(3, result.records)
+        self.assertEqual({"SUCESSO": 3}, result.details["patch_status"])
+        self.assertEqual("3 produto(s) gravado(s) na VR, 1 sem alteração, 1 rejeitado(s). "
+                         "Não foi possível reler os produtos para conferência: timeout.", result.message)
+
+    def test_receive_message_and_progress_show_patch_failures(self):
+        self._setup_receive()
+        self.vr.patch_status = {2: "ERRO"}
+        self.vr.ignore_codes = {2}
+        progress = []
+        result = self.integration.receive(CNPJ, progress.append)
+        self.assertIn(" 1 falha(s) na gravação.", result.message)
+        self.assertIn("⚠ Produto 2: ERRO – processado", progress)
+
+    def test_receive_summarizes_more_than_20_patch_failures(self):
+        self.vr.products = [store_product(c) for c in range(1, 23)]
+        self.api.targets = [target_for(c, **CHANGED) for c in range(1, 23)]
+        self.vr.patch_status = {c: "ERRO" for c in range(1, 23)}
+        progress = []
+        result = self.integration.receive(CNPJ, progress.append)
+        self.assertIn(" 22 falha(s) na gravação.", result.message)
+        self.assertEqual(20, len([m for m in progress if m.startswith("⚠ Produto ")]))
+        self.assertIn("⚠ ... e mais 2 falha(s).", progress)
+
+    def test_receive_progress_shows_vinculo_failures_and_divergences(self):
+        self._setup_receive()
+        self.api.targets[3].update(cst_ibs_cbs="000", c_class_trib="000001")
+        self.vr.vincular_detalhes = {"produtosNaoVinculados": [{"codigo": 4, "motivo": "inativo"}],
+                                     "ncmsNaoVinculados": [{"ncm": "1234", "motivo": "NCM em formato inválido"}]}
+        self.vr.ignore_codes = {1}
+        progress = []
+        result = self.integration.receive(CNPJ, progress.append)
+        self.assertIn(" 2 falha(s) na gravação.", result.message)
+        self.assertIn(" 1 divergência(s) na releitura.", result.message)
+        self.assertIn("⚠ Vínculo 55: produto 4 não vinculado (inativo)", progress)
+        self.assertIn("⚠ Vínculo 55: NCM 1234 não vinculado (NCM em formato inválido)", progress)
+        self.assertTrue(any(m.startswith("⚠ Produto 1: cst enviado") for m in progress))
+
+    def test_receive_vincular_error_counts_as_failure(self):
+        self._setup_receive()
+        self.api.targets[3].update(cst_ibs_cbs="000", c_class_trib="000001")
+
+        def boom(body):
+            raise VrApiError("HTTP 500")
+        self.vr.vincular_classificacao = boom
+        progress = []
+        result = self.integration.receive(CNPJ, progress.append)
+        self.assertFalse(result.success)
+        self.assertIn(" 1 falha(s) na gravação.", result.message)
+        self.assertIn("⚠ Vínculo 55: HTTP 500", progress)
 
     def test_cancel_sets_flag(self):
         self.integration.cancel()

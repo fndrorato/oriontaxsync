@@ -48,10 +48,15 @@ class VrIntegration(IntegrationAdapter):
             f"⚠ {len(rejected)} produto(s) rejeitado(s) localmente; "
             f"{continuing} produto(s) válido(s) continuarão."
         )
-        for error in rejected[:20]:
-            cls._progress(callback, f"⚠ {error}")
-        if len(rejected) > 20:
-            cls._progress(callback, f"⚠ ... e mais {len(rejected) - 20} rejeição(ões).")
+        cls._warn_lines(callback, rejected, "rejeição(ões)")
+
+    @classmethod
+    def _warn_lines(cls, callback, lines: List[str], noun: str, limit: int = 20):
+        """Emite as primeiras `limit` linhas com ⚠ e resume o restante."""
+        for line in lines[:limit]:
+            cls._progress(callback, f"⚠ {line}")
+        if len(lines) > limit:
+            cls._progress(callback, f"⚠ ... e mais {len(lines) - limit} {noun}.")
 
     def _store_uf(self, cnpj: str) -> str:
         cliente = self.store_lookup(cnpj)
@@ -203,22 +208,26 @@ class VrIntegration(IntegrationAdapter):
         patch_status: Dict[str, int] = {}
         patch_info: List[dict] = []
         written: List[dict] = []
-        failures = 0
         batch_size = self.vr.patch_batch_size
         total = (len(items) + batch_size - 1) // batch_size
         done = 0
+
+        def partial(message):
+            self._warn_patch_failures(progress_callback, patch_info)
+            return SyncResult(False, message, len(written),
+                              details=self._receive_details(rejected, unchanged, patch_status, patch_info))
+
         for offset in range(0, len(items), batch_size):
             batch = items[offset:offset + batch_size]
             number = offset // batch_size + 1
             if self._cancelled:
-                return self._cancelled_result(done, written, rejected, unchanged, patch_status, patch_info)
+                return partial(self._cancel_message(done))
             self._progress(progress_callback, f"Gravando lote {number}/{total} na VR...")
             try:
                 response = self.vr.patch_integracao_fiscal(batch)
             except VrApiError as exc:
-                return SyncResult(False, f"Erro ao gravar o lote {number}/{total} na VR: {exc}; "
-                                         f"{done} lote(s) já gravado(s) na VR.", len(written),
-                                  details=self._receive_details(rejected, unchanged, patch_status, patch_info))
+                return partial(f"Erro ao gravar o lote {number}/{total} na VR: {exc}; "
+                               f"{done} lote(s) já gravado(s) na VR.")
             done += 1
             by_code = {}
             for result in response or []:
@@ -233,45 +242,78 @@ class VrIntegration(IntegrationAdapter):
                 if self._is_success(status):
                     written.append(item)
                 else:
-                    failures += 1
-                    patch_info.append(result)
-
+                    patch_info.append({**result, "status": status})
+        self._warn_patch_failures(progress_callback, patch_info)
         if self._cancelled:
-            return self._cancelled_result(done, written, rejected, unchanged, patch_status, patch_info)
-        vinculo_details = []
-        for body in vinculos:
-            self._progress(progress_callback, f"Vinculando classificação tributária "
-                                              f"{body['codigoClassificacaoTributaria']} na VR...")
-            try:
-                detalhes = self.vr.vincular_classificacao(body)
-            except VrApiError as exc:
-                failures += len(body.get("codigoProdutos") or [])
-                vinculo_details.append({"codigoClassificacaoTributaria": body["codigoClassificacaoTributaria"],
-                                        "erro": str(exc)})
-                continue
-            vinculo_details.append(detalhes)
-            failures += len(detalhes.get("produtosNaoVinculados") or [])
-            failures += len(detalhes.get("ncmsNaoVinculados") or [])
+            return partial(self._cancel_message(done))
+
+        vinculo_details, vinculo_failures, vinculo_lines = self._send_vinculos(vinculos, progress_callback)
+        self._warn_lines(progress_callback, vinculo_lines, "falha(s) de vínculo")
+        failures = len(patch_info) + vinculo_failures
 
         divergences = []
+        reread_error = None
         if written:
             self._progress(progress_callback, "Relendo produtos na VR para conferência...")
-            reread = self._index_products(self.vr.list_products(ctx.cnpj))
-            divergences = [d for d in (self._divergence(item, reread, ctx.uf) for item in written) if d]
+            try:
+                reread = self._index_products(self.vr.list_products(ctx.cnpj))
+            except VrApiError as exc:
+                reread_error = exc
+            else:
+                divergences = [d for d in (self._divergence(item, reread, ctx.uf) for item in written) if d]
+                self._warn_lines(progress_callback, divergences, "divergência(s)")
 
         message = (f"{len(written)} produto(s) gravado(s) na VR, {unchanged} sem alteração, "
                    f"{len(rejected)} rejeitado(s).")
+        if failures:
+            message += f" {failures} falha(s) na gravação."
         if divergences:
             message += f" {len(divergences)} divergência(s) na releitura."
+        if reread_error is not None:
+            message += f" Não foi possível reler os produtos para conferência: {reread_error}."
         return SyncResult(
-            failures + len(divergences) == 0, message, len(written),
+            failures + len(divergences) == 0 and reread_error is None, message, len(written),
             details=self._receive_details(rejected, unchanged, patch_status, patch_info,
                                           vinculo_details, divergences),
         )
 
-    def _cancelled_result(self, done, written, rejected, unchanged, patch_status, patch_info) -> SyncResult:
-        return SyncResult(False, f"Operação cancelada; {done} lote(s) já gravado(s) na VR.", len(written),
-                          details=self._receive_details(rejected, unchanged, patch_status, patch_info))
+    @classmethod
+    def _warn_patch_failures(cls, callback, patch_info: List[dict]):
+        lines = []
+        for r in patch_info:
+            line = f"Produto {r.get('codigoProduto')}: {r.get('status')}"
+            info = str(r.get("info") or "").strip()
+            lines.append(f"{line} – {info}" if info else line)
+        cls._warn_lines(callback, lines, "falha(s)")
+
+    def _send_vinculos(self, vinculos, progress_callback):
+        """(detalhes de cada vínculo, quantidade de falhas, linhas de aviso)."""
+        details, lines = [], []
+        failures = 0
+        for body in vinculos:
+            codigo = body["codigoClassificacaoTributaria"]
+            self._progress(progress_callback, f"Vinculando classificação tributária {codigo} na VR...")
+            try:
+                detalhes = self.vr.vincular_classificacao(body)
+            except VrApiError as exc:
+                failures += len(body.get("codigoProdutos") or [])
+                details.append({"codigoClassificacaoTributaria": codigo, "erro": str(exc)})
+                lines.append(f"Vínculo {codigo}: {exc}")
+                continue
+            details.append(detalhes)
+            for produto in detalhes.get("produtosNaoVinculados") or []:
+                failures += 1
+                lines.append(f"Vínculo {codigo}: produto {produto.get('codigo')} não vinculado "
+                             f"({produto.get('motivo') or 'sem motivo'})")
+            for ncm in detalhes.get("ncmsNaoVinculados") or []:
+                failures += 1
+                lines.append(f"Vínculo {codigo}: NCM {ncm.get('ncm')} não vinculado "
+                             f"({ncm.get('motivo') or 'sem motivo'})")
+        return details, failures, lines
+
+    @staticmethod
+    def _cancel_message(done: int) -> str:
+        return f"Operação cancelada; {done} lote(s) já gravado(s) na VR."
 
     @staticmethod
     def _divergence(item: dict, reread: Dict[str, dict], uf: str) -> Optional[str]:
