@@ -98,18 +98,30 @@ def _icms_cst(block: dict) -> Optional[int]:
     return int(csosn) if csosn else None
 
 
+def find_uf_item(product: dict, uf: str) -> Optional[dict]:
+    """Item de `aliquotas[]` da UF informada (comparação sem caixa/espaços)."""
+    wanted = str(uf or "").strip().upper()
+    return next((a for a in (product or {}).get("aliquotas") or []
+                 if str(a.get("uf") or "").strip().upper() == wanted), None)
+
+
+def find_group_item(product: dict, grupo_nome: str) -> Optional[dict]:
+    """Item de `pisCofins[]` do grupo econômico informado (pelo nome, sem caixa/espaços)."""
+    wanted = str(grupo_nome or "").strip().lower()
+    return next((g for g in (product or {}).get("pisCofins") or []
+                 if str(g.get("grupoEconomico") or "").strip().lower() == wanted), None)
+
+
 def vr_product_to_api(product: dict, ctx: VrStoreContext, today: date) -> dict:
     codigo = str(product.get("codigo") if product.get("codigo") is not None else "").strip()
     label = codigo or "<sem código>"
 
-    uf_item = next((a for a in product.get("aliquotas") or []
-                    if str(a.get("uf") or "").strip().upper() == ctx.uf), None)
+    uf_item = find_uf_item(product, ctx.uf)
     if uf_item is None:
         raise ValueError(f"Produto {label}: sem alíquotas de ICMS para a UF {ctx.uf}")
     icms = uf_item.get(ICMS_SCENARIO) or {}
 
-    group = next((g for g in product.get("pisCofins") or []
-                  if str(g.get("grupoEconomico") or "").strip().lower() == ctx.grupo_nome.lower()), None)
+    group = find_group_item(product, ctx.grupo_nome)
     if group:
         debito = group.get("debito") or {}
         pis_cst = str(debito["cst"]).zfill(2) if debito.get("cst") not in (None, "") else None
