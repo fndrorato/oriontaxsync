@@ -2,6 +2,7 @@ import copy
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from config.database import DatabaseManager
 from core.integrations.factory import create_integration
@@ -387,6 +388,31 @@ class VrIntegrationTests(unittest.TestCase):
                 db.save_vr_config("http://10.0.0.5:9025", "tok")
                 db.save_oriontax_api_config("https://api.example.com", "tok")
                 self.assertIsInstance(create_integration(db, "vr"), VrIntegration)
+            finally:
+                db.disconnect()
+
+    def test_scheduler_routes_vr_through_integration(self):
+        from core.integrations.base import SyncResult
+        from core.scheduler import Scheduler
+
+        with tempfile.TemporaryDirectory() as temp:
+            db = DatabaseManager(Path(temp) / "t.db")
+            try:
+                db.set_erp_type("vr")
+                db.save_vr_config("http://10.0.0.5:9025", "tok")
+                db.save_oriontax_api_config("https://api.example.com", "tok")
+                fake = mock.Mock()
+                fake.send.return_value = SyncResult(True, "ok", 3)
+                scheduler = Scheduler(db)
+                with mock.patch("core.integrations.create_integration", return_value=fake) as factory:
+                    scheduler._execute_sync_for_client(
+                        "ENVIAR", db.get_vr_config(), db.get_oriontax_api_config(),
+                        CNPJ, "Loja", "vr")
+                factory.assert_called_once_with(db, "vr")
+                fake.send.assert_called_once()
+                logs = db.get_logs_recentes(5)
+                self.assertEqual("SUCESSO", logs[0]["status"])
+                self.assertEqual(3, logs[0]["registros_processados"])
             finally:
                 db.disconnect()
 

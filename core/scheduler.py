@@ -216,7 +216,10 @@ class Scheduler:
             # ✅ Buscar configurações (THREAD-SAFE)
             installation = self.db_manager.get_installation()
             erp_type = installation['erp_type']
-            if erp_type == 'sysmo':
+            if erp_type == 'vr':
+                oracle_config = self.db_manager.get_vr_config()
+                oriontax_config = self.db_manager.get_oriontax_api_config()
+            elif erp_type == 'sysmo':
                 oracle_config = self.db_manager.get_sysmo_config()
                 oriontax_config = self.db_manager.get_oriontax_api_config()
             else:
@@ -238,12 +241,12 @@ class Scheduler:
                 self.logger.warning("Nenhum cliente cadastrado")
                 return
 
-            # Uma configuração Sysmo contém um único banco e um único token
+            # Uma configuração Sysmo/VR contém um único banco e um único token
             # Bearer (o próprio token define o cliente na API). Evita enviar a
             # mesma fotografia repetidamente caso existam cadastros legados.
-            if erp_type == 'sysmo' and len(clientes) > 1:
+            if erp_type in ('sysmo', 'vr') and len(clientes) > 1:
                 self.logger.warning(
-                    "Perfil Sysmo possui mais de um cliente ativo; o agendamento usará somente o primeiro."
+                    f"Perfil {erp_type.upper()} possui mais de um cliente ativo; o agendamento usará somente o primeiro."
                 )
                 clientes = clientes[:1]
             
@@ -293,9 +296,9 @@ class Scheduler:
         try:
             start_time = datetime.now()
 
-            if erp_type == 'sysmo':
+            if erp_type in ('sysmo', 'vr'):
                 from core.integrations import create_integration
-                integration = create_integration(self.db_manager, 'sysmo')
+                integration = create_integration(self.db_manager, erp_type)
                 result = (integration.send if operation_type == 'ENVIAR' else integration.receive)(
                     cnpj, lambda msg: self.logger.info(f'[{nome_cliente}] {msg}')
                 )

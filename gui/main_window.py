@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                              QPushButton, QLabel, QTextEdit, QGroupBox,
                              QMessageBox, QStatusBar, QProgressBar, QTabWidget,
                              QTableWidget, QTableWidgetItem, QHeaderView,
-                             QAction, QMenu, QMenuBar, QComboBox, QDialog)
+                             QAction, QActionGroup, QMenu, QMenuBar, QComboBox, QDialog)
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer
 from PyQt5.QtGui import QIcon, QFont, QColor
 from datetime import datetime, timezone
@@ -15,9 +15,9 @@ import logging
 
 # from config.database import db_manager
 from gui.settings import (OracleConfigDialog, OrionTaxConfigDialog, HeartbeatConfigDialog,
-                          SysmoConfigDialog, OrionTaxApiConfigDialog)
+                          SysmoConfigDialog, OrionTaxApiConfigDialog, VrConfigDialog)
 from gui.settings import UpdateConfigDialog
-from core.integrations.profiles import get_erp_profile
+from core.integrations.profiles import ERP_PROFILES, get_erp_profile
 from version import APP_VERSION
 
 
@@ -86,9 +86,9 @@ class WorkerThread(QThread):
         try:
             start_time = datetime.now()
 
-            if self.erp_type == 'sysmo':
+            if self.erp_type in ('sysmo', 'vr'):
                 from core.integrations import create_integration
-                integration = create_integration(self.db_manager, 'sysmo')
+                integration = create_integration(self.db_manager, self.erp_type)
                 self._set_active_client(integration)
                 result = (integration.send if self.operation_type == 'ENVIAR' else integration.receive)(
                     self.cnpj, self.progress.emit
@@ -269,12 +269,16 @@ class MainWindow(QMainWindow):
         file_menu.addAction(exit_action)
 
         erp_menu = menubar.addMenu('ERP')
-        intersolid_action = QAction('Usar Intersolid', self)
-        intersolid_action.triggered.connect(lambda: self.change_erp_profile('intersolid'))
-        erp_menu.addAction(intersolid_action)
-        sysmo_action = QAction('Usar Sysmo', self)
-        sysmo_action.triggered.connect(lambda: self.change_erp_profile('sysmo'))
-        erp_menu.addAction(sysmo_action)
+        self.erp_action_group = QActionGroup(self)
+        self.erp_action_group.setExclusive(True)
+        self.erp_actions = {}
+        for erp_key in ('intersolid', 'vr', 'sysmo'):
+            action = QAction(ERP_PROFILES[erp_key]['name'], self, checkable=True)
+            action.setChecked(erp_key == self.erp_type)
+            action.triggered.connect(lambda checked, key=erp_key: self.change_erp_profile(key))
+            self.erp_action_group.addAction(action)
+            erp_menu.addAction(action)
+            self.erp_actions[erp_key] = action
         
         # Menu Ajuda
         help_menu = menubar.addMenu('Ajuda')
@@ -292,9 +296,11 @@ class MainWindow(QMainWindow):
     def change_erp_profile(self, erp_type: str):
         """Altera explicitamente o perfil desta instalação e solicita reinício."""
         if erp_type == self.erp_type:
+            self._restore_erp_action()
             QMessageBox.information(self, 'Perfil ERP', 'Este perfil já está ativo.')
             return
         if self.worker_thread and self.worker_thread.isRunning():
+            self._restore_erp_action()
             QMessageBox.warning(self, 'Operação em andamento', 'Cancele ou conclua a sincronização antes de trocar o ERP.')
             return
         name = get_erp_profile(erp_type)['name']
@@ -306,6 +312,14 @@ class MainWindow(QMainWindow):
         if reply == QMessageBox.Yes:
             self.db_manager.set_erp_type(erp_type)
             QMessageBox.information(self, 'Perfil alterado', 'Perfil salvo. Reinicie o OrionTax Sync para aplicar a nova interface.')
+        else:
+            self._restore_erp_action()
+
+    def _restore_erp_action(self):
+        """Remarca no menu ERP o perfil realmente ativo."""
+        action = getattr(self, 'erp_actions', {}).get(self.erp_type)
+        if action is not None:
+            action.setChecked(True)
 
     def setup_update_timer(self):
         """Verifica releases sem bloquear a abertura e repete a cada 12 horas."""
@@ -616,6 +630,16 @@ class MainWindow(QMainWindow):
             api_button.clicked.connect(self.open_oriontax_api_config)
             sysmo_layout.addWidget(sysmo_button); sysmo_layout.addWidget(api_button)
             sysmo_group.setLayout(sysmo_layout); layout.addWidget(sysmo_group)
+
+        if self.erp_type == 'vr':
+            vr_group = QGroupBox('Configuração VR e API OrionTax')
+            vr_layout = QHBoxLayout()
+            vr_button = QPushButton('⚙️ Configurar API VR')
+            vr_button.clicked.connect(self.open_vr_config)
+            vr_api_button = QPushButton('⚙️ Configurar API OrionTax')
+            vr_api_button.clicked.connect(self.open_oriontax_api_config)
+            vr_layout.addWidget(vr_button); vr_layout.addWidget(vr_api_button)
+            vr_group.setLayout(vr_layout); layout.addWidget(vr_group)
 
         # ========================================
         # HEARTBEAT
@@ -931,6 +955,23 @@ class MainWindow(QMainWindow):
     
     def check_connection_status(self):
         """Verifica status das conexões"""
+        if self.erp_type == 'vr':
+            vr_config = self.db_manager.get_vr_config()
+            api_config = self.db_manager.get_oriontax_api_config()
+            if vr_config:
+                self.oracle_status_label.setText(f"✓ API VR: {vr_config['base_url']}")
+                self.oracle_status_label.setStyleSheet('color: #27ae60; font-weight: bold;')
+            else:
+                self.oracle_status_label.setText('✗ API VR: Não configurada')
+                self.oracle_status_label.setStyleSheet('color: #e74c3c; font-weight: bold;')
+            if api_config:
+                self.oriontax_status_label.setText(f"✓ API OrionTax: {api_config['base_url']}")
+                self.oriontax_status_label.setStyleSheet('color: #27ae60; font-weight: bold;')
+            else:
+                self.oriontax_status_label.setText('✗ API OrionTax: Não configurada')
+                self.oriontax_status_label.setStyleSheet('color: #e74c3c; font-weight: bold;')
+            return
+
         if self.erp_type == 'sysmo':
             sysmo_config = self.db_manager.get_sysmo_config()
             api_config = self.db_manager.get_oriontax_api_config()
@@ -992,7 +1033,9 @@ class MainWindow(QMainWindow):
         
         for cliente in clientes:
             cnpj_formatado = self.db_manager.format_cnpj(cliente['cnpj'])  # ✅ Adicionar self.
-            display_text = f"{cliente['nome']} - {cnpj_formatado}"
+            uf = cliente.get('uf')
+            display_text = (f"{cliente['nome']} - {uf} - {cnpj_formatado}" if uf
+                            else f"{cliente['nome']} - {cnpj_formatado}")
             self.client_combo.addItem(display_text, cliente)
     
     def load_clients_table(self):
@@ -1338,7 +1381,10 @@ class MainWindow(QMainWindow):
     def execute_operation(self, operation_type: str):
         """Executa operação (enviar ou buscar)"""
         # Validar configurações
-        if self.erp_type == 'sysmo':
+        if self.erp_type == 'vr':
+            oracle_config = self.db_manager.get_vr_config()
+            oriontax_config = self.db_manager.get_oriontax_api_config()
+        elif self.erp_type == 'sysmo':
             oracle_config = self.db_manager.get_sysmo_config()
             oriontax_config = self.db_manager.get_oriontax_api_config()
         else:
@@ -1482,6 +1528,12 @@ class MainWindow(QMainWindow):
         if dialog.exec_():
             self.check_connection_status()
             self.log_message('Configuração Sysmo atualizada', 'SUCCESS')
+
+    def open_vr_config(self):
+        dialog = VrConfigDialog(self)
+        if dialog.exec_():
+            self.check_connection_status()
+            self.log_message('Configuração API VR atualizada', 'SUCCESS')
 
     def open_oriontax_api_config(self):
         dialog = OrionTaxApiConfigDialog(self)

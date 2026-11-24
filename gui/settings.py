@@ -464,6 +464,86 @@ class SysmoConfigDialog(QDialog):
             self.accept()
 
 
+class VrConfigDialog(QDialog):
+    """Configuração da API VRMaster (VR)."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle('Configuração API VR')
+        self.setMinimumWidth(520)
+        layout = QVBoxLayout(self); form = QFormLayout()
+        self.url_input = QLineEdit(); self.url_input.setPlaceholderText('http://servidor:9025')
+        self.token_input = QLineEdit(); self.token_input.setEchoMode(QLineEdit.Password)
+        self.timeout_input = QSpinBox(); self.timeout_input.setRange(5, 300); self.timeout_input.setValue(60)
+        self.page_input = QSpinBox(); self.page_input.setRange(1, 5000); self.page_input.setValue(500)
+        self.patch_input = QSpinBox(); self.patch_input.setRange(1, 500); self.patch_input.setValue(50)
+        form.addRow('URL base:', self.url_input); form.addRow('Token VRMaster:', self.token_input)
+        form.addRow('Timeout (s):', self.timeout_input); form.addRow('Itens por página:', self.page_input)
+        form.addRow('Produtos por PATCH:', self.patch_input)
+        layout.addLayout(form)
+        self.token_hint = QLabel('')
+        self.token_hint.setWordWrap(True); layout.addWidget(self.token_hint)
+        buttons = QHBoxLayout(); buttons.addStretch()
+        test = QPushButton('Testar'); test.clicked.connect(self.test_connection); buttons.addWidget(test)
+        save = QPushButton('Salvar'); save.clicked.connect(self.save_config); buttons.addWidget(save)
+        cancel = QPushButton('Cancelar'); cancel.clicked.connect(self.reject); buttons.addWidget(cancel)
+        layout.addLayout(buttons)
+        self.load_config()
+
+    def load_config(self):
+        config = db_manager.get_vr_config()
+        if config:
+            self.url_input.setText(config['base_url'])
+            self.timeout_input.setValue(config['timeout_seconds'])
+            self.page_input.setValue(config['page_size'])
+            self.patch_input.setValue(config['patch_batch_size'])
+            self.token_hint.setText('Token já salvo. Deixe o campo vazio para mantê-lo.')
+
+    def _token(self):
+        """Token digitado ou, se vazio, o salvo."""
+        token = self.token_input.text().strip()
+        if token:
+            return token
+        config = db_manager.get_vr_config()
+        return config['token'] if config else ''
+
+    def _values(self):
+        return dict(base_url=self.url_input.text().strip(), token=self._token(),
+                    timeout_seconds=self.timeout_input.value(), page_size=self.page_input.value(),
+                    patch_batch_size=self.patch_input.value())
+
+    def _valid(self):
+        values = self._values()
+        if not values['base_url'].startswith(('http://', 'https://')):
+            QMessageBox.warning(self, 'Atenção', 'Informe a URL base começando com http:// ou https://.')
+            return False
+        if not values['token']:
+            QMessageBox.warning(self, 'Atenção', 'Informe o token VRMaster.')
+            return False
+        return True
+
+    def test_connection(self):
+        if not self._valid():
+            return
+        from core.api.vr_api_client import VrApiClient, VrApiError
+        try:
+            client = VrApiClient(self._values())
+            info = client.info()
+            client.authenticate()
+        except VrApiError as exc:
+            QMessageBox.critical(self, 'Teste VR', str(exc))
+            return
+        QMessageBox.information(
+            self, 'Teste VR',
+            f"Conexão e autenticação OK.\n{info.get('servico', 'VR')} "
+            f"{info.get('major', '')}.{info.get('minor', '')}.{info.get('release', '')}")
+
+    def save_config(self):
+        if self._valid():
+            db_manager.save_vr_config(**self._values())
+            self.accept()
+
+
 class OrionTaxApiConfigDialog(QDialog):
     """Configuração do contrato HTTP OrionTax V2."""
 

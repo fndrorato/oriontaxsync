@@ -2,6 +2,17 @@
 
 ---
 
+## [Não lançado]
+
+### Adicionado
+
+#### Integração VR (VRMaster): envio para a API OrionTax e gravação via PATCH /v2/integracaofiscal
+- Novo perfil ERP "VR" (menu ERP, aba Configurações e agendador), com diálogo de configuração da API VR (URL, token VRMaster, timeout, itens por página e produtos por PATCH) e botão de teste.
+- O cadastro de clientes passou a ter a UF da loja, obrigatória no perfil VR.
+- O menu ERP agora mostra Intersolid, VR e Sysmo com o perfil ativo marcado.
+
+---
+
 ## [2.0.0.1] — 2026-09-24
 
 ### Alterado

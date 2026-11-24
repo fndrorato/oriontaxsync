@@ -3,10 +3,10 @@ Diálogo de Gerenciamento de Clientes
 """
 from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel,
                              QLineEdit, QPushButton, QMessageBox, QGroupBox,
-                             QFormLayout)
+                             QFormLayout, QComboBox)
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
-from config.database import db_manager
+from config.database import db_manager, UFS
 
 
 class ClientDialog(QDialog):
@@ -52,6 +52,13 @@ class ClientDialog(QDialog):
         cnpj_layout.addWidget(cnpj_info)
         
         form.addRow('CNPJ:', cnpj_layout)
+
+        # UF da loja (obrigatória no perfil VR)
+        self.uf_combo = QComboBox()
+        self.uf_combo.addItem('—', None)
+        for uf in UFS:
+            self.uf_combo.addItem(uf, uf)
+        form.addRow('UF:', self.uf_combo)
         
         group.setLayout(form)
         layout.addWidget(group)
@@ -121,6 +128,8 @@ class ClientDialog(QDialog):
             # Formatar CNPJ para exibição
             cnpj_formatado = db_manager.format_cnpj(cliente['cnpj'])
             self.cnpj_input.setText(cnpj_formatado)
+            index = self.uf_combo.findData(cliente.get('uf'))
+            self.uf_combo.setCurrentIndex(index if index >= 0 else 0)
     
     def validate_cnpj(self, cnpj: str) -> bool:
         """
@@ -169,14 +178,21 @@ class ClientDialog(QDialog):
             self.cnpj_input.setFocus()
             return
         
+        uf = self.uf_combo.currentData()
+        if uf is None and db_manager.get_installation()['erp_type'] == 'vr':
+            QMessageBox.warning(self, 'Atenção',
+                                'Informe a UF da loja (obrigatória para a integração VR).')
+            self.uf_combo.setFocus()
+            return
+
         # Salvar
         if self.cliente_id:
             # Atualizar
-            success = db_manager.update_cliente(self.cliente_id, nome, cnpj)
+            success = db_manager.update_cliente(self.cliente_id, nome, cnpj, uf)
             message = 'Cliente atualizado com sucesso!' if success else 'Erro ao atualizar cliente.'
         else:
             # Criar novo
-            success = db_manager.create_cliente(nome, cnpj)
+            success = db_manager.create_cliente(nome, cnpj, uf)
             if not success:
                 QMessageBox.critical(
                     self,
