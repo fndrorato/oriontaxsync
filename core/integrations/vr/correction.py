@@ -74,14 +74,38 @@ def format_cest(value) -> str:
     return f"{text[:2]}.{text[2:5]}.{text[5:]}"
 
 
-def resolve_icms_id(values: dict, catalog: List[dict]) -> Optional[int]:
+def _icms_matches(values: dict, catalog: List[dict]) -> List[dict]:
+    """Cadastros ativos com mesmos códigos, percentuais e (quando os dois têm) aplicaReducaoFCP."""
+    found = []
     for cadastro in catalog or []:
         if str(cadastro.get("status") or "").strip().upper() == "INATIVO":
             continue
-        if all(_code(values.get(k)) == _code(cadastro.get(k)) for k in _ICMS_MATCH_CODES) and \
-                all(_same_num(values.get(k), cadastro.get(k)) for k in _ICMS_MATCH_NUMBERS):
-            return cadastro.get("codigo")
-    return None
+        if not all(_code(values.get(k)) == _code(cadastro.get(k)) for k in _ICMS_MATCH_CODES):
+            continue
+        if not all(_same_num(values.get(k), cadastro.get(k)) for k in _ICMS_MATCH_NUMBERS):
+            continue
+        if values.get("aplicaReducaoFCP") is not None and cadastro.get("aplicaReducaoFCP") is not None \
+                and bool(values["aplicaReducaoFCP"]) != bool(cadastro["aplicaReducaoFCP"]):
+            continue
+        found.append(cadastro)
+    return found
+
+
+def _resolve_icms(values: dict, catalog: List[dict]) -> Tuple[Optional[dict], bool]:
+    """(cadastro, ambíguo). Vários candidatos só valem se forem iguais fora o `codigo`."""
+    found = _icms_matches(values, catalog)
+    if not found:
+        return None, False
+    strip = lambda c: {k: v for k, v in c.items() if k != "codigo"}
+    if any(strip(c) != strip(found[0]) for c in found[1:]):
+        return None, True
+    return found[0], False
+
+
+def resolve_icms_id(values: dict, catalog: List[dict]) -> Optional[int]:
+    """`codigo` do cadastro compatível; None se não houver ou se for ambíguo."""
+    cadastro, _ = _resolve_icms(values, catalog)
+    return cadastro.get("codigo") if cadastro else None
 
 
 def _is_saida(cadastro: dict) -> bool:
@@ -105,17 +129,24 @@ def resolve_piscofins_id(cst: int, pis: float, cofins: float, regime: str,
     return cadastro.get("codigo") if cadastro else None
 
 
-def _icms_block(source: dict, catalog: List[dict]) -> dict:
+def _icms_block(source: dict, catalog: List[dict], required: bool = False) -> dict:
     block = {k: source[k] for k in _ICMS_KEYS if k in source}
     block.setdefault("cst", "")
     block.setdefault("csosn", "")
     block.setdefault("cBenef", "")
     for key in _ICMS_MATCH_NUMBERS:
         block[key] = _num(block.get(key))
-    cadastro_id = resolve_icms_id(block, catalog)
-    if cadastro_id is not None:
-        block["idAliquota"] = cadastro_id
-        cadastro = next(c for c in catalog if c.get("codigo") == cadastro_id)
+    cadastro, ambiguous = _resolve_icms(block, catalog)
+    if required and ambiguous:
+        code = block["cst"] or block["csosn"]
+        raise CorrectionRejected(f"cadastro de ICMS ambíguo em /icms (CST {code}, {block['percentual']:g}%): "
+                                 f"mais de um cadastro compatível e diferentes entre si; ajuste no VRMaster")
+    if required and cadastro is None:
+        code = block["cst"] or block["csosn"]
+        raise CorrectionRejected(f"sem cadastro de ICMS compatível em /icms "
+                                 f"(CST {code}, {block['percentual']:g}%); crie no VRMaster")
+    if cadastro is not None:
+        block["idAliquota"] = cadastro.get("codigo")
         if cadastro.get("aliquotaIcmsMonofasico") is not None:
             block["aliquotaMonofasico"] = cadastro["aliquotaIcmsMonofasico"]
     return block
@@ -189,8 +220,14 @@ def _same_saida(a: dict, b: dict) -> bool:
 
 def _pauta(current_pauta: dict, ncm, catalogs: VrCatalogs) -> dict:
     pauta = {k: current_pauta[k] for k in _PAUTA_KEYS if k in current_pauta}
-    match = next((p for p in catalogs.pautas or [] if digits(p.get("ncm")) == digits(ncm)), None)
-    pauta["valorPercentual"] = bool(match) and str(match.get("tipoValor") or "").strip() == "Percentual"
+    tipos = {str(p.get("tipoValor") or "").strip()
+             for p in catalogs.pautas or [] if digits(p.get("ncm")) == digits(ncm)}
+    if len(tipos) == 1 and "" not in tipos:
+        pauta["valorPercentual"] = tipos.pop() == "Percentual"
+    elif _num(current_pauta.get("mva")) == 0 and _num(current_pauta.get("mvaAjustada")) == 0:
+        pauta["valorPercentual"] = False  # sem MVA, o tipo de valor não altera o cálculo
+    else:
+        raise CorrectionRejected(f"pauta fiscal sem tipoValor único em /pautasfiscais para o NCM {digits(ncm)}")
     for key in PAUTA_ICMS:
         if current_pauta.get(key):
             pauta[key] = _icms_block(current_pauta[key], catalogs.icms)
@@ -237,12 +274,7 @@ def _build_correction(current, target, ctx, catalogs, label) -> Optional[dict]:
     aliquotas: Dict[str, dict] = {}
     for scenario in ICMS_SCENARIOS:
         if scenario == ICMS_SCENARIO:
-            block = _icms_block(target_cf, catalogs.icms)
-            if "idAliquota" not in block:
-                code = block["cst"] or block["csosn"]
-                raise CorrectionRejected(f"sem cadastro de ICMS compatível em /icms "
-                                         f"(CST {code}, {block['percentual']:g}%); crie no VRMaster")
-            aliquotas[scenario] = block
+            aliquotas[scenario] = _icms_block(target_cf, catalogs.icms, required=True)
         elif uf_item.get(scenario):
             aliquotas[scenario] = _icms_block(uf_item[scenario], catalogs.icms)
 

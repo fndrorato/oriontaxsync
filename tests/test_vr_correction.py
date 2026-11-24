@@ -154,8 +154,54 @@ class BuildCorrectionTests(unittest.TestCase):
         self.assertEqual(8, pauta["icmsDebito"]["idAliquota"])
         self.assertNotIn("idAliquota", pauta["icmsCredito"])  # sem cadastro: só valores
         self.assertEqual(("00", 12), (pauta["icmsCredito"]["cst"], pauta["icmsCredito"]["percentual"]))
-        pauta2 = build_correction(with_pauta(), target, CTX, CATALOGS)["pautaFiscal"]
-        self.assertIs(False, pauta2["valorPercentual"])
+
+    def test_pauta_with_mva_requires_unique_value_type(self):
+        target = vr_product_to_api(with_pauta(), CTX, TODAY) | {"icms_cst": 0, "percentual_redbcde": 0}
+        with self.assertRaisesRegex(CorrectionRejected, "Produto 86922: pauta fiscal sem tipoValor único .*19019000"):
+            build_correction(with_pauta(), target, CTX, CATALOGS)
+        conflicting = replace(CATALOGS, pautas=[{"ncm": "19019000", "tipoValor": "Percentual"},
+                                                {"ncm": "1901.90.00", "tipoValor": "Absoluto"}])
+        with self.assertRaisesRegex(CorrectionRejected, "tipoValor único"):
+            build_correction(with_pauta(), target, CTX, conflicting)
+        agreeing = replace(CATALOGS, pautas=[{"ncm": "19019000", "tipoValor": "Absoluto"},
+                                             {"ncm": "1901.90.00", "tipoValor": "Absoluto"}])
+        self.assertIs(False, build_correction(with_pauta(), target, CTX, agreeing)["pautaFiscal"]["valorPercentual"])
+
+    def test_pauta_without_mva_defaults_value_type_to_false(self):
+        prod = with_pauta()
+        prod["aliquotas"][1]["pautaFiscal"].update(mva=0, mvaAjustada=0)
+        target = vr_product_to_api(prod, CTX, TODAY) | {"icms_cst": 0, "percentual_redbcde": 0}
+        self.assertIs(False, build_correction(prod, target, CTX, CATALOGS)["pautaFiscal"]["valorPercentual"])
+
+    def test_icms_match_uses_aplica_reducao_fcp(self):
+        base = {"cst": "00", "csosn": "", "percentual": 19, "percentualReducao": 0,
+                "percentualDiferimento": 0, "percentualFCP": 2}
+        catalogs = replace(CATALOGS, icms=[{**base, "codigo": 20, "aplicaReducaoFCP": False},
+                                           {**base, "codigo": 21, "aplicaReducaoFCP": True}])
+        prod = vr_product()
+        prod["aliquotas"][1]["icmsConsumidorFinal"]["aplicaReducaoFCP"] = True
+        target = vr_product_to_api(prod, CTX, TODAY) | {"icms_cst": 0, "percentual_redbcde": 0}
+        cf = build_correction(prod, target, CTX, catalogs)["aliquotas"]["icmsConsumidorFinal"]
+        self.assertEqual((21, True), (cf["idAliquota"], cf["aplicaReducaoFCP"]))
+
+    def test_ambiguous_icms_cadastro(self):
+        base = {"cst": "00", "csosn": "", "percentual": 19, "percentualReducao": 0,
+                "percentualDiferimento": 0, "percentualFCP": 2}
+        ambiguous = replace(CATALOGS, icms=[CATALOGS.icms[0], {**base, "codigo": 30, "aliquotaIcmsMonofasico": 0},
+                                            {**base, "codigo": 31, "aliquotaIcmsMonofasico": 1.5}])
+        target = vr_product_to_api(vr_product(), CTX, TODAY) | {"icms_cst": 0, "percentual_redbcde": 0}
+        with self.assertRaisesRegex(CorrectionRejected, "Produto 86922: cadastro de ICMS ambíguo em /icms"):
+            build_correction(vr_product(), target, CTX, ambiguous)
+        # cenário não alvo (icmsDebito 00/19%/FCP 2) ambíguo: só valores, sem idAliquota
+        prod = vr_product()
+        prod["aliquotas"][1]["icmsDebito"]["percentualFCP"] = 2
+        target = vr_product_to_api(prod, CTX, TODAY) | {"ncm": "19019010"}
+        item = build_correction(prod, target, CTX, ambiguous)
+        self.assertNotIn("idAliquota", item["aliquotas"]["icmsDebito"])
+        self.assertEqual(7, item["aliquotas"]["icmsConsumidorFinal"]["idAliquota"])
+        self.assertIsNone(resolve_icms_id(base, ambiguous.icms))
+        identical = replace(CATALOGS, icms=[{**base, "codigo": 30}, {**base, "codigo": 31}])
+        self.assertEqual(30, resolve_icms_id(base, identical.icms))
 
 
 class HelperTests(unittest.TestCase):
