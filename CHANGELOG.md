@@ -2,15 +2,33 @@
 
 ---
 
-## [Não lançado]
+## [2.0.1] — 2026-11-25
 
 ### Adicionado
+
+#### Campo opcional "Tipo Layout MXF" na configuração do BD Intersolid (Oracle)
+- Algumas versões do schema Intersolid exigem a coluna `TIPO_LAYOUT_MXF` (NOT NULL) nas tabelas `MXF_TMP_*`. Sem ela, a operação **BUSCAR** quebrava com `ORA-01400: cannot insert NULL into (...TIPO_LAYOUT_MXF)` ao gravar PIS/COFINS e CBS/IBS.
+- Novo campo "Tipo Layout MXF" em Configuração Banco de Dados (visível só para Oracle). Preenchido com o valor de `TAB_PARAMETRO_EMPRESA.TIPO_LAYOUT_MXF` da loja (ex.: `8`), o valor passa a ser gravado nas tabelas `MXF_TMP_*` que têm essa coluna.
+- Vazio (padrão), nada muda: as lojas atuais continuam funcionando como antes. Se o valor for configurado numa loja cujas tabelas não têm a coluna, ele é ignorado e um aviso é registrado no log.
+- A coluna `tipo_layout_mxf` é criada automaticamente em `config_oracle` no banco local na primeira execução.
+
+#### Depuração da integração Sysmo
+- `ORIONTAX_DRY_RUN=1` valida o recebimento Sysmo completo e desfaz a gravação no fim (ROLLBACK), sem alterar a tabela de destino.
+- `ORIONTAX_DEBUG_CODE=<código>` registra no log o caminho do produto informado: como veio da API, o sequencial encontrado e a linha gravada.
 
 #### Integração VR (VRMaster): envio para a API OrionTax e gravação via PATCH /v2/integracaofiscal
 - Novo perfil ERP "VR" (menu ERP, aba Configurações e agendador), com diálogo de configuração da API VR (URL, token VRMaster, timeout, itens por página e produtos por PATCH) e botão de teste.
 - O cadastro de clientes passou a ter a UF da loja, obrigatória no perfil VR.
 - O menu ERP agora mostra Intersolid, VR e Sysmo com o perfil ativo marcado.
 - Trava de gravação na VR: o recebimento só grava (e só consome a fotografia da OrionTax) depois de marcar "Permitir gravação na VR (somente após homologação)" em Configurar API VR; `ORIONTAX_DRY_RUN=1` continua simulando com a trava desligada, `ORIONTAX_VR_ONLY=<códigos>` restringe a gravação a uma lista de produtos e cada fotografia recebida é salva em `vr_snapshots`, ao lado do banco local.
+
+### Corrigido
+
+#### Mensagem de erro do insert linha a linha mostrava sempre ORA-01722
+- Quando um lote falhava, a mensagem dizia "ORA-01722" mesmo quando o erro real era outro (ex.: `ORA-01400`), o que atrapalhava o diagnóstico. Agora ela traz o erro Oracle real, a tabela, a linha e os valores.
+
+### Alterado
+- A versão da aplicação e do instalador foi atualizada para `2.0.1`.
 
 ---
 
