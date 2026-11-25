@@ -254,6 +254,7 @@ class DatabaseManager:
             ("db_type", "TEXT DEFAULT 'oracle'"),
             ("database_path", "TEXT"),
             ("charset", "TEXT"),
+            ("tipo_layout_mxf", "INTEGER"),
         ]
         for col_name, col_def in migration_columns:
             try:
@@ -605,7 +606,8 @@ class DatabaseManager:
                           instant_client_path: str = None,
                           db_type: str = 'oracle',
                           database_path: str = None,
-                          charset: str = None) -> bool:
+                          charset: str = None,
+                          tipo_layout_mxf: Optional[int] = None) -> bool:
         """Salva configuração Oracle ou Firebird"""
         try:
             password_enc = encryption_manager.encrypt(password)
@@ -621,19 +623,22 @@ class DatabaseManager:
                     UPDATE config_oracle
                     SET host = ?, port = ?, service_name = ?, username = ?,
                         password_encrypted = ?, instant_client_path = ?,
-                        db_type = ?, database_path = ?, charset = ?, updated_at = ?
+                        db_type = ?, database_path = ?, charset = ?,
+                        tipo_layout_mxf = ?, updated_at = ?
                     WHERE nome_conexao = ?
                 """, (host, port, service_name, username, password_enc,
                       instant_client_path, db_type, database_path, charset,
-                      datetime.now(), nome_conexao))
+                      tipo_layout_mxf, datetime.now(), nome_conexao))
             else:
                 cursor.execute("""
                     INSERT INTO config_oracle
                     (nome_conexao, host, port, service_name, username, password_encrypted,
-                     instant_client_path, db_type, database_path, charset)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                     instant_client_path, db_type, database_path, charset,
+                     tipo_layout_mxf)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (nome_conexao, host, port, service_name, username, password_enc,
-                      instant_client_path, db_type, database_path, charset))
+                      instant_client_path, db_type, database_path, charset,
+                      tipo_layout_mxf))
 
             self.conn.commit()
             return True

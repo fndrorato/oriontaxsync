@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel,
                              QGroupBox, QFormLayout, QMessageBox, QComboBox,
                              QTimeEdit, QListWidget, QFileDialog, QWidget)
 from PyQt5.QtCore import Qt, QTime
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QIntValidator
 from config.database import db_manager
 import json
 
@@ -119,6 +119,29 @@ class DatabaseConfigDialog(QDialog):
         form.addRow(self.instant_client_label, instant_client_container)
         self.instant_client_container = instant_client_container
 
+        # Tipo Layout MXF (Oracle / Intersolid)
+        layout_mxf_container = QWidget()
+        lm_outer = QVBoxLayout(layout_mxf_container)
+        lm_outer.setContentsMargins(0, 0, 0, 0)
+
+        self.tipo_layout_mxf_input = QLineEdit()
+        self.tipo_layout_mxf_input.setValidator(QIntValidator(0, 999999, self))
+        self.tipo_layout_mxf_input.setPlaceholderText('Ex: 8')
+        self.tipo_layout_mxf_input.setMaximumWidth(120)
+        lm_outer.addWidget(self.tipo_layout_mxf_input)
+
+        layout_mxf_info = QLabel(
+            'Opcional: preencha só se o Intersolid exigir a coluna TIPO_LAYOUT_MXF '
+            '(valor de TAB_PARAMETRO_EMPRESA). Vazio = não enviar.'
+        )
+        layout_mxf_info.setStyleSheet('color: #7f8c8d; font-size: 10px;')
+        layout_mxf_info.setWordWrap(True)
+        lm_outer.addWidget(layout_mxf_info)
+
+        self.tipo_layout_mxf_label = QLabel('Tipo Layout MXF:')
+        form.addRow(self.tipo_layout_mxf_label, layout_mxf_container)
+        self.tipo_layout_mxf_container = layout_mxf_container
+
         group.setLayout(form)
         layout.addWidget(group)
 
@@ -157,6 +180,8 @@ class DatabaseConfigDialog(QDialog):
         self.service_input.setVisible(is_oracle)
         self.instant_client_label.setVisible(is_oracle)
         self.instant_client_container.setVisible(is_oracle)
+        self.tipo_layout_mxf_label.setVisible(is_oracle)
+        self.tipo_layout_mxf_container.setVisible(is_oracle)
 
         # Campos Firebird
         self.db_path_label.setVisible(is_firebird)
@@ -252,6 +277,8 @@ class DatabaseConfigDialog(QDialog):
                 self.db_type_combo.setCurrentText('Oracle')
                 self.service_input.setText(config.get('service_name', ''))
                 self.instant_client_input.setText(config.get('instant_client_path', '') or '')
+                tipo_layout = config.get('tipo_layout_mxf')
+                self.tipo_layout_mxf_input.setText('' if tipo_layout is None else str(tipo_layout))
             # Senha não é carregada por segurança
 
     def validate_fields(self) -> bool:
@@ -374,11 +401,14 @@ class DatabaseConfigDialog(QDialog):
             instant_client_path = None
             database_path = self.db_path_input.text().strip()
             charset = self.charset_input.text().strip() or 'WIN1252'
+            tipo_layout_mxf = None
         else:
             service_name = self.service_input.text().strip()
             instant_client_path = self.instant_client_input.text().strip() or None
             database_path = None
             charset = None
+            tipo_layout_text = self.tipo_layout_mxf_input.text().strip()
+            tipo_layout_mxf = int(tipo_layout_text) if tipo_layout_text else None
 
         success = db_manager.save_oracle_config(
             nome_conexao=self.nome_input.text().strip(),
@@ -390,7 +420,8 @@ class DatabaseConfigDialog(QDialog):
             instant_client_path=instant_client_path,
             db_type=db_type,
             database_path=database_path,
-            charset=charset
+            charset=charset,
+            tipo_layout_mxf=tipo_layout_mxf,
         )
 
         if success:

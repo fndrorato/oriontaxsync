@@ -398,10 +398,14 @@ class OracleClient:
         cursor,
         batch_size: int = 1000,
         progress_callback: Optional[Callable[[str], None]] = None,
+        tipo_layout_mxf: Optional[int] = None,
     ) -> int:
         """
         Insere um DataFrame no Oracle usando executemany,
         com SQL específico por tabela.
+
+        tipo_layout_mxf: quando informado, grava também a coluna
+        TIPO_LAYOUT_MXF (exigida em algumas versões do schema Intersolid).
         """
 
         logger = self.logger
@@ -425,6 +429,10 @@ class OracleClient:
         )
 
         inserted_rows = 0
+        # Colunas usadas na mensagem de erro do fallback linha a linha
+        error_columns = expected_columns + (
+            ["TIPO_LAYOUT_MXF"] if tipo_layout_mxf is not None else []
+        )
 
         # ==========================
         # SQL POR TABELA
@@ -510,6 +518,14 @@ class OracleClient:
 
         columns = list(df.columns)
 
+        if tipo_layout_mxf is not None:
+            sql = insert_sql.replace(") VALUES (", ", TIPO_LAYOUT_MXF\n                ) VALUES (", 1)
+            sql = sql.rstrip()
+            if not sql.endswith(")"):
+                raise ValueError(f"{table_name} | SQL de insert em formato inesperado")
+            insert_sql = sql[:-1].rstrip() + f",\n                    :{expected_cols + 1}\n                )"
+            logger.info(f"{table_name} | TIPO_LAYOUT_MXF = {tipo_layout_mxf}")
+
         # ==========================
         # LIMPEZA DE VALORES
         # ==========================
@@ -591,6 +607,9 @@ class OracleClient:
                     f"{len(clean_row)} (esperado {expected_cols})"
                 )
 
+            if tipo_layout_mxf is not None:
+                clean_row.append(tipo_layout_mxf)
+
             batch.append(tuple(clean_row))
 
             # ==========================
@@ -604,7 +623,7 @@ class OracleClient:
                     inserted_rows += len(batch)
                     batch.clear()
                 except Exception as e:
-                    _execute_batch_one_by_one(cursor, insert_sql, batch, table_name, columns)
+                    _execute_batch_one_by_one(cursor, insert_sql, batch, table_name, error_columns)
                     inserted_rows += len(batch)
                     batch.clear()
 
@@ -618,7 +637,7 @@ class OracleClient:
                 )
                 inserted_rows += len(batch)
             except Exception as e:
-                _execute_batch_one_by_one(cursor, insert_sql, batch, table_name, columns)
+                _execute_batch_one_by_one(cursor, insert_sql, batch, table_name, error_columns)
                 inserted_rows += len(batch)
 
         logger.info(
@@ -734,6 +753,8 @@ class OracleClient:
 
             self.logger.info("✓ Tabelas TMP limpas")
 
+            tipo_layout_mxf, tabelas_com_layout = self._resolve_tipo_layout_mxf(cursor)
+
             # -------------------------------------------------
             # 2. Mapeamento dataframe -> tabela
             # -------------------------------------------------
@@ -769,6 +790,9 @@ class OracleClient:
                     cursor=cursor,
                     batch_size=5000,
                     progress_callback=progress_callback,
+                    tipo_layout_mxf=(
+                        tipo_layout_mxf if table_name in tabelas_com_layout else None
+                    ),
                 )
 
                 total_inserted += inserted
@@ -793,6 +817,43 @@ class OracleClient:
             if self.connection:
                 self.connection.rollback()
             raise
+
+    def _resolve_tipo_layout_mxf(self, cursor):
+        """
+        Lê o TIPO_LAYOUT_MXF configurado para esta loja (opcional).
+
+        Retorna (valor, tabelas_que_tem_a_coluna). Sem valor configurado,
+        retorna (None, set()) e nada muda no insert.
+        """
+        valor = self.config.get("tipo_layout_mxf")
+        if valor in (None, ""):
+            return None, set()
+        valor = int(valor)
+
+        tabelas = [
+            "MXF_TMP_ICMS_ENTRADA", "MXF_TMP_ICMS_SAIDA",
+            "MXF_TMP_PIS_COFINS", "MXF_TMP_CBS_IBS",
+        ]
+        binds = {f"t{i}": nome for i, nome in enumerate(tabelas)}
+        cursor.execute(
+            "SELECT DISTINCT table_name FROM all_tab_columns "
+            "WHERE column_name = 'TIPO_LAYOUT_MXF' "
+            f"AND table_name IN ({', '.join(':' + k for k in binds)})",
+            binds,
+        )
+        tabelas_com_layout = {row[0] for row in cursor.fetchall()}
+
+        if tabelas_com_layout:
+            self.logger.info(
+                f"TIPO_LAYOUT_MXF = {valor} (configurado) para: "
+                + ", ".join(sorted(tabelas_com_layout))
+            )
+        else:
+            self.logger.warning(
+                f"TIPO_LAYOUT_MXF = {valor} configurado, mas nenhuma tabela "
+                "MXF_TMP tem essa coluna; o valor será ignorado."
+            )
+        return valor, tabelas_com_layout
 
     def clear_tmp_tables(self, table_names: list) -> Tuple[bool, str]:
         """
